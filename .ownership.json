@@ -1,0 +1,16 @@
+{
+    "repository_name": "RxComposableArchitecture",
+    "description": "RxComposableArchitecture dependencies for iOS App",
+    "directorate": "TECH",
+    "namespace": "ios",
+    "security_owner": "ferico.samuel@tokopedia.com",
+    "app": [
+    	{
+    		"name": "RxComposableArchitecture",
+    		"description": "RxComposableArchitecture dependencies for iOS App",
+    		"owner": "ferico.samuel@tokopedia.com",
+    		"slack_channel": "teamios"
+    	}
+    ],
+    "last_update": "21/02/2022"
+}
