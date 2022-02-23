@@ -1,0 +1,13 @@
+use_frameworks!
+
+platform :ios, '9.0'
+
+target 'RxComposableArchitecture_Example' do
+  pod 'RxComposableArchitecture', :path => '../'
+
+  target 'RxComposableArchitecture_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
