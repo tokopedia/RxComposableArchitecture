@@ -1,0 +1,14 @@
+use_frameworks!
+
+platform :ios, '10.0'
+
+target 'RxComposableArchitecture_Example' do
+  pod 'RxComposableArchitecture', :path => '../'
+  pod 'CasePaths', :podspec => '../development-podspecs/CasePaths.podspec.json'
+
+  target 'RxComposableArchitecture_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
