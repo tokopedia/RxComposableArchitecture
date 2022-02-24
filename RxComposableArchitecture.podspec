@@ -28,9 +28,13 @@ TODO: Add long description of the pod here.
   s.source           = { :git => 'https://github.com/andreyyoshua/RxComposableArchitecture.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
-  s.ios.deployment_target = '9.0'
+  s.ios.deployment_target = '10.0'
 
-  s.source_files = 'RxComposableArchitecture/Classes/**/*'
+  s.source_files = [
+    'RxComposableArchitecture/Classes/**/*',
+    'DiffingInterface/**/*.swift',
+    'DiffingUtility/**/*.swift'
+  ]
   
   # s.resource_bundles = {
   #   'RxComposableArchitecture' => ['RxComposableArchitecture/Assets/*.png']
@@ -38,5 +42,17 @@ TODO: Add long description of the pod here.
 
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
+  s.dependency 'RxSwift', '5.1.1'
+  s.dependency 'RxCocoa', '5.1.1'
+  s.dependency 'CasePaths'
+  
+#  s.subspec 'DiffingInterface' do |diffingInterface|
+#      diffingInterface.dependency 'Alamofire'
+#      diffingInterface.source_files = 'DiffingInterface/**/*.swift'
+#  end
+#
+#  s.subspec 'DiffingUtility' do |diffingUtility|
+#      diffingUtility.source_files = 'DiffingUtility/**/*.swift'
+#  end
+  
 end
