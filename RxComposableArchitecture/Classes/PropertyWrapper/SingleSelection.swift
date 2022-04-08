@@ -57,7 +57,7 @@
  }
 
  struct State {
-     @SingleSelection([], selection: \.isSelected)
+     @SingleSelection(wrappedValue: [], selection: \.isSelected)
      var items: IdentifiedArrayOf<Item>
  }
 
@@ -71,7 +71,7 @@
 
  ## how to use
  ```
- @SingleSelection([], selection: \.isSelected)
+ @SingleSelection(wrappedValue: [], selection: \.isSelected)
  ```
  by using `SingleSelection`, you don't need to handle the single selection manually,
  just set selection from child side, and `SingleSelection` will automatically unselect previous one and select the new one.
@@ -119,7 +119,7 @@ public struct SingleSelection<Element> where Element: HashDiffable {
         - set: closure to set new Bool value to `Element` `isSelected`
      */
     public init(
-        _ wrappedValue: IdentifiedArrayOf<Element> = [],
+        wrappedValue: IdentifiedArrayOf<Element> = [],
         extract: @escaping (Element) -> Bool,
         set: @escaping (inout Element, Bool) -> Void
     ) {
@@ -139,11 +139,11 @@ public struct SingleSelection<Element> where Element: HashDiffable {
         - selection: writeable keypath to `isSelected` value.
      */
     public init(
-        _ wrappedValue: IdentifiedArrayOf<Element> = [],
+        wrappedValue: IdentifiedArrayOf<Element> = [],
         selection path: WritableKeyPath<Element, Bool>
     ) {
         self.init(
-            wrappedValue,
+            wrappedValue: wrappedValue,
             extract: { $0[keyPath: path] },
             set: { $0[keyPath: path] = $1 }
         )
@@ -230,9 +230,9 @@ extension SingleSelection where Element: Selectable {
      - Parameters:
         - wrappedValue: initial value
      */
-    public init(_ wrappedValue: IdentifiedArrayOf<Element> = []) {
+    public init(wrappedValue: IdentifiedArrayOf<Element> = []) {
         self.init(
-            wrappedValue,
+            wrappedValue: wrappedValue,
             extract: \.isSelected,
             set: { $0.isSelected = $1 }
         )
