@@ -161,8 +161,15 @@ public protocol CustomDebugOutputConvertible {
 
 extension Date: CustomDebugOutputConvertible {
     public var debugOutput: String {
-        dateFormatter.string(from: self)
+        "Date(\(Self.formatter.string(from: self)))"
     }
+    
+    private static let formatter: DateFormatter = {
+      let formatter = DateFormatter()
+      formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXXXX"
+      formatter.timeZone = TimeZone(secondsFromGMT: 0)!
+      return formatter
+    }()
 }
 
 private let dateFormatter: ISO8601DateFormatter = {
