@@ -172,12 +172,6 @@ extension Date: CustomDebugOutputConvertible {
     }()
 }
 
-private let dateFormatter: ISO8601DateFormatter = {
-    let formatter = ISO8601DateFormatter()
-    formatter.timeZone = TimeZone(identifier: "UTC")!
-    return formatter
-}()
-
 extension DispatchQueue: CustomDebugOutputConvertible {
     public var debugOutput: String {
         switch (self, label) {
