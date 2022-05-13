@@ -167,7 +167,7 @@ import RxSwift
 ///
 public final class TestStore<State, LocalState, Action: Equatable, LocalAction, Environment> {
     public var environment: Environment
-
+    
     private let file: StaticString
     private let fromLocalAction: (LocalAction) -> Action
     private var line: UInt
@@ -179,7 +179,7 @@ public final class TestStore<State, LocalState, Action: Equatable, LocalAction, 
     private let toLocalState: (State) -> LocalState
     public var stateDiffMode: DiffMode = .distinct
     public var actionDiffMode: DiffMode = .distinct
-
+    
     private init(
         environment: Environment,
         file: StaticString,
@@ -196,7 +196,7 @@ public final class TestStore<State, LocalState, Action: Equatable, LocalAction, 
         self.reducer = reducer
         snapshotState = initialState
         self.toLocalState = toLocalState
-
+        
         store = Store(
             initialState: initialState,
             reducer: Reducer<State, TestAction, Void> { [unowned self] state, action, _ in
@@ -205,12 +205,12 @@ public final class TestStore<State, LocalState, Action: Equatable, LocalAction, 
                 case let .send(localAction):
                     effects = self.reducer.run(&state, self.fromLocalAction(localAction), self.environment)
                     self.snapshotState = state
-
+                    
                 case let .receive(action):
                     effects = self.reducer.run(&state, action, self.environment)
                     self.receivedActions.append((action, state))
                 }
-
+                
                 let effect = LongLivingEffect(file: action.file, line: action.line)
                 return effects
                     .do(
@@ -224,18 +224,18 @@ public final class TestStore<State, LocalState, Action: Equatable, LocalAction, 
             environment: ()
         )
     }
-
+    
     deinit {
         self.completed()
     }
-
+    
     private func completed() {
         if !receivedActions.isEmpty {
             XCTFail(
                 """
                 The store received \(receivedActions.count) unexpected \
                 action\(receivedActions.count == 1 ? "" : "s") after this one: …
-
+                
                 Unhandled actions: \(debugOutput(receivedActions.map { $0.action }))
                 """,
                 file: file, line: line
@@ -246,16 +246,16 @@ public final class TestStore<State, LocalState, Action: Equatable, LocalAction, 
                 """
                 An effect returned for this action is still running. It must complete before the end of \
                 the test. …
-
+                
                 To fix, inspect any effects the reducer returns for this action and ensure that all of \
                 them complete by the end of the test. There are a few reasons why an effect may not have \
                 completed:
-
+                
                 • If an effect uses a scheduler (via "receive(on:)", "delay", "debounce", etc.), make \
                 sure that you wait enough time for the scheduler to perform the effect. If you are using \
                 a test scheduler, advance the scheduler so that the effects may complete, or consider \
                 using an immediate scheduler to immediately perform the effect instead.
-
+                
                 • If you are returning a long-living effect (timers, notifications, subjects, etc.), \
                 then make sure those effects are torn down by marking the effect ".cancellable" and \
                 returning a corresponding cancellation effect ("Effect.cancel") from another action, or, \
@@ -266,16 +266,16 @@ public final class TestStore<State, LocalState, Action: Equatable, LocalAction, 
             )
         }
     }
-
+    
     private struct LongLivingEffect: Hashable {
         let id = UUID()
         let file: StaticString
         let line: UInt
-
+        
         static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.id == rhs.id
         }
-
+        
         func hash(into hasher: inout Hasher) {
             id.hash(into: &hasher)
         }
@@ -320,7 +320,7 @@ extension TestStore where LocalState: Equatable {
                 """
                 Must handle \(receivedActions.count) received \
                 action\(receivedActions.count == 1 ? "" : "s") before sending an action: …
-
+                
                 Unhandled actions: \(debugOutput(receivedActions.map { $0.action }))
                 """,
                 file: file, line: line
@@ -331,7 +331,7 @@ extension TestStore where LocalState: Equatable {
             state: toLocalState,
             action: { .init(origin: .send($0), file: file, line: line) }
         )
-        .send(action)
+            .send(action)
         do {
             try update(&expectedState)
         } catch {
@@ -347,7 +347,7 @@ extension TestStore where LocalState: Equatable {
             self.line = line
         }
     }
-
+    
     public func receive(
         _ expectedAction: Action,
         file: StaticString = #file,
@@ -366,20 +366,20 @@ extension TestStore where LocalState: Equatable {
         let (receivedAction, state) = receivedActions.removeFirst()
         if expectedAction != receivedAction {
             let diff =
-                debugDiff(expectedAction, receivedAction, actionDiffMode)
-                    .map { "\($0.indent(by: 4))\n\n(Expected: −, Received: +)" }
-                    ?? """
+            debugDiff(expectedAction, receivedAction, actionDiffMode)
+                .map { "\($0.indent(by: 4))\n\n(Expected: −, Received: +)" }
+            ?? """
                     Expected:
                     \(String(describing: expectedAction).indent(by: 2))
-
+                    
                     Received:
                     \(String(describing: receivedAction).indent(by: 2))
                     """
-
+            
             XCTFail(
                 """
                 Received unexpected action: …
-
+                
                 \(diff)
                 """,
                 file: file, line: line
@@ -402,85 +402,81 @@ extension TestStore where LocalState: Equatable {
             self.line = line
         }
     }
-
+    
     /// Asserts against a script of actions.
     public func assert(
         _ steps: Step...,
-        annotateTo annotating: Annotating = .activity,
         groupLevel: Int = 0,
         file: StaticString = #file,
         line: UInt = #line
     ) {
-        assert(steps, annotateTo: annotating, groupLevel: groupLevel, file: file, line: line)
+        assert(steps, groupLevel: groupLevel, file: file, line: line)
     }
-
+    
     /// Asserts against an array of actions.
     public func assert(
         _ steps: [Step],
-        annotateTo annotating: Annotating,
         groupLevel: Int = 0,
         file _: StaticString = #file,
         line _: UInt = #line
     ) {
-        for step in steps {
-            annotating.annotate(step, groupLevel) { _ in
-                //                var expectedState = self.toLocalState(self.snapshotState)
-
-                switch step.type {
-                case let .send(action, update):
-                    self.send(action, file: step.file, line: step.line, update)
-                case let .receive(expectedAction, update):
-                    self.receive(expectedAction, file: step.file, line: step.line, update)
-                case let .environment(work):
-                    if !self.receivedActions.isEmpty {
-                        XCTFail(
-                            """
-                            Must handle \(self.receivedActions.count) received \
-                            action\(self.receivedActions.count == 1 ? "" : "s") before performing this work: …
-                            Unhandled actions: \(debugOutput(self.receivedActions))
-                            """,
-                            file: step.file, line: step.line
-                        )
-                    }
-                    do {
-                        try work(&self.environment)
-                    } catch {
-                        XCTFail("Threw error: \(error)", file: step.file, line: step.line)
-                    }
-
-                case let .do(work):
-                    if !self.receivedActions.isEmpty {
-                        XCTFail(
-                            """
-                            Must handle \(self.receivedActions.count) received \
-                            action\(self.receivedActions.count == 1 ? "" : "s") before performing this work: …
-                            Unhandled actions: \(debugOutput(self.receivedActions))
-                            """,
-                            file: step.file, line: step.line
-                        )
-                    }
-                    do {
-                        try work()
-                    } catch {
-                        XCTFail("Threw error: \(error)", file: step.file, line: step.line)
-                    }
-                case let .group(_, steps):
-                    if steps.count > 0 {
-                        self.assert(
-                            steps,
-                            annotateTo: annotating,
-                            groupLevel: groupLevel + 1,
-                            file: step.file,
-                            line: step.line
-                        )
-                    }
-                    return
+        func assert(step: Step) {
+            switch step.type {
+            case let .send(action, update):
+                self.send(action, file: step.file, line: step.line, update)
+            case let .receive(expectedAction, update):
+                self.receive(expectedAction, file: step.file, line: step.line, update)
+            case let .environment(work):
+                if !self.receivedActions.isEmpty {
+                    XCTFail(
+                        """
+                        Must handle \(self.receivedActions.count) received \
+                        action\(self.receivedActions.count == 1 ? "" : "s") before performing this work: …
+                        Unhandled actions: \(debugOutput(self.receivedActions))
+                        """,
+                        file: step.file, line: step.line
+                    )
                 }
+                do {
+                    try work(&self.environment)
+                } catch {
+                    XCTFail("Threw error: \(error)", file: step.file, line: step.line)
+                }
+
+            case let .do(work):
+                if !self.receivedActions.isEmpty {
+                    XCTFail(
+                        """
+                        Must handle \(self.receivedActions.count) received \
+                        action\(self.receivedActions.count == 1 ? "" : "s") before performing this work: …
+                        Unhandled actions: \(debugOutput(self.receivedActions))
+                        """,
+                        file: step.file, line: step.line
+                    )
+                }
+                do {
+                    try work()
+                } catch {
+                    XCTFail("Threw error: \(error)", file: step.file, line: step.line)
+                }
+            case let .group(_, steps):
+                if steps.count > 0 {
+                    self.assert(
+                        steps,
+                        groupLevel: groupLevel + 1,
+                        file: step.file,
+                        line: step.line
+                    )
+                }
+                return
             }
         }
-        completed()
+        
+        steps.forEach(assert(step:))
+        
+        self.completed()
     }
-
+    
     private func expectedStateShouldMatch(
         expected: LocalState,
         actual: LocalState,
@@ -489,20 +485,20 @@ extension TestStore where LocalState: Equatable {
     ) {
         if expected != actual {
             let diff =
-                debugDiff(expected, actual, stateDiffMode)
-                    .map { "\($0.indent(by: 4))\n\n(Expected: −, Actual: +)" }
-                    ?? """
+            debugDiff(expected, actual, stateDiffMode)
+                .map { "\($0.indent(by: 4))\n\n(Expected: −, Actual: +)" }
+            ?? """
                     Expected:
                     \(String(describing: expected).indent(by: 2))
-
+                    
                     Actual:
                     \(String(describing: actual).indent(by: 2))
                     """
-
+            
             XCTFail(
                 """
                 State change does not match expectation: …
-
+                
                 \(diff)
                 """,
                 file: file,
@@ -538,7 +534,7 @@ extension TestStore {
             toLocalState: { toLocalState(self.toLocalState($0)) }
         )
     }
-
+    
     /// Scopes a store to assert against more local state.
     ///
     /// Useful for testing view store-specific state.
@@ -551,13 +547,13 @@ extension TestStore {
     ) -> TestStore<State, S, Action, LocalAction, Environment> {
         scope(state: toLocalState, action: { $0 })
     }
-
+    
     /// A single step of a `TestStore` assertion.
     public struct Step {
         internal let type: StepType
         fileprivate let file: StaticString
         fileprivate let line: UInt
-
+        
         private init(
             _ type: StepType,
             file: StaticString = #file,
@@ -567,7 +563,7 @@ extension TestStore {
             self.file = file
             self.line = line
         }
-
+        
         /// A step that describes an action sent to a store and asserts against how the store's state
         /// is expected to change.
         ///
@@ -584,7 +580,7 @@ extension TestStore {
         ) -> Step {
             Step(.send(action, update), file: file, line: line)
         }
-
+        
         /// A step that describes an action received by an effect and asserts against how the store's
         /// state is expected to change.
         ///
@@ -601,7 +597,7 @@ extension TestStore {
         ) -> Step {
             Step(.receive(action, update), file: file, line: line)
         }
-
+        
         /// A step that updates a test store's environment.
         ///
         /// - Parameter update: A function that updates the test store's environment for subsequent
@@ -614,7 +610,7 @@ extension TestStore {
         ) -> Step {
             Step(.environment(update), file: file, line: line)
         }
-
+        
         /// A step that captures some work to be done between assertions
         ///
         /// - Parameter work: A function that is called between steps.
@@ -626,7 +622,7 @@ extension TestStore {
         ) -> Step {
             Step(.do(work), file: file, line: line)
         }
-
+        
         /// A step that captures a sub-sequence of steps.
         ///
         /// - Parameter steps: An array of `Step`
@@ -639,7 +635,7 @@ extension TestStore {
         ) -> Step {
             Step(.group(name, steps), file: file, line: line)
         }
-
+        
         internal enum StepType {
             case send(LocalAction, (inout LocalState) throws -> Void)
             case receive(Action, (inout LocalState) throws -> Void)
@@ -648,37 +644,37 @@ extension TestStore {
             case group(String, [Step])
         }
     }
-
+    
     private struct TestAction {
         let origin: Origin
         let file: StaticString
         let line: UInt
-
+        
         enum Origin {
             case send(LocalAction)
             case receive(Action)
         }
     }
-
+    
     public struct Annotating {
         public typealias StepResultCallback = (Bool) -> Void
-
+        
         public var annotate: (Step, Int, @escaping (@escaping StepResultCallback) -> Void) -> Void
-
+        
         public init(annotate: @escaping (Step, Int, @escaping (@escaping StepResultCallback) -> Void) -> Void) {
             self.annotate = annotate
         }
-
+        
         public static func combine(_ annotatings: Annotating...) -> Self {
             return Annotating { step, groupLevel, callback in
                 var combinedCallbacks: [StepResultCallback] = []
-
+                
                 for annotating in annotatings {
                     annotating.annotate(step, groupLevel) { resultCallback in
                         combinedCallbacks.append(resultCallback)
                     }
                 }
-
+                
                 callback { stepResult in
                     for callback in combinedCallbacks {
                         callback(stepResult)
@@ -686,7 +682,7 @@ extension TestStore {
                 }
             }
         }
-
+        
         public static var none: Self {
             Self { _, _, callback in
                 callback { _ in }
