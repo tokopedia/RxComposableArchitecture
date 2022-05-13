@@ -8,12 +8,25 @@
 
 /* Begin PBXBuildFile section */
 		17052C4B33DC192F601D8A0B /* Pods_RxComposableArchitecture_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29FC08E4DACDDCE98D8925A2 /* Pods_RxComposableArchitecture_Example.framework */; };
+		1D43C264282E09E4009C1A8B /* TimerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C256282E09E4009C1A8B /* TimerTests.swift */; };
+		1D43C265282E09E4009C1A8B /* StoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C257282E09E4009C1A8B /* StoreTests.swift */; };
+		1D43C266282E09E4009C1A8B /* ReducerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C258282E09E4009C1A8B /* ReducerTests.swift */; };
+		1D43C267282E09E4009C1A8B /* LCRNG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C259282E09E4009C1A8B /* LCRNG.swift */; };
+		1D43C268282E09E4009C1A8B /* DebugTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C25A282E09E4009C1A8B /* DebugTests.swift */; };
+		1D43C269282E09E4009C1A8B /* RxComposableArchitectureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C25B282E09E4009C1A8B /* RxComposableArchitectureTests.swift */; };
+		1D43C26A282E09E4009C1A8B /* EffectDebounceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C25C282E09E4009C1A8B /* EffectDebounceTests.swift */; };
+		1D43C26B282E09E4009C1A8B /* IdentifiedArrayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C25D282E09E4009C1A8B /* IdentifiedArrayTests.swift */; };
+		1D43C26C282E09E4009C1A8B /* EffectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C25E282E09E4009C1A8B /* EffectTests.swift */; };
+		1D43C26D282E09E4009C1A8B /* EffectCancellationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C25F282E09E4009C1A8B /* EffectCancellationTests.swift */; };
+		1D43C26E282E09E4009C1A8B /* SingleSelectionSelectableTypeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C260282E09E4009C1A8B /* SingleSelectionSelectableTypeTests.swift */; };
+		1D43C26F282E09E4009C1A8B /* MemoryManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C261282E09E4009C1A8B /* MemoryManagementTests.swift */; };
+		1D43C270282E09E4009C1A8B /* SingleSelectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C262282E09E4009C1A8B /* SingleSelectionTests.swift */; };
+		1D43C271282E09E4009C1A8B /* EffectDeferredTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C263282E09E4009C1A8B /* EffectDeferredTests.swift */; };
 		607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD51AFB9204008FA782 /* AppDelegate.swift */; };
 		607FACD81AFB9204008FA782 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD71AFB9204008FA782 /* ViewController.swift */; };
 		607FACDB1AFB9204008FA782 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 607FACD91AFB9204008FA782 /* Main.storyboard */; };
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
-		607FACEC1AFB9204008FA782 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* Tests.swift */; };
 		852F4FE2179B4ABDAA68FBAD /* Pods_RxComposableArchitecture_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0A9E85147266305698B534F /* Pods_RxComposableArchitecture_Tests.framework */; };
 /* End PBXBuildFile section */
 
@@ -29,6 +42,20 @@
 
 /* Begin PBXFileReference section */
 		1798FFB4523F9DE3C29F12E1 /* Pods-RxComposableArchitecture_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RxComposableArchitecture_Tests.debug.xcconfig"; path = "Target Support Files/Pods-RxComposableArchitecture_Tests/Pods-RxComposableArchitecture_Tests.debug.xcconfig"; sourceTree = "<group>"; };
+		1D43C256282E09E4009C1A8B /* TimerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TimerTests.swift; sourceTree = "<group>"; };
+		1D43C257282E09E4009C1A8B /* StoreTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
+		1D43C258282E09E4009C1A8B /* ReducerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReducerTests.swift; sourceTree = "<group>"; };
+		1D43C259282E09E4009C1A8B /* LCRNG.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LCRNG.swift; sourceTree = "<group>"; };
+		1D43C25A282E09E4009C1A8B /* DebugTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DebugTests.swift; sourceTree = "<group>"; };
+		1D43C25B282E09E4009C1A8B /* RxComposableArchitectureTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RxComposableArchitectureTests.swift; sourceTree = "<group>"; };
+		1D43C25C282E09E4009C1A8B /* EffectDebounceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EffectDebounceTests.swift; sourceTree = "<group>"; };
+		1D43C25D282E09E4009C1A8B /* IdentifiedArrayTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IdentifiedArrayTests.swift; sourceTree = "<group>"; };
+		1D43C25E282E09E4009C1A8B /* EffectTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EffectTests.swift; sourceTree = "<group>"; };
+		1D43C25F282E09E4009C1A8B /* EffectCancellationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EffectCancellationTests.swift; sourceTree = "<group>"; };
+		1D43C260282E09E4009C1A8B /* SingleSelectionSelectableTypeTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SingleSelectionSelectableTypeTests.swift; sourceTree = "<group>"; };
+		1D43C261282E09E4009C1A8B /* MemoryManagementTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MemoryManagementTests.swift; sourceTree = "<group>"; };
+		1D43C262282E09E4009C1A8B /* SingleSelectionTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SingleSelectionTests.swift; sourceTree = "<group>"; };
+		1D43C263282E09E4009C1A8B /* EffectDeferredTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EffectDeferredTests.swift; sourceTree = "<group>"; };
 		29FC08E4DACDDCE98D8925A2 /* Pods_RxComposableArchitecture_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RxComposableArchitecture_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		47617C3F2EE39CB169FD426A /* Pods-RxComposableArchitecture_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RxComposableArchitecture_Example.debug.xcconfig"; path = "Target Support Files/Pods-RxComposableArchitecture_Example/Pods-RxComposableArchitecture_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		607FACD01AFB9204008FA782 /* RxComposableArchitecture_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RxComposableArchitecture_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -40,7 +67,6 @@
 		607FACDF1AFB9204008FA782 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
 		607FACE51AFB9204008FA782 /* RxComposableArchitecture_Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RxComposableArchitecture_Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		607FACEA1AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		607FACEB1AFB9204008FA782 /* Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests.swift; sourceTree = "<group>"; };
 		8694B607FA6DE13542F1EB7D /* Pods-RxComposableArchitecture_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RxComposableArchitecture_Tests.release.xcconfig"; path = "Target Support Files/Pods-RxComposableArchitecture_Tests/Pods-RxComposableArchitecture_Tests.release.xcconfig"; sourceTree = "<group>"; };
 		B03EAF931852F2F891C13CFB /* RxComposableArchitecture.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = RxComposableArchitecture.podspec; path = ../RxComposableArchitecture.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		B887F4DBAC1BD2A15A9CB4F8 /* Pods-RxComposableArchitecture_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RxComposableArchitecture_Example.release.xcconfig"; path = "Target Support Files/Pods-RxComposableArchitecture_Example/Pods-RxComposableArchitecture_Example.release.xcconfig"; sourceTree = "<group>"; };
@@ -124,7 +150,20 @@
 		607FACE81AFB9204008FA782 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				607FACEB1AFB9204008FA782 /* Tests.swift */,
+				1D43C25A282E09E4009C1A8B /* DebugTests.swift */,
+				1D43C25F282E09E4009C1A8B /* EffectCancellationTests.swift */,
+				1D43C25C282E09E4009C1A8B /* EffectDebounceTests.swift */,
+				1D43C263282E09E4009C1A8B /* EffectDeferredTests.swift */,
+				1D43C25E282E09E4009C1A8B /* EffectTests.swift */,
+				1D43C25D282E09E4009C1A8B /* IdentifiedArrayTests.swift */,
+				1D43C259282E09E4009C1A8B /* LCRNG.swift */,
+				1D43C261282E09E4009C1A8B /* MemoryManagementTests.swift */,
+				1D43C258282E09E4009C1A8B /* ReducerTests.swift */,
+				1D43C25B282E09E4009C1A8B /* RxComposableArchitectureTests.swift */,
+				1D43C260282E09E4009C1A8B /* SingleSelectionSelectableTypeTests.swift */,
+				1D43C262282E09E4009C1A8B /* SingleSelectionTests.swift */,
+				1D43C257282E09E4009C1A8B /* StoreTests.swift */,
+				1D43C256282E09E4009C1A8B /* TimerTests.swift */,
 				607FACE91AFB9204008FA782 /* Supporting Files */,
 			);
 			path = Tests;
@@ -348,7 +387,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				607FACEC1AFB9204008FA782 /* Tests.swift in Sources */,
+				1D43C26E282E09E4009C1A8B /* SingleSelectionSelectableTypeTests.swift in Sources */,
+				1D43C26D282E09E4009C1A8B /* EffectCancellationTests.swift in Sources */,
+				1D43C270282E09E4009C1A8B /* SingleSelectionTests.swift in Sources */,
+				1D43C26B282E09E4009C1A8B /* IdentifiedArrayTests.swift in Sources */,
+				1D43C271282E09E4009C1A8B /* EffectDeferredTests.swift in Sources */,
+				1D43C26C282E09E4009C1A8B /* EffectTests.swift in Sources */,
+				1D43C26A282E09E4009C1A8B /* EffectDebounceTests.swift in Sources */,
+				1D43C269282E09E4009C1A8B /* RxComposableArchitectureTests.swift in Sources */,
+				1D43C264282E09E4009C1A8B /* TimerTests.swift in Sources */,
+				1D43C267282E09E4009C1A8B /* LCRNG.swift in Sources */,
+				1D43C266282E09E4009C1A8B /* ReducerTests.swift in Sources */,
+				1D43C265282E09E4009C1A8B /* StoreTests.swift in Sources */,
+				1D43C26F282E09E4009C1A8B /* MemoryManagementTests.swift in Sources */,
+				1D43C268282E09E4009C1A8B /* DebugTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
