@@ -10,7 +10,7 @@
     ///
     /// - Parameter message: An optional description of the assertion, for inclusion in test
     ///   results.
-    public func XCTFail(_ message: String = "") {
+    internal func XCTFail(_ message: String = "") {
       guard
         let XCTestObservationCenter = NSClassFromString("XCTestObservationCenter")
           as Any as? NSObjectProtocol,
@@ -70,7 +70,7 @@
     ///
     /// - Parameter message: An optional description of the assertion, for inclusion in test
     ///   results.
-    public func XCTFail(_ message: String = "", file: StaticString, line: UInt) {
+    internal func XCTFail(_ message: String = "", file: StaticString, line: UInt) {
       _XCTFailureHandler(nil, true, "\(file)", line, "\(message.isEmpty ? "failed" : message)", nil)
     }
 
@@ -94,7 +94,7 @@
   ///
   /// - Parameter message: An optional description of the assertion, for inclusion in test
   ///   results.
-  public func XCTFail(_ message: String = "") {}
+internal func XCTFail(_ message: String = "") {}
 
   /// This function generates a failure immediately and unconditionally.
   ///
@@ -104,5 +104,5 @@
   ///
   /// - Parameter message: An optional description of the assertion, for inclusion in test
   ///   results.
-  public func XCTFail(_ message: String = "", file: StaticString, line: UInt) {}
+  internal func XCTFail(_ message: String = "", file: StaticString, line: UInt) {}
 #endif
