@@ -1,0 +1,12 @@
+# README
+# Make sure you really understand how to modify this file https://help.github.com/en/articles/about-code-owners
+# Common mistakes when defining code owners
+# 1. Including spaces in path, will result on the whole CODEOWNERS file not working. example: /path/to/folder with spaces/a.txt
+# 2. Using wildcard. /foo/bar/* will capture changes in /foo/bar/baz.txt but not in /foo/bar/baz/quux/something.txt
+# 3. Forgetting to modify CODEOWNERS when modifying folder structure
+
+/DiffingInterface/ @andreyyoshua @jeffersonsetiawan @wendyliga
+/DiffingUtility/ @andreyyoshua @jeffersonsetiawan @wendyliga
+/Example/ @andreyyoshua @jeffersonsetiawan @wendyliga
+/RxComposableArchitecture/ @andreyyoshua @jeffersonsetiawan @wendyliga
+/development-podspecs/ @andreyyoshua @jeffersonsetiawan @wendyliga
