@@ -1,8 +1,6 @@
 # RxComposableArchitecture
 
-[![CI](https://github.com/tokopedia/RxComposableArchitecture/workflows/CI/badge.svg)](https://github.com/tokopedia/RxComposableArchitecture/actions?query=workflow%3ACI)
-
-The Composable Architecture (TCA, for short) is a library for building applications in a consistent and understandable way, with composition, testing, and ergonomics in mind. This library is based on PointFree's Swift Composable Architecture
+The Composable Architecture (TCA, for short) is a library for building applications in a consistent and understandable way, with composition, testing, and ergonomics in mind. This library is based on PointFree's Swift Composable Architecture.
 
 * [What is the Composable Architecture?](#what-is-the-composable-architecture)
 * [Learn more](#learn-more)
@@ -10,6 +8,8 @@ The Composable Architecture (TCA, for short) is a library for building applicati
 * [Basic usage](#basic-usage)
 * [Requirements](#requirements)
 * [Installation](#installation)
+* [What is the differences between RxComposable and TCA](#what-is-the-differences-between-rxcomposable-and-tca)
+* [License](#license)
 
 ## What is the Composable Architecture?
 
@@ -291,6 +291,12 @@ You can add ComposableArchitecture to an Xcode project by adding it as a package
   3. Depending on how your project is structured:
       - If you have a single application target that needs access to the library, then add **ComposableArchitecture** directly to your application.
       - If you want to use this library from multiple Xcode targets, or mixing Xcode targets and SPM targets, you must create a shared framework that depends on **ComposableArchitecture** and then depend on that framework in all of your targets. For an example of this, check out the [Tic-Tac-Toe](./Examples/TicTacToe) demo application, which splits lots of features into modules and consumes the static library in this fashion using the **tic-tac-toe** Swift package.
+
+## What is the differences between RxComposable and TCA
+- Use of `RxSwift` instead of `Combine` (to support iOS<13) as the Reactive backbone.
+- Use of `HashDiffable` instead of `Identifiable`
+- Effect only have 1 generic, doesn't have Error counterpart.
+- We are not using `ViewStore`, because on UIKit, we don't need the presence of `ViewStore` yet.
 
 ## License
 
