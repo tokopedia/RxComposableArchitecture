@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1D3CEFCC283E49F300A5105A /* BasicUsage+Reducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3CEFCB283E49F300A5105A /* BasicUsage+Reducer.swift */; };
 		1D43C28C2833C36C009C1A8B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C28B2833C36C009C1A8B /* AppDelegate.swift */; };
 		1D43C28E2833C36C009C1A8B /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C28D2833C36C009C1A8B /* SceneDelegate.swift */; };
 		1D43C2902833C36C009C1A8B /* RouteVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D43C28F2833C36C009C1A8B /* RouteVC.swift */; };
@@ -36,6 +37,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1D3CEFCB283E49F300A5105A /* BasicUsage+Reducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BasicUsage+Reducer.swift"; sourceTree = "<group>"; };
 		1D43C2882833C36C009C1A8B /* Examples.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Examples.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1D43C28B2833C36C009C1A8B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1D43C28D2833C36C009C1A8B /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -109,6 +111,7 @@
 				1D43C2962833C36D009C1A8B /* LaunchScreen.storyboard */,
 				1D43C2992833C36D009C1A8B /* Info.plist */,
 				1D43C2C02833CBA7009C1A8B /* BasicUsageVC.swift */,
+				1D3CEFCB283E49F300A5105A /* BasicUsage+Reducer.swift */,
 			);
 			path = Examples;
 			sourceTree = "<group>";
@@ -280,6 +283,7 @@
 				1D43C2902833C36C009C1A8B /* RouteVC.swift in Sources */,
 				1D43C2C12833CBA7009C1A8B /* BasicUsageVC.swift in Sources */,
 				1D43C28C2833C36C009C1A8B /* AppDelegate.swift in Sources */,
+				1D3CEFCC283E49F300A5105A /* BasicUsage+Reducer.swift in Sources */,
 				1D43C28E2833C36C009C1A8B /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

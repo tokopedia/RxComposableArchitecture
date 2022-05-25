@@ -8,10 +8,11 @@
 
 Pod::Spec.new do |s|
   s.name             = 'RxComposableArchitecture'
-  s.version          = '0.1.0'
-  s.summary          = 'A short description of RxComposableArchitecture.'
+  s.version          = '0.17.0'
+  s.summary          = 'The Composable Architecture (TCA, for short) is a library for building applications in a consistent and understandable way, with composition, testing, and ergonomics in mind.'
   s.description      = <<-DESC
-TODO: Add long description of the pod here.
+  The Composable Architecture (TCA, for short) is a library for building applications in a consistent and understandable way, with composition, testing, and ergonomics in mind. 
+  This library is based on PointFree's Swift Composable Architecture.
                        DESC
 
   s.homepage         = 'https://github.com/tokopedia/RxComposableArchitecture'

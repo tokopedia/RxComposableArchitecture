@@ -9,33 +9,6 @@ import RxComposableArchitecture
 import RxSwift
 import UIKit
 
-struct BasicState: Equatable {
-    var number: Int
-    var errorMessage: String?
-}
-
-enum BasicAction: Equatable {
-    case didTapPlus
-    case didTapMinus
-}
-
-let basicUsageReducer = Reducer<BasicState, BasicAction, Void> { state, action, _ in
-    switch action {
-    case .didTapMinus:
-        guard state.number > 0 else {
-            state.errorMessage = "Can't below 0"
-            return .none
-        }
-        state.number -= 1
-        state.errorMessage = nil
-        return .none
-    case .didTapPlus:
-        state.number += 1
-        state.errorMessage = nil
-        return .none
-    }
-}
-
 class BasicUsageVC: UIViewController {
     private let explanationTextView: UILabel = {
         let text = UILabel()
@@ -91,8 +64,6 @@ class BasicUsageVC: UIViewController {
             stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
             stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             stack.bottomAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor),
-//            stack.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
-//            stack.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
         ])
     }
     
