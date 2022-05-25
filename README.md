@@ -197,7 +197,7 @@ let viewController = AppViewController(store: Store(
     initialState: AppState(),
     reducer: appReducer,
     environment: AppEnvironment(
-      mainQueue: .main,
+      mainQueue: MainScheduler.instance,
       numberFact: { number in Effect(value: "\(number) is a good number Brent") }
     )
 ))
