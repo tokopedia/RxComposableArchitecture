@@ -8,51 +8,27 @@
 
 Pod::Spec.new do |s|
   s.name             = 'RxComposableArchitecture'
-  s.version          = '0.1.0'
-  s.summary          = 'A short description of RxComposableArchitecture.'
-
-# This description is used to generate tags and improve search results.
-#   * Think: What does it do? Why did you write it? What is the focus?
-#   * Try to keep it short, snappy and to the point.
-#   * Write the description between the DESC delimiters below.
-#   * Finally, don't worry about the indent, CocoaPods strips it!
-
+  s.version          = '0.17.0'
+  s.summary          = 'The Composable Architecture (TCA, for short) is a library for building applications in a consistent and understandable way, with composition, testing, and ergonomics in mind.'
   s.description      = <<-DESC
-TODO: Add long description of the pod here.
+  The Composable Architecture (TCA, for short) is a library for building applications in a consistent and understandable way, with composition, testing, and ergonomics in mind. 
+  This library is based on PointFree's Swift Composable Architecture.
                        DESC
 
-  s.homepage         = 'https://github.com/andreyyoshua/RxComposableArchitecture'
+  s.homepage         = 'https://github.com/tokopedia/RxComposableArchitecture'
   # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
-  s.author           = { 'andreyyoshua' => 'andrey.yoshua@gmail.com' }
-  s.source           = { :git => 'https://github.com/andreyyoshua/RxComposableArchitecture.git', :tag => s.version.to_s }
-  # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
+  s.author           = { 'tokopedia' => 'ios@tokopedia.com' }
+  s.source           = { :git => 'https://github.com/tokopedia/RxComposableArchitecture.git', :tag => s.version.to_s }
+  s.social_media_url = 'https://twitter.com/tokopedia'
 
-  s.ios.deployment_target = '10.0'
+  s.ios.deployment_target = '11.0'
 
   s.source_files = [
-    'RxComposableArchitecture/Classes/**/*',
-    'DiffingInterface/**/*.swift',
-    'DiffingUtility/**/*.swift'
+    'Sources/RxComposableArchitecture/**/*'
   ]
-  
-  # s.resource_bundles = {
-  #   'RxComposableArchitecture' => ['RxComposableArchitecture/Assets/*.png']
-  # }
-
-  # s.public_header_files = 'Pod/Classes/**/*.h'
-  # s.frameworks = 'UIKit', 'MapKit'
   s.dependency 'RxSwift', '5.1.1'
   s.dependency 'RxCocoa', '5.1.1'
   s.dependency 'CasePaths'
-  
-#  s.subspec 'DiffingInterface' do |diffingInterface|
-#      diffingInterface.dependency 'Alamofire'
-#      diffingInterface.source_files = 'DiffingInterface/**/*.swift'
-#  end
-#
-#  s.subspec 'DiffingUtility' do |diffingUtility|
-#      diffingUtility.source_files = 'DiffingUtility/**/*.swift'
-#  end
   
 end
