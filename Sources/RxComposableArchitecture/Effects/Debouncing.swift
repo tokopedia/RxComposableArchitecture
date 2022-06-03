@@ -30,7 +30,7 @@ extension Effect {
     ) -> Effect<Element> {
         Observable.just(())
             .delay(dueTime, scheduler: scheduler)
-            .flatMap { self }
+            .flatMap { self.observeOn(scheduler) }
             .eraseToEffect()
             .cancellable(id: id, cancelInFlight: true)
     }

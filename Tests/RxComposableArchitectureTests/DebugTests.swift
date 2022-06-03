@@ -571,59 +571,6 @@ internal final class DebugTests: XCTestCase {
         )
     }
 
-    internal func testComplexDiff2() {
-        let before = """
-        AppState(
-          login: LoginState(
-            alertData: nil,
-            email: "a",
-            isFormValid: true,
-            isLoginRequestInFlight: true,
-            password: "a",
-            twoFactor: nil
-          ),
-          newGame: nil
-        )
-        """
-
-        let after = """
-        AppState(
-          login: LoginState(
-            alertData: AlertData(
-              title: "The operation couldn’t be completed. (AuthenticationClient.AuthenticationError error 0.)"
-            ),
-            email: "a",
-            isFormValid: true,
-            isLoginRequestInFlight: false,
-            password: "a",
-            twoFactor: nil
-          ),
-          newGame: nil
-        )
-        """
-
-        XCTAssertEqual(
-            debugDiff(before, after, printer: { $0 })!,
-            """
-              AppState(
-                login: LoginState(
-            −     alertData: nil,
-            +     alertData: AlertData(
-            +       title: "The operation couldn’t be completed. (AuthenticationClient.AuthenticationError error 0.)"
-            +     ),
-                  email: "a",
-                  isFormValid: true,
-            −     isLoginRequestInFlight: true,
-            +     isLoginRequestInFlight: false,
-                  password: "a",
-                  twoFactor: nil
-                ),
-                newGame: nil
-              )
-            """
-        )
-    }
-
     internal func testComplexDiff3() {
         let before = """
         B
