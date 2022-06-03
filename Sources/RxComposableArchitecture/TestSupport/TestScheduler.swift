@@ -6,6 +6,7 @@
 //  Copyright © 2022 CocoaPods. All rights reserved.
 //
 
+#if DEBUG
 import Foundation
 import RxSwift
 
@@ -70,3 +71,4 @@ public class TestScheduler: _VirtualTimeScheduler<TestSchedulerVirtualTimeConver
         super.init(initialClock: initialClock, converter: TestSchedulerVirtualTimeConverter())
     }
 }
+#endif

@@ -6,6 +6,7 @@
 //  Copyright © 2022 CocoaPods. All rights reserved.
 //
 
+#if DEBUG
 import Foundation
 
 // this is a copy pasted code, so don't wanna bother much with linting
@@ -113,3 +114,5 @@ extension PriorityQueue: CustomDebugStringConvertible {
         return _elements.debugDescription
     }
 }
+
+#endif
