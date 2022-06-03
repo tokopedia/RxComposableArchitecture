@@ -1,11 +1,4 @@
-//
-//  TestStore.swift
-//  RxComposableArchitecture_Tests
-//
-//  Created by jefferson.setiawan on 13/05/22.
-//  Copyright © 2022 CocoaPods. All rights reserved.
-//
-
+#if DEBUG
 import Foundation
 import RxSwift
 
@@ -213,9 +206,9 @@ public final class TestStore<State, LocalState, Action: Equatable, LocalAction, 
                 let effect = LongLivingEffect(file: action.file, line: action.line)
                 return effects
                     .do(
-                        onCompleted: { longLivingEffects.remove(effect) },
-                        onSubscribe: { longLivingEffects.insert(effect) },
-                        onDispose: { longLivingEffects.remove(effect) }
+                        onCompleted: { [weak self] in self?.longLivingEffects.remove(effect) },
+                        onSubscribe: { [weak self] in self?.longLivingEffects.insert(effect) },
+                        onDispose: { [weak self] in self?.longLivingEffects.remove(effect) }
                     )
                     .map { .init(origin: .receive($0), file: action.file, line: action.line) }
                     .eraseToEffect()
@@ -689,3 +682,4 @@ extension TestStore {
         }
     }
 }
+#endif
