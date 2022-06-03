@@ -9,7 +9,7 @@ import RxSwift
 import UIKit
 
 class UIScrollVC: UIViewController {
-    private let scrollView: UIScrollView = {
+    let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.keyboardDismissMode = .interactive
         return scrollView

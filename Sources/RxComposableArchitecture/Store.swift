@@ -194,6 +194,16 @@ public final class Store<State, Action> {
     }
 }
 
+extension Store {
+    public func subscribeNeverEqual<LocalState: Equatable>(
+        _ toLocalState: @escaping (State) -> NeverEqual<LocalState>
+    ) -> Effect<LocalState> {
+        relay.map(toLocalState).distinctUntilChanged()
+            .map(\.wrappedValue)
+            .eraseToEffect()
+    }
+}
+
 extension Store where State: Equatable {
     public func subscribe() -> Effect<State> {
         return relay.distinctUntilChanged().eraseToEffect()

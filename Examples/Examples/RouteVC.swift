@@ -14,6 +14,7 @@ class RouteVC: UITableViewController {
         case environment = "2. Environment"
         case scoping = "3. Scope"
         case pullback = "4. Pullback"
+        case neverEqual = "6. Demo NeverEqual"
     }
 
     internal var routes: [Route] = Route.allCases
@@ -48,6 +49,13 @@ class RouteVC: UITableViewController {
             let viewController = PullbackVC(store: Store(
                 initialState: PullbackState(),
                 reducer: pullbackReducer,
+                environment: ()
+            ))
+            navigationController?.pushViewController(viewController, animated: true)
+        case .neverEqual:
+            let viewController = NeverEqualVC(store: Store(
+                initialState: NeverEqualState(),
+                reducer: neverEqualDemoReducer,
                 environment: ()
             ))
             navigationController?.pushViewController(viewController, animated: true)
