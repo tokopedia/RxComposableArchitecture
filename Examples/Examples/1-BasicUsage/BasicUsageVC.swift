@@ -9,28 +9,22 @@ import RxComposableArchitecture
 import RxSwift
 import UIKit
 
-class BasicUsageVC: UIViewController {
+class BasicUsageVC: UIScrollVC {
     private let explanationTextView: UILabel = {
         let text = UILabel()
         text.text = "This is a demo for Basic usage State, Action, Reducer, and how to bind it to the UI"
         text.numberOfLines = 0
         return text
     }()
-    private let plusButton: UIButton = {
-        let btn = UIButton()
-        btn.setTitle("+", for: .normal)
-        btn.setTitleColor(.blue, for: .normal)
-        return btn
-    }()
+    private let plusButton = UIButton.template(title: "+")
     
-    private let minusButton: UIButton = {
-        let btn = UIButton()
-        btn.setTitle("-", for: .normal)
-        btn.setTitleColor(.blue, for: .normal)
-        return btn
-    }()
+    private let minusButton = UIButton.template(title: "-")
     
-    private let numberLabel = UILabel()
+    private let numberLabel: UILabel = {
+        let label = UILabel()
+        label.font = .preferredFont(forTextStyle: .largeTitle)
+        return label
+    }()
     
     private let errorLabel: UILabel = {
         let label = UILabel()
@@ -39,32 +33,21 @@ class BasicUsageVC: UIViewController {
     }()
     
     private let store: Store<BasicState, BasicAction>
-    private let disposeBag = DisposeBag()
     
     init(store: Store<BasicState, BasicAction>) {
         self.store = store
-        super.init(nibName: nil, bundle: nil)
-        title = "Basic Usage"
+        super.init()
+        title = "Basic Usage of State, Action & Reducer"
     }
     
     override func loadView() {
         super.loadView()
-        view.backgroundColor = .systemBackground
-        let horizontalStack = UIStackView(arrangedSubviews: [minusButton, numberLabel, plusButton])
+        let horizontalStack = UIStackView.horizontal(subviews: [minusButton, numberLabel, plusButton])
         horizontalStack.alignment = .center
-        let stack = UIStackView(arrangedSubviews: [explanationTextView, horizontalStack, errorLabel])
-        stack.axis = .vertical
+        let stack = UIStackView.vertical(subviews: [explanationTextView, horizontalStack, errorLabel], spacing: 16)
         stack.alignment = .center
-        horizontalStack.translatesAutoresizingMaskIntoConstraints = false
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(stack)
-        
-        NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            stack.bottomAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor),
-        ])
+        contentView.addSubview(stack)
+        stack.fillSuperview()
     }
     
     override func viewDidLoad() {
