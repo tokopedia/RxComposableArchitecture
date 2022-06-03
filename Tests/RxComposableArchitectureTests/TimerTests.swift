@@ -7,7 +7,6 @@
 
 import RxComposableArchitecture
 import RxSwift
-//import TestSupport
 import XCTest
 
 internal final class TimerTests: XCTestCase {
@@ -69,50 +68,38 @@ internal final class TimerTests: XCTestCase {
     internal func testTimerCancellation() {
         let scheduler = TestScheduler(initialClock: 0)
 
-        var count2 = 0
-        var count3 = 0
+        var firstCount = 0
+        var secondCount = 0
 
         struct CancelToken: Hashable {}
 
-        Effect.merge(
-            Effect<Int>.timer(id: CancelToken(), every: .seconds(2), on: scheduler)
-                .do(onNext: { _ in count2 += 1 })
-                .eraseToEffect(),
-            Effect<Int>.timer(id: CancelToken(), every: .seconds(3), on: scheduler)
-                .do(onNext: { _ in count3 += 1 })
-                .eraseToEffect(),
-            Observable.just(())
-                .delay(.seconds(31), scheduler: scheduler)
-                .flatMap { Effect.cancel(id: CancelToken()) }
-                .eraseToEffect()
-        )
-        .subscribe(onNext: { _ in })
-        .disposed(by: disposeBag)
+        Effect<Int>.timer(id: CancelToken(), every: .seconds(2), on: scheduler)
+            .do(onNext: { _ in firstCount += 1 })
+            .subscribe(onNext: { _ in })
+            .disposed(by: disposeBag)
 
-        scheduler.advance(by: .seconds(1))
+        scheduler.advance(by: .seconds(2))
 
-        XCTAssertEqual(count2, 0)
-        XCTAssertEqual(count3, 0)
+        XCTAssertEqual(firstCount, 1)
 
-        scheduler.advance(by: .seconds(1))
+        scheduler.advance(by: .seconds(2))
 
-        XCTAssertEqual(count2, 1)
-        XCTAssertEqual(count3, 0)
+        XCTAssertEqual(firstCount, 2)
 
-        scheduler.advance(by: .seconds(1))
+        Effect<Int>.timer(id: CancelToken(), every: .seconds(2), on: scheduler)
+            .do(onNext: { _ in secondCount += 1 })
+            .subscribe(onNext: { _ in })
+            .disposed(by: disposeBag)
 
-        XCTAssertEqual(count2, 1)
-        XCTAssertEqual(count3, 1)
+        scheduler.advance(by: .seconds(2))
 
-        scheduler.advance(by: .seconds(1))
+        XCTAssertEqual(firstCount, 2)
+        XCTAssertEqual(secondCount, 1)
 
-        XCTAssertEqual(count2, 2)
-        XCTAssertEqual(count3, 1)
+        scheduler.advance(by: .seconds(2))
 
-        scheduler.run()
-
-        XCTAssertEqual(count2, 15)
-        XCTAssertEqual(count3, 10)
+        XCTAssertEqual(firstCount, 2)
+        XCTAssertEqual(secondCount, 2)
     }
 
     internal func testTimerCompletion() {
