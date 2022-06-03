@@ -1,3 +1,4 @@
+#if DEBUG
 import Foundation
 import RxSwift
 
@@ -274,3 +275,4 @@ extension VirtualTimeComparison {
         return self == .equal
     }
 }
+#endif
