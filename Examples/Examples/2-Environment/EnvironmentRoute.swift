@@ -1,19 +1,19 @@
 //
-//  RouteVC.swift
+//  EnvironmentRoute.swift
 //  Examples
 //
-//  Created by jefferson.setiawan on 17/05/22.
+//  Created by jefferson.setiawan on 02/06/22.
 //
 
 import RxComposableArchitecture
 import UIKit
 
-class RouteVC: UITableViewController {
+class EnvironmentRouteVC: UITableViewController {
     internal enum Route: String, CaseIterable {
-        case basic = "1. State, Action, Reducer"
-        case environment = "2. Environment"
-        case scoping = "3. Scope"
-        case pullback = "4. Pullback"
+        case live = "Live"
+        case mockSuccess = "Mock always success get data"
+        case mockFailed = "Mock always failed get data"
+        case mockRandom = "Mock random succcess and failed"
     }
 
     internal var routes: [Route] = Route.allCases
@@ -28,27 +28,32 @@ class RouteVC: UITableViewController {
 
         let selectedRoute = routes[indexPath.row]
         switch selectedRoute {
-        case .basic:
-            let viewController = BasicUsageVC(store: Store(
-                initialState: BasicState(number: 0),
-                reducer: basicUsageReducer,
-                environment: ()
+        case .live:
+            let viewController = EnvironmentDemoVC(store: Store(
+                initialState: EnvironmentState(),
+                reducer: environmentReducer,
+                environment: EnvironmentVCEnvironment.live
             ))
             navigationController?.pushViewController(viewController, animated: true)
-        case .environment:
-            navigationController?.pushViewController(EnvironmentRouteVC(), animated: true)
-        case .scoping:
-            let viewController = ScopingVC(store: Store(
-                initialState: ScopingState(),
-                reducer: scopingReducer,
-                environment: ()
+        case .mockSuccess:
+            let viewController = EnvironmentDemoVC(store: Store(
+                initialState: EnvironmentState(),
+                reducer: environmentReducer,
+                environment: EnvironmentVCEnvironment.mockSuccess
             ))
             navigationController?.pushViewController(viewController, animated: true)
-        case .pullback:
-            let viewController = PullbackVC(store: Store(
-                initialState: PullbackState(),
-                reducer: pullbackReducer,
-                environment: ()
+        case .mockFailed:
+            let viewController = EnvironmentDemoVC(store: Store(
+                initialState: EnvironmentState(),
+                reducer: environmentReducer,
+                environment: EnvironmentVCEnvironment.mockFailed
+            ))
+            navigationController?.pushViewController(viewController, animated: true)
+        case .mockRandom:
+            let viewController = EnvironmentDemoVC(store: Store(
+                initialState: EnvironmentState(),
+                reducer: environmentReducer,
+                environment: EnvironmentVCEnvironment.mockRandom
             ))
             navigationController?.pushViewController(viewController, animated: true)
         }
