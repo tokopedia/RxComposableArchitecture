@@ -44,7 +44,7 @@ class OptionalIfLetVC: UIScrollVC {
         stackView = UIStackView.vertical(subviews: [
             explanationTextView,
             textLabel,
-            UIStackView.horizontal(subviews: [switchLabelView, switchView])
+            UIStackView.horizontal(subviews: [switchLabelView, switchView], spacing: 16)
         ], spacing: 8)
         stackView.alignment = .center
         super.init()
