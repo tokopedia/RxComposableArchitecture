@@ -32,6 +32,9 @@
 		1D6402E32849BC3400C4F882 /* EnvironmentReducerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402E22849BC3400C4F882 /* EnvironmentReducerTests.swift */; };
 		1D6402E52849BF3200C4F882 /* ScopingReducerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402E42849BF3200C4F882 /* ScopingReducerTests.swift */; };
 		1D6402E72849C04800C4F882 /* PullbackReducerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402E62849C04800C4F882 /* PullbackReducerTests.swift */; };
+		1D6402F1284D9F4500C4F882 /* OptionalIfLetVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402F0284D9F4500C4F882 /* OptionalIfLetVC.swift */; };
+		1D6402F3284D9FF400C4F882 /* OptionalIfLetVC+Reducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402F2284D9FF400C4F882 /* OptionalIfLetVC+Reducer.swift */; };
+		1D6402F5284DA4CA00C4F882 /* OptionalIfLetReducerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402F4284DA4CA00C4F882 /* OptionalIfLetReducerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,6 +84,9 @@
 		1D6402E22849BC3400C4F882 /* EnvironmentReducerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReducerTests.swift; sourceTree = "<group>"; };
 		1D6402E42849BF3200C4F882 /* ScopingReducerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScopingReducerTests.swift; sourceTree = "<group>"; };
 		1D6402E62849C04800C4F882 /* PullbackReducerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PullbackReducerTests.swift; sourceTree = "<group>"; };
+		1D6402F0284D9F4500C4F882 /* OptionalIfLetVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionalIfLetVC.swift; sourceTree = "<group>"; };
+		1D6402F2284D9FF400C4F882 /* OptionalIfLetVC+Reducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OptionalIfLetVC+Reducer.swift"; sourceTree = "<group>"; };
+		1D6402F4284DA4CA00C4F882 /* OptionalIfLetReducerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionalIfLetReducerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -134,6 +140,7 @@
 		1D43C28A2833C36C009C1A8B /* Examples */ = {
 			isa = PBXGroup;
 			children = (
+				1D6402EF284D9F3700C4F882 /* 5-OptionalIfLet */,
 				1D6402DD2849B5AB00C4F882 /* 4-Pullback */,
 				1D6402D82849A1D600C4F882 /* 3-Scope */,
 				1D6402CB2849815600C4F882 /* Helper */,
@@ -156,6 +163,7 @@
 				1D6402E22849BC3400C4F882 /* EnvironmentReducerTests.swift */,
 				1D6402E42849BF3200C4F882 /* ScopingReducerTests.swift */,
 				1D6402E62849C04800C4F882 /* PullbackReducerTests.swift */,
+				1D6402F4284DA4CA00C4F882 /* OptionalIfLetReducerTests.swift */,
 			);
 			path = ExamplesTests;
 			sourceTree = "<group>";
@@ -230,6 +238,15 @@
 				1D6402E02849B5E700C4F882 /* PullbackVC.swift */,
 			);
 			path = "4-Pullback";
+			sourceTree = "<group>";
+		};
+		1D6402EF284D9F3700C4F882 /* 5-OptionalIfLet */ = {
+			isa = PBXGroup;
+			children = (
+				1D6402F0284D9F4500C4F882 /* OptionalIfLetVC.swift */,
+				1D6402F2284D9FF400C4F882 /* OptionalIfLetVC+Reducer.swift */,
+			);
+			path = "5-OptionalIfLet";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -367,9 +384,11 @@
 			files = (
 				1D6402D12849855B00C4F882 /* EnvironmentDemoVC+Reducer.swift in Sources */,
 				1D43C2902833C36C009C1A8B /* RouteVC.swift in Sources */,
+				1D6402F3284D9FF400C4F882 /* OptionalIfLetVC+Reducer.swift in Sources */,
 				1D6402D3284985B700C4F882 /* EnvironmentVC+Mock.swift in Sources */,
 				1D6402CF284981DD00C4F882 /* UIView+AutoLayout.swift in Sources */,
 				1D43C2C12833CBA7009C1A8B /* BasicUsageVC.swift in Sources */,
+				1D6402F1284D9F4500C4F882 /* OptionalIfLetVC.swift in Sources */,
 				1D6402DA2849A1DA00C4F882 /* ScopingVC+Reducer.swift in Sources */,
 				1D6402DC2849A1E400C4F882 /* ScopingVC.swift in Sources */,
 				1D43C28C2833C36C009C1A8B /* AppDelegate.swift in Sources */,
@@ -389,6 +408,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1D6402F5284DA4CA00C4F882 /* OptionalIfLetReducerTests.swift in Sources */,
 				1D6402E72849C04800C4F882 /* PullbackReducerTests.swift in Sources */,
 				1D6402E52849BF3200C4F882 /* ScopingReducerTests.swift in Sources */,
 				1D6402E32849BC3400C4F882 /* EnvironmentReducerTests.swift in Sources */,

@@ -5,8 +5,7 @@
 # 2. Using wildcard. /foo/bar/* will capture changes in /foo/bar/baz.txt but not in /foo/bar/baz/quux/something.txt
 # 3. Forgetting to modify CODEOWNERS when modifying folder structure
 
-/DiffingInterface/ @andreyyoshua @jeffersonsetiawan @wendyliga
-/DiffingUtility/ @andreyyoshua @jeffersonsetiawan @wendyliga
-/Example/ @andreyyoshua @jeffersonsetiawan @wendyliga
-/RxComposableArchitecture/ @andreyyoshua @jeffersonsetiawan @wendyliga
+/Sources/ @andreyyoshua @jeffersonsetiawan @wendyliga
+/Examples/ @jeffersonsetiawan
+/Tests/ @jeffersonsetiawan
 /development-podspecs/ @andreyyoshua @jeffersonsetiawan @wendyliga
