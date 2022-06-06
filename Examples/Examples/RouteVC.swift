@@ -14,6 +14,7 @@ class RouteVC: UITableViewController {
         case environment = "2. Environment"
         case scoping = "3. Scope"
         case pullback = "4. Pullback"
+        case optionalIfLet = "5. IfLet & Reducer.optional"
         case neverEqual = "6. Demo NeverEqual"
     }
 
@@ -49,6 +50,13 @@ class RouteVC: UITableViewController {
             let viewController = PullbackVC(store: Store(
                 initialState: PullbackState(),
                 reducer: pullbackReducer,
+                environment: ()
+            ))
+            navigationController?.pushViewController(viewController, animated: true)
+        case .optionalIfLet:
+            let viewController = OptionalIfLetVC(store: Store(
+                initialState: OptionalIfLetState(),
+                reducer: optionalIfLetReducer,
                 environment: ()
             ))
             navigationController?.pushViewController(viewController, animated: true)
