@@ -22,7 +22,7 @@ jobs:
       - name: Select Xcode ${{ matrix.xcode }}
         run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
       - name: Run build
-        run: swift build 2>&1 | xcpretty
+        run: swift build
   unit_test:
     strategy:
       matrix:
@@ -36,4 +36,4 @@ jobs:
       - name: Select Xcode ${{ matrix.xcode }}
         run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
       - name: Run tests
-        run: swift test --enable-test-discovery --enable-code-coverage 2>&1 | xcpretty
+        run: swift test --enable-test-discovery --enable-code-coverage | xcpretty
