@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build_big_sur:
+    strategy:
+      matrix:
+        xcode:
+          - '13.0'
+          - '13.2.1'
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Run build
+        run: swift build
+  build_monterey:
+    strategy:
+      matrix:
+        xcode:
+          - '13.1'
+          - '13.4'
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v2
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Run build
+        run: swift build
+  unit_test_big_sur:
+    strategy:
+      matrix:
+        xcode:
+          - '13.0'
+          - '13.2.1'          
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Run tests
+        run: swift test --enable-test-discovery --enable-code-coverage | xcpretty
+  unit_test_monterey:
+    strategy:
+      matrix:
+        xcode:
+          - '13.1'
+          - '13.4'         
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v2
+      - name: Select Xcode ${{ matrix.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Run tests
+        run: swift test --enable-test-discovery --enable-code-coverage | xcpretty
