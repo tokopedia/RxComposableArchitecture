@@ -62,7 +62,7 @@
  }
  ```
  */
-#if DEBUG
+#if DEBUG && canImport(UIKit)
     import UIKit
 
     public struct Section {
