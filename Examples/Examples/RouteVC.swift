@@ -15,6 +15,7 @@ class RouteVC: UITableViewController {
         case scoping = "3. Scope"
         case pullback = "4. Pullback"
         case optionalIfLet = "5. IfLet & Reducer.optional"
+        case neverEqual = "6. Demo NeverEqual"
     }
 
     internal var routes: [Route] = Route.allCases
@@ -56,6 +57,13 @@ class RouteVC: UITableViewController {
             let viewController = OptionalIfLetVC(store: Store(
                 initialState: OptionalIfLetState(),
                 reducer: optionalIfLetReducer,
+                environment: ()
+            ))
+            navigationController?.pushViewController(viewController, animated: true)
+        case .neverEqual:
+            let viewController = NeverEqualVC(store: Store(
+                initialState: NeverEqualState(),
+                reducer: neverEqualDemoReducer,
                 environment: ()
             ))
             navigationController?.pushViewController(viewController, animated: true)

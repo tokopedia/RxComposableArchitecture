@@ -35,6 +35,9 @@
 		1D6402F1284D9F4500C4F882 /* OptionalIfLetVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402F0284D9F4500C4F882 /* OptionalIfLetVC.swift */; };
 		1D6402F3284D9FF400C4F882 /* OptionalIfLetVC+Reducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402F2284D9FF400C4F882 /* OptionalIfLetVC+Reducer.swift */; };
 		1D6402F5284DA4CA00C4F882 /* OptionalIfLetReducerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402F4284DA4CA00C4F882 /* OptionalIfLetReducerTests.swift */; };
+		1D6402F9284DA71E00C4F882 /* NeverEqualVC+Reducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402F7284DA71E00C4F882 /* NeverEqualVC+Reducer.swift */; };
+		1D6402FA284DA71E00C4F882 /* NeverEqualVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402F8284DA71E00C4F882 /* NeverEqualVC.swift */; };
+		1D6402FC284DA73400C4F882 /* NeverEqualReducerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402FB284DA73400C4F882 /* NeverEqualReducerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,6 +90,9 @@
 		1D6402F0284D9F4500C4F882 /* OptionalIfLetVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionalIfLetVC.swift; sourceTree = "<group>"; };
 		1D6402F2284D9FF400C4F882 /* OptionalIfLetVC+Reducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OptionalIfLetVC+Reducer.swift"; sourceTree = "<group>"; };
 		1D6402F4284DA4CA00C4F882 /* OptionalIfLetReducerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionalIfLetReducerTests.swift; sourceTree = "<group>"; };
+		1D6402F7284DA71E00C4F882 /* NeverEqualVC+Reducer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NeverEqualVC+Reducer.swift"; sourceTree = "<group>"; };
+		1D6402F8284DA71E00C4F882 /* NeverEqualVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeverEqualVC.swift; sourceTree = "<group>"; };
+		1D6402FB284DA73400C4F882 /* NeverEqualReducerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeverEqualReducerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -140,12 +146,13 @@
 		1D43C28A2833C36C009C1A8B /* Examples */ = {
 			isa = PBXGroup;
 			children = (
-				1D6402EF284D9F3700C4F882 /* 5-OptionalIfLet */,
-				1D6402DD2849B5AB00C4F882 /* 4-Pullback */,
-				1D6402D82849A1D600C4F882 /* 3-Scope */,
 				1D6402CB2849815600C4F882 /* Helper */,
 				1D6402C52848CFC200C4F882 /* 1-BasicUsage */,
 				1D6402C62848CFC700C4F882 /* 2-Environment */,
+				1D6402D82849A1D600C4F882 /* 3-Scope */,
+				1D6402DD2849B5AB00C4F882 /* 4-Pullback */,
+				1D6402EF284D9F3700C4F882 /* 5-OptionalIfLet */,
+				1D6402F6284DA71E00C4F882 /* 6-NeverEqual */,
 				1D43C28B2833C36C009C1A8B /* AppDelegate.swift */,
 				1D43C28D2833C36C009C1A8B /* SceneDelegate.swift */,
 				1D43C28F2833C36C009C1A8B /* RouteVC.swift */,
@@ -159,6 +166,7 @@
 		1D43C2A12833C36D009C1A8B /* ExamplesTests */ = {
 			isa = PBXGroup;
 			children = (
+				1D6402FB284DA73400C4F882 /* NeverEqualReducerTests.swift */,
 				1D43C2A22833C36D009C1A8B /* BasicReducerTests.swift */,
 				1D6402E22849BC3400C4F882 /* EnvironmentReducerTests.swift */,
 				1D6402E42849BF3200C4F882 /* ScopingReducerTests.swift */,
@@ -247,6 +255,15 @@
 				1D6402F2284D9FF400C4F882 /* OptionalIfLetVC+Reducer.swift */,
 			);
 			path = "5-OptionalIfLet";
+			sourceTree = "<group>";
+		};
+		1D6402F6284DA71E00C4F882 /* 6-NeverEqual */ = {
+			isa = PBXGroup;
+			children = (
+				1D6402F7284DA71E00C4F882 /* NeverEqualVC+Reducer.swift */,
+				1D6402F8284DA71E00C4F882 /* NeverEqualVC.swift */,
+			);
+			path = "6-NeverEqual";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -397,9 +414,11 @@
 				1D6402CD2849815F00C4F882 /* UIScrollVC.swift in Sources */,
 				1D6402E12849B5E700C4F882 /* PullbackVC.swift in Sources */,
 				1D6402C82848CFCF00C4F882 /* EnvironmentRoute.swift in Sources */,
+				1D6402F9284DA71E00C4F882 /* NeverEqualVC+Reducer.swift in Sources */,
 				1D3CEFCC283E49F300A5105A /* BasicUsage+Reducer.swift in Sources */,
 				1D43C28E2833C36C009C1A8B /* SceneDelegate.swift in Sources */,
 				1D6402CA2848D69300C4F882 /* EnvironmentDemoVC.swift in Sources */,
+				1D6402FA284DA71E00C4F882 /* NeverEqualVC.swift in Sources */,
 				1D6402DF2849B5B200C4F882 /* PullbackVC+Reducer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -408,6 +427,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1D6402FC284DA73400C4F882 /* NeverEqualReducerTests.swift in Sources */,
 				1D6402F5284DA4CA00C4F882 /* OptionalIfLetReducerTests.swift in Sources */,
 				1D6402E72849C04800C4F882 /* PullbackReducerTests.swift in Sources */,
 				1D6402E52849BF3200C4F882 /* ScopingReducerTests.swift in Sources */,
