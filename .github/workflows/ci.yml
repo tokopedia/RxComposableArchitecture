@@ -26,8 +26,8 @@ jobs:
     strategy:
       matrix:
         xcode:
-          - '13.0'
-          - '13.2.1'
+          - '13.1'
+          - '13.4'
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v2
@@ -52,8 +52,8 @@ jobs:
     strategy:
       matrix:
         xcode:
-          - '13.0'
-          - '13.2.1'          
+          - '13.1'
+          - '13.4'         
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v2
