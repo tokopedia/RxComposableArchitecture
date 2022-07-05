@@ -70,5 +70,9 @@ public class TestScheduler: _VirtualTimeScheduler<TestSchedulerVirtualTimeConver
     public init(initialClock: Double) {
         super.init(initialClock: initialClock, converter: TestSchedulerVirtualTimeConverter())
     }
+    
+    public func advance() {
+        advance(by: .nanoseconds(1))
+    }
 }
 #endif
