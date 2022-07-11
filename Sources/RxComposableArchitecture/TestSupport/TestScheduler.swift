@@ -6,7 +6,6 @@
 //  Copyright © 2022 CocoaPods. All rights reserved.
 //
 
-#if DEBUG
 import Foundation
 import RxSwift
 
@@ -30,6 +29,7 @@ extension DispatchTimeInterval {
     }
 }
 
+#if DEBUG
 public struct TestSchedulerVirtualTimeConverter: VirtualTimeConverterType {
     public typealias VirtualTimeUnit = Double
 
