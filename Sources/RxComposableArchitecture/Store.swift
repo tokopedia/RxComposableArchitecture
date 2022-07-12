@@ -48,7 +48,7 @@ public final class Store<State, Action> {
         )
     }
     
-    private func newSend(_ action: Action) {
+    private func newSend(_ action: Action, instrumentation: Instrumentation) {
         bufferedActions.append(action)
         guard !isSending else { return }
         
@@ -86,9 +86,9 @@ public final class Store<State, Action> {
         }
     }
 
-    public func send(_ action: Action) {
+    public func send(_ action: Action, instrumentation: Instrumentation = .shared) {
         guard !useNewScope else {
-            newSend(action)
+            newSend(action, instrumentation: instrumentation)
             return
         }
         if !isSending {
@@ -140,7 +140,8 @@ public final class Store<State, Action> {
 
     public func scope<LocalState, LocalAction>(
         state toLocalState: @escaping (State) -> LocalState,
-        action fromLocalAction: @escaping (LocalAction) -> Action
+        action fromLocalAction: @escaping (LocalAction) -> Action,
+        instrumentation: Instrumentation = .shared
     ) -> Store<LocalState, LocalAction> {
         if useNewScope {
             var isSending = false
@@ -160,7 +161,11 @@ public final class Store<State, Action> {
                 .skip(1)
                 .subscribe(onNext: { [weak localStore] newValue in
                     guard !isSending else { return }
-                    localStore?.state = toLocalState(newValue)
+                    let callbackInfo = Instrumentation.CallbackInfo<Self.Type, Any>(storeKind: Self.self, action: nil).eraseToAny()
+                    instrumentation.callback?(callbackInfo, .pre, .storeToLocal)
+                    let newState = toLocalState(newValue)
+                    instrumentation.callback?(callbackInfo, .post, .storeToLocal)
+                    localStore?.state = newState
                 })
                 .disposed(by: localStore.disposeBag)
             
@@ -187,7 +192,8 @@ public final class Store<State, Action> {
     }
 
     public func scope<LocalState>(
-        state toLocalState: @escaping (State) -> LocalState
+        state toLocalState: @escaping (State) -> LocalState,
+        instrumentation: Instrumentation = .shared
     ) -> Store<LocalState, Action> {
         scope(state: toLocalState, action: { $0 })
     }
