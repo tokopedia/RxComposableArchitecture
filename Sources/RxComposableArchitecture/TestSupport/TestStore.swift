@@ -319,11 +319,7 @@ extension TestStore where LocalState: Equatable {
             )
         }
         var expectedState = toLocalState(snapshotState)
-        store.scope(
-            state: toLocalState,
-            action: { .init(origin: .send($0), file: file, line: line) }
-        )
-            .send(action)
+        self.store.send(.init(origin: .send(action), file: file, line: line))
         do {
             try update(&expectedState)
         } catch {
