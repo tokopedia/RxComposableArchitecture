@@ -24,28 +24,16 @@ public final class Store<State, Action> {
         return relay.asObservable()
     }
 
-    private init(
-        initialState: State,
-        reducer: @escaping (inout State, Action) -> Effect<Action>,
-        useNewScope: Bool
-    ) {
-        relay = BehaviorRelay(value: initialState)
-        self.reducer = reducer
-        self.useNewScope = useNewScope
-        state = initialState
-    }
-
-    public convenience init<Environment>(
+    public init<Environment>(
         initialState: State,
         reducer: Reducer<State, Action, Environment>,
         environment: Environment,
         useNewScope: Bool = false
     ) {
-        self.init(
-            initialState: initialState,
-            reducer: { reducer.callAsFunction(&$0, $1, environment) },
-            useNewScope: useNewScope
-        )
+        relay = BehaviorRelay(value: initialState)
+        self.reducer = { state, action in reducer.run(&state, action, environment) }
+        self.useNewScope = useNewScope
+        state = initialState
     }
     
     private func newSend(_ action: Action) {
@@ -146,13 +134,14 @@ public final class Store<State, Action> {
             var isSending = false
             let localStore = Store<LocalState, LocalAction>(
                 initialState: toLocalState(state),
-                reducer: { localState, localAction in
+                reducer: Reducer { localState, localAction, _ in
                     isSending = true
                     defer { isSending = false }
                     self.send(fromLocalAction(localAction))
                     localState = toLocalState(self.state)
                     return .none
                 },
+                environment: (),
                 useNewScope: useNewScope
             )
             
@@ -168,11 +157,12 @@ public final class Store<State, Action> {
         } else {
             let localStore = Store<LocalState, LocalAction>(
                 initialState: toLocalState(state),
-                reducer: { localState, localAction in
+                reducer: Reducer { localState, localAction, _ in
                     self.send(fromLocalAction(localAction))
                     localState = toLocalState(self.state)
                     return .none
                 },
+                environment: (),
                 useNewScope: useNewScope
             )
 
@@ -285,7 +275,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
             guard let element = toLocalState(identifier, state) else { return nil }
             let localStore = Store<State.Element, LocalAction>(
                 initialState: element,
-                reducer: { localState, localAction in
+                reducer: Reducer { localState, localAction, _ in
                     isSending = true
                     defer { isSending = false }
                     self.send(fromLocalAction(localAction))
@@ -295,6 +285,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                     localState = finalState
                     return .none
                 },
+                environment: (),
                 useNewScope: useNewScope
             )
             
@@ -314,7 +305,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
 
             let localStore = Store<State.Element, LocalAction>(
                 initialState: element,
-                reducer: { localState, localAction in
+                reducer: Reducer { localState, localAction, _ in
                     self.send(fromLocalAction(localAction))
                     guard let finalState = toLocalState(identifier, self.state) else {
                         return .none
@@ -323,6 +314,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                     localState = finalState
                     return .none
                 },
+                environment: (),
                 useNewScope: useNewScope
             )
 
