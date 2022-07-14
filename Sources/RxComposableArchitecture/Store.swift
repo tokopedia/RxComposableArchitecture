@@ -290,7 +290,7 @@ public final class Store<State, Action> {
         case let .send(action, originatingAction: nil):
           runtimeWarning(
             """
-            "ViewStore.send" was called on a non-main thread with: %@ …
+            "Store.send" was called on a non-main thread with: %@ …
 
             Make sure that "ViewStore.send" is always called on the main thread, or create your \
             store via "Store.unchecked" to opt out of the main thread checker.
