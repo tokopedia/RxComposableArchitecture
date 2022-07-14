@@ -22,24 +22,14 @@ public final class Store<State, Action> {
         return relay.asObservable()
     }
 
-    private init(
-        initialState: State,
-        reducer: @escaping (inout State, Action) -> Effect<Action>
-    ) {
-        relay = BehaviorRelay(value: initialState)
-        self.reducer = reducer
-        state = initialState
-    }
-
-    public convenience init<Environment>(
+    public init<Environment>(
         initialState: State,
         reducer: Reducer<State, Action, Environment>,
         environment: Environment
     ) {
-        self.init(
-            initialState: initialState,
-            reducer: { reducer.callAsFunction(&$0, $1, environment) }
-        )
+        relay = BehaviorRelay(value: initialState)
+        self.reducer = { state, action in reducer.run(&state, action, environment) }
+        state = initialState
     }
 
     public func send(_ action: Action) {
@@ -96,11 +86,12 @@ public final class Store<State, Action> {
     ) -> Store<LocalState, LocalAction> {
         let localStore = Store<LocalState, LocalAction>(
             initialState: toLocalState(state),
-            reducer: { localState, localAction in
+            reducer: Reducer { localState, localAction, _ in
                 self.send(fromLocalAction(localAction))
                 localState = toLocalState(self.state)
                 return .none
-            }
+            },
+            environment: ()
         )
 
         relay
@@ -139,11 +130,12 @@ public final class Store<State, Action> {
             .map { localState in
                 let localStore = Store<LocalState, LocalAction>(
                     initialState: localState,
-                    reducer: { localState, localAction in
+                    reducer: Reducer { localState, localAction, _ in
                         self.send(fromLocalAction(localAction))
                         localState = extractLocalState(self.state) ?? localState
                         return .none
-                    }
+                    },
+                    environment: ()
                 )
 
                 self.relay.asObservable()
@@ -262,7 +254,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
 
         let localStore = Store<State.Element, LocalAction>(
             initialState: element,
-            reducer: { localState, localAction in
+            reducer: Reducer { localState, localAction, _ in
                 self.send(fromLocalAction(localAction))
                 guard let finalState = toLocalState(identifier, self.state) else {
                     return .none
@@ -270,7 +262,8 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
 
                 localState = finalState
                 return .none
-            }
+            },
+            environment: ()
         )
 
         // reflect changes on store parent to local store
