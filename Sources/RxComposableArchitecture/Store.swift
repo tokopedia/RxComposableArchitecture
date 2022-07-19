@@ -66,18 +66,28 @@ public final class Store<State, Action> {
         )
     }
     
-    private func newSend(_ action: Action, originatingFrom originatingAction: Action? = nil) {
+    private func newSend(_ action: Action, originatingFrom originatingAction: Action? = nil, instrumentation: Instrumentation) {
         bufferedActions.append(action)
         guard !isSending else { return }
         
         isSending = true
         var currentState = state
+        let callbackInfo = Instrumentation.CallbackInfo(storeKind: Self.self, action: action, originatingAction: originatingAction).eraseToAny()
+        instrumentation.callback?(callbackInfo, .pre, .storeSend)
+        defer { instrumentation.callback?(callbackInfo, .post, .storeSend) }
         defer {
+            instrumentation.callback?(callbackInfo, .pre, .storeChangeState)
+            defer { instrumentation.callback?(callbackInfo, .post, .storeChangeState) }
             self.isSending = false
             self.state = currentState
         }
         while !bufferedActions.isEmpty {
             let action = bufferedActions.removeFirst()
+            
+            let processCallbackInfo = Instrumentation.CallbackInfo(storeKind: Self.self, action: action, originatingAction: nil).eraseToAny()
+            instrumentation.callback?(processCallbackInfo, .pre, .storeProcessEvent)
+            defer { instrumentation.callback?(processCallbackInfo, .post, .storeProcessEvent) }
+            
             let effect = reducer(&currentState, action)
             
             var didComplete = false
@@ -85,7 +95,7 @@ public final class Store<State, Action> {
             
             let effectDisposable = effect.subscribe(
                 onNext: { [weak self] effectAction in
-                    self?.send(effectAction, originatingFrom: action)
+                    self?.send(effectAction, originatingFrom: action, instrumentation: instrumentation)
                 },
                 onError: { err in
                     assertionFailure("Error during effect handling: \(err.localizedDescription)")
@@ -108,9 +118,12 @@ public final class Store<State, Action> {
     public func send(_ action: Action, originatingFrom originatingAction: Action? = nil, instrumentation: Instrumentation = .shared) {
         self.threadCheck(status: .send(action, originatingAction: originatingAction))
         guard !useNewScope else {
-            newSend(action, originatingFrom: originatingAction)
+            newSend(action, originatingFrom: originatingAction, instrumentation: instrumentation)
             return
         }
+        let callbackInfo = Instrumentation.CallbackInfo(storeKind: Self.self, action: action, originatingAction: originatingAction).eraseToAny()
+        instrumentation.callback?(callbackInfo, .pre, .storeSend)
+        defer { instrumentation.callback?(callbackInfo, .post, .storeSend) }
         if !isSending {
             synchronousActionsToSend.append(action)
         } else {
@@ -123,8 +136,14 @@ public final class Store<State, Action> {
                 ? synchronousActionsToSend.removeFirst()
                 : bufferedActions.removeFirst()
 
+            let processCallbackInfo = Instrumentation.CallbackInfo(storeKind: Self.self, action: action, originatingAction: nil).eraseToAny()
+            instrumentation.callback?(processCallbackInfo, .pre, .storeProcessEvent)
+            defer { instrumentation.callback?(processCallbackInfo, .post, .storeProcessEvent) }
+            
             isSending = true
+            instrumentation.callback?(callbackInfo, .pre, .storeChangeState)
             let effect = reducer(&state, action)
+            instrumentation.callback?(callbackInfo, .post, .storeChangeState)
             isSending = false
 
             var didComplete = false
@@ -206,7 +225,11 @@ public final class Store<State, Action> {
 
             relay
                 .subscribe(onNext: { [weak localStore] newValue in
-                    localStore?.state = toLocalState(newValue)
+                    let callbackInfo = Instrumentation.CallbackInfo<Self.Type, Any>(storeKind: Self.self, action: nil).eraseToAny()
+                    instrumentation.callback?(callbackInfo, .pre, .storeToLocal)
+                    let newState = toLocalState(newValue)
+                    instrumentation.callback?(callbackInfo, .post, .storeToLocal)
+                    localStore?.state = newState
                 })
                 .disposed(by: localStore.disposeBag)
 
@@ -218,7 +241,7 @@ public final class Store<State, Action> {
         state toLocalState: @escaping (State) -> LocalState,
         instrumentation: Instrumentation = .shared
     ) -> Store<LocalState, Action> {
-        scope(state: toLocalState, action: { $0 })
+        scope(state: toLocalState, action: { $0 }, instrumentation: instrumentation)
     }
 
     /// Returns a "stateless" store by erasing state to `Void`.
@@ -338,15 +361,30 @@ public final class Store<State, Action> {
 
     public func subscribe<LocalState>(
         _ toLocalState: @escaping (State) -> LocalState,
-        removeDuplicates isDuplicate: @escaping (LocalState, LocalState) -> Bool
+        removeDuplicates isDuplicate: @escaping (LocalState, LocalState) -> Bool,
+        instrumentation: Instrumentation = .shared
     ) -> Effect<LocalState> {
-        return relay.map(toLocalState).distinctUntilChanged(isDuplicate).eraseToEffect()
+        let stateChangeCallbackInfo = Instrumentation.CallbackInfo(storeKind: Self.self, action: nil as Action?).eraseToAny()
+        return relay
+            .map {
+                instrumentation.callback?(stateChangeCallbackInfo, .pre, .viewStoreChangeState)
+                defer { instrumentation.callback?(stateChangeCallbackInfo, .post, .viewStoreChangeState) }
+                return toLocalState($0)
+            }
+            .distinctUntilChanged {
+                instrumentation.callback?(stateChangeCallbackInfo, .pre, .viewStoreDeduplicate)
+                        defer { instrumentation.callback?(stateChangeCallbackInfo, .post, .viewStoreDeduplicate) }
+                return isDuplicate($0, $1)
+            }
+            .eraseToEffect()
+//        return relay.map(toLocalState).distinctUntilChanged(isDuplicate).eraseToEffect()
     }
 
     public func subscribe<LocalState: Equatable>(
-        _ toLocalState: @escaping (State) -> LocalState
+        _ toLocalState: @escaping (State) -> LocalState,
+        instrumentation: Instrumentation = .shared
     ) -> Effect<LocalState> {
-        return relay.map(toLocalState).distinctUntilChanged().eraseToEffect()
+        return subscribe(toLocalState, removeDuplicates: ==, instrumentation: instrumentation)
     }
     
     private init<Environment>(
@@ -370,9 +408,10 @@ public final class Store<State, Action> {
 
 extension Store {
     public func subscribeNeverEqual<LocalState: Equatable>(
-        _ toLocalState: @escaping (State) -> NeverEqual<LocalState>
+        _ toLocalState: @escaping (State) -> NeverEqual<LocalState>,
+        instrumentation: Instrumentation = .shared
     ) -> Effect<LocalState> {
-        relay.map(toLocalState).distinctUntilChanged()
+        subscribe(toLocalState, removeDuplicates: ==, instrumentation: instrumentation)
             .map(\.wrappedValue)
             .eraseToEffect()
     }
@@ -416,9 +455,69 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
 
      - Returns: A new store with its domain (state and domain) transformed based on the index you set
      */
+    public func scope<LocalState, LocalAction>(
+        state toLocalState: @escaping (State) -> LocalState,
+        action fromLocalAction: @escaping (LocalAction) -> Action,
+        instrumentation: Instrumentation = .shared
+    ) -> Store<LocalState, LocalAction> {
+        self.threadCheck(status: .scope)
+        if useNewScope {
+            var isSending = false
+            let localStore = Store<LocalState, LocalAction>(
+                initialState: toLocalState(state),
+                reducer: Reducer { localState, localAction, _ in
+                    isSending = true
+                    defer { isSending = false }
+                    self.send(fromLocalAction(localAction))
+                    localState = toLocalState(self.state)
+                    return .none
+                },
+                environment: (),
+                useNewScope: useNewScope
+            )
+            
+            relay
+                .skip(1)
+                .subscribe(onNext: { [weak localStore] newValue in
+                    guard !isSending else { return }
+                    let callbackInfo = Instrumentation.CallbackInfo<Self.Type, Any>(storeKind: Self.self, action: nil).eraseToAny()
+                    instrumentation.callback?(callbackInfo, .pre, .storeToLocal)
+                    let newState = toLocalState(newValue)
+                    instrumentation.callback?(callbackInfo, .post, .storeToLocal)
+                    localStore?.state = newState
+                })
+                .disposed(by: localStore.disposeBag)
+            
+            return localStore
+        } else {
+            let localStore = Store<LocalState, LocalAction>(
+                initialState: toLocalState(state),
+                reducer: Reducer { localState, localAction, _ in
+                    self.send(fromLocalAction(localAction))
+                    localState = toLocalState(self.state)
+                    return .none
+                },
+                environment: (),
+                useNewScope: useNewScope
+            )
+
+            relay
+                .subscribe(onNext: { [weak localStore] newValue in
+                    let callbackInfo = Instrumentation.CallbackInfo<Self.Type, Any>(storeKind: Self.self, action: nil).eraseToAny()
+                    instrumentation.callback?(callbackInfo, .pre, .storeToLocal)
+                    let newState = toLocalState(newValue)
+                    instrumentation.callback?(callbackInfo, .post, .storeToLocal)
+                    localStore?.state = newState
+                })
+                .disposed(by: localStore.disposeBag)
+
+            return localStore
+        }
+    }
     public func scope<LocalAction>(
         at identifier: State.Element.IdentifierType,
-        action fromLocalAction: @escaping (LocalAction) -> Action
+        action fromLocalAction: @escaping (LocalAction) -> Action,
+        instrumentation: Instrumentation = .shared
     ) -> Store<State.Element, LocalAction>? {
         self.threadCheck(status: .scope)
         let toLocalState: (State.Element.IdentifierType, State) -> State.Element? = { identifier, state in
@@ -455,7 +554,13 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                 .skip(1)
                 .subscribe(onNext: { [weak localStore] newValue in
                     guard !isSending else { return }
-                    guard let element = toLocalState(identifier, newValue) else { return }
+                    let callbackInfo = Instrumentation.CallbackInfo<Self.Type, Any>(storeKind: Self.self, action: nil).eraseToAny()
+                    instrumentation.callback?(callbackInfo, .pre, .storeToLocal)
+                    guard let element = toLocalState(identifier, newValue) else {
+                        instrumentation.callback?(callbackInfo, .post, .storeToLocal)
+                        return
+                    }
+                    instrumentation.callback?(callbackInfo, .post, .storeToLocal)
                     localStore?.state = element
                 })
                 .disposed(by: localStore.disposeBag)
@@ -484,14 +589,17 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
             relay
                 .distinctUntilChanged()
                 .flatMapLatest { newValue -> Observable<State.Element> in
+                    let callbackInfo = Instrumentation.CallbackInfo<Self.Type, Any>(storeKind: Self.self, action: nil).eraseToAny()
+                    instrumentation.callback?(callbackInfo, .pre, .storeToLocal)
+                    
                     guard let newElement = toLocalState(identifier, newValue) else {
+                        instrumentation.callback?(callbackInfo, .post, .storeToLocal)
                         return .empty()
                     }
-
+                    instrumentation.callback?(callbackInfo, .post, .storeToLocal)
                     return .just(newElement)
                 }
                 .subscribe(onNext: { [weak localStore] newValue in
-                    print("<<< CALLED! ")
                     localStore?.state = newValue
                 })
                 .disposed(by: localStore.disposeBag)
