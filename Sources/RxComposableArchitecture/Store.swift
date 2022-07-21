@@ -329,7 +329,6 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                     return .just(newElement)
                 }
                 .subscribe(onNext: { [weak localStore] newValue in
-                    print("<<< CALLED! ")
                     localStore?.state = newValue
                 })
                 .disposed(by: localStore.disposeBag)
