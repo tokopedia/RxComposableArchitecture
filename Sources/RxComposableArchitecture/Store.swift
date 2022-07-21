@@ -39,7 +39,7 @@ public final class Store<State, Action> {
             reducer: reducer,
             environment: environment,
             useNewScope: useNewScope,
-            mainThreadChecksEnabled: true
+            mainThreadChecksEnabled: false
         )
         self.threadCheck(status: .`init`)
     }
@@ -151,11 +151,11 @@ public final class Store<State, Action> {
             var disposeKey: CompositeDisposable.DisposeKey?
 
             let effectDisposable = effect.subscribe(
-                onNext: { [weak self] action in
+                onNext: { [weak self] effectAction in
                     if isProcessingEffects {
-                        self?.synchronousActionsToSend.append(action)
+                        self?.synchronousActionsToSend.append(effectAction)
                     } else {
-                        self?.send(action)
+                        self?.send(effectAction, originatingFrom: action)
                     }
                 },
                 onError: { err in
