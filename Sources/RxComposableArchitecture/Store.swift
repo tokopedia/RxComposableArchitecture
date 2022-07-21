@@ -39,7 +39,7 @@ public final class Store<State, Action> {
             reducer: reducer,
             environment: environment,
             useNewScope: useNewScope,
-            mainThreadChecksEnabled: true
+            mainThreadChecksEnabled: false
         )
         self.threadCheck(status: .`init`)
     }
