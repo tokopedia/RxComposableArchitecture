@@ -163,9 +163,7 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
         rhsChildren.sort(by: areInIncreasingOrder)
       }
 
-    CollectionDifference<Mirror.Child>
-      let difference = rhsChildren.difference(from: lhsChildren, by: areEquivalent)
-//        let diff2 = DiffingInterfaceList.diffing(oldArray: <#T##[HashDiffable]#>, newArray: <#T##[HashDiffable]#>)
+      let difference = rhsChildren.differenceCompatibility(from: lhsChildren, by: areEquivalent)
 
       var lhsOffset = 0
       var rhsOffset = 0
