@@ -169,6 +169,8 @@ public final class TestStore<State, LocalState, Action: Equatable, LocalAction, 
     private var snapshotState: State
     private var store: Store<State, TestAction>!
     private let toLocalState: (State) -> LocalState
+    public var stateDiffMode: DiffMode = .distinct
+    public var actionDiffMode: DiffMode = .distinct
     
     private init(
         environment: Environment,
