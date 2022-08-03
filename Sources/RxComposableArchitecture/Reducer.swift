@@ -551,25 +551,13 @@ public struct Reducer<State, Action, Environment> {
     public func run(
         _ state: inout State,
         _ action: Action,
-        _ environment: Environment,
-        _ debug: (State) -> Void = { _ in }
+        _ environment: Environment
     ) -> Effect<Action> {
-        func environmentToUse() -> Environment {
-            #if DEBUG
-                if let bootstrappedEnvironment = Bootstrap.get(environment: type(of: environment)) {
-                    return bootstrappedEnvironment
-                } else {
-                    return environment
-                }
-            #else
-                return environment
-            #endif
-        }
-
-        let reducer = reducer(&state, action, environmentToUse())
-        debug(state)
-
-        return reducer
+        #if DEBUG
+            reducer(&state, action, Bootstrap.get(environment: type(of: environment)) ?? environment)
+        #else
+            reducer(&state, action, environment)
+        #endif
     }
 }
 
