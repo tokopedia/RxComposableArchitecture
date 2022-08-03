@@ -50,22 +50,18 @@ internal class RxComposableArchitectureTests: XCTestCase {
             environment: scheduler
         )
 
-        store.assert(
-            .send(.incrAndSquareLater),
-            .do { scheduler.advance(by: .seconds(1)) },
-            .receive(.squareNow) { $0 = 4 },
-            .do { scheduler.advance(by: .seconds(1)) },
-            .receive(.incrNow) { $0 = 5 },
-            .receive(.squareNow) { $0 = 25 }
-        )
+        store.send(.incrAndSquareLater)
+        scheduler.advance(by: .seconds(1))
+        store.receive(.squareNow) { $0 = 4 }
+        scheduler.advance(by: .seconds(1))
+        store.receive(.incrNow) { $0 = 5 }
+        store.receive(.squareNow) { $0 = 25 }
 
-        store.assert(
-            .send(.incrAndSquareLater),
-            .do { scheduler.advance(by: .seconds(2)) },
-            .receive(.squareNow) { $0 = 625 },
-            .receive(.incrNow) { $0 = 626 },
-            .receive(.squareNow) { $0 = 391_876 }
-        )
+        store.send(.incrAndSquareLater)
+        scheduler.advance(by: .seconds(2))
+        store.receive(.squareNow) { $0 = 625 }
+        store.receive(.incrNow) { $0 = 626 }
+        store.receive(.squareNow) { $0 = 391_876 }
     }
 
     internal func testLongLivingEffects() {
@@ -99,13 +95,11 @@ internal class RxComposableArchitectureTests: XCTestCase {
             )
         )
 
-        store.assert(
-            .send(.start),
-            .send(.incr) { $0 = 1 },
-            .do { subject.onNext(()) },
-            .receive(.incr) { $0 = 2 },
-            .send(.end)
-        )
+        store.send(.start)
+        store.send(.incr) { $0 = 1 }
+        subject.onNext(())
+        store.receive(.incr) { $0 = 2 }
+        store.send(.end)
     }
 
     internal func testCancellation() {
@@ -152,16 +146,12 @@ internal class RxComposableArchitectureTests: XCTestCase {
             )
         )
 
-        store.assert(
-            .send(.incr) { $0 = 1 },
-            .do { scheduler.advance(by: .milliseconds(1)) },
-            .receive(.response(1)) { $0 = 1 }
-        )
+        store.send(.incr) { $0 = 1 }
+        scheduler.advance(by: .milliseconds(1))
+        store.receive(.response(1))
 
-        store.assert(
-            .send(.incr) { $0 = 2 },
-            .send(.cancel),
-            .do { scheduler.run() }
-        )
+        store.send(.incr) { $0 = 2 }
+        store.send(.cancel)
+        scheduler.run()
     }
 }
