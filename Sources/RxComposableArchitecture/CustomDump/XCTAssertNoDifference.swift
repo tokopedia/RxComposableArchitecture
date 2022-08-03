@@ -37,6 +37,7 @@
 ///     you call this function.
 ///   - line: The line number where the failure occurs. The default is the line number where you
 ///     call this function.
+#if DEBUG
 public func XCTAssertNoDifference<T>(
   _ expression1: @autoclosure () throws -> T,
   _ expression2: @autoclosure () throws -> T,
@@ -87,3 +88,4 @@ public func XCTAssertNoDifference<T>(
     )
   }
 }
+#endif
