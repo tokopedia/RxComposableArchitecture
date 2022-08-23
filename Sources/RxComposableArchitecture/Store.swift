@@ -28,19 +28,23 @@ public final class Store<State, Action> {
         return relay.asObservable()
     }
 
-    public convenience init<Environment>(
+    public init<Environment>(
         initialState: State,
         reducer: Reducer<State, Action, Environment>,
         environment: Environment,
-        useNewScope: Bool = false
+        useNewScope: Bool = false,
+        mainThreadChecksEnabled: Bool = false
     ) {
-        self.init(
-            initialState: initialState,
-            reducer: reducer,
-            environment: environment,
-            useNewScope: useNewScope,
-            mainThreadChecksEnabled: false
-        )
+        relay = BehaviorRelay(value: initialState)
+        self.reducer = { state, action in reducer.run(&state, action, environment) }
+        self.useNewScope = useNewScope
+        
+        #if DEBUG
+        self.mainThreadChecksEnabled = mainThreadChecksEnabled
+        #endif
+        
+        state = initialState
+        
         self.threadCheck(status: .`init`)
     }
     
@@ -340,24 +344,6 @@ public final class Store<State, Action> {
         _ toLocalState: @escaping (State) -> LocalState
     ) -> Effect<LocalState> {
         return relay.map(toLocalState).distinctUntilChanged().eraseToEffect()
-    }
-    
-    private init<Environment>(
-        initialState: State,
-        reducer: Reducer<State, Action, Environment>,
-        environment: Environment,
-        useNewScope: Bool,
-        mainThreadChecksEnabled: Bool
-    ) {
-        relay = BehaviorRelay(value: initialState)
-        self.reducer = { state, action in reducer.run(&state, action, environment) }
-        self.useNewScope = useNewScope
-        
-        #if DEBUG
-        self.mainThreadChecksEnabled = mainThreadChecksEnabled
-        #endif
-        
-        state = initialState
     }
 }
 
