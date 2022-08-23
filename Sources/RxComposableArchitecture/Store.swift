@@ -4,7 +4,7 @@ import RxSwift
 
 public final class Store<State, Action> {
     public private(set) var state: State {
-        get { return relay.value }
+        get { relay.value }
         set { relay.accept(newValue) }
     }
 
@@ -17,6 +17,8 @@ public final class Store<State, Action> {
     private let disposeBag = DisposeBag()
     internal var effectDisposables = CompositeDisposable()
     private let relay: BehaviorRelay<State>
+    
+    private let useNewScope: Bool
 
     public var observable: Observable<State> {
         return relay.asObservable()
@@ -25,14 +27,58 @@ public final class Store<State, Action> {
     public init<Environment>(
         initialState: State,
         reducer: Reducer<State, Action, Environment>,
-        environment: Environment
+        environment: Environment,
+        useNewScope: Bool = false
     ) {
         relay = BehaviorRelay(value: initialState)
         self.reducer = { state, action in reducer.run(&state, action, environment) }
+        self.useNewScope = useNewScope
         state = initialState
+    }
+    
+    private func newSend(_ action: Action) {
+        bufferedActions.append(action)
+        guard !isSending else { return }
+        
+        isSending = true
+        var currentState = state
+        defer {
+            self.isSending = false
+            self.state = currentState
+        }
+        while !bufferedActions.isEmpty {
+            let action = bufferedActions.removeFirst()
+            let effect = reducer(&currentState, action)
+            
+            var didComplete = false
+            var disposeKey: CompositeDisposable.DisposeKey?
+            
+            let effectDisposable = effect.subscribe(
+                onNext: { [weak self] action in
+                    self?.send(action)
+                },
+                onError: { err in
+                    assertionFailure("Error during effect handling: \(err.localizedDescription)")
+                },
+                onCompleted: { [weak self] in
+                    didComplete = true
+                    if let disposeKey = disposeKey {
+                        self?.effectDisposables.remove(for: disposeKey)
+                    }
+                }
+            )
+            
+            if !didComplete {
+                disposeKey = effectDisposables.insert(effectDisposable)
+            }
+        }
     }
 
     public func send(_ action: Action) {
+        guard !useNewScope else {
+            newSend(action)
+            return
+        }
         if !isSending {
             synchronousActionsToSend.append(action)
         } else {
@@ -84,80 +130,55 @@ public final class Store<State, Action> {
         state toLocalState: @escaping (State) -> LocalState,
         action fromLocalAction: @escaping (LocalAction) -> Action
     ) -> Store<LocalState, LocalAction> {
-        let localStore = Store<LocalState, LocalAction>(
-            initialState: toLocalState(state),
-            reducer: Reducer { localState, localAction, _ in
-                self.send(fromLocalAction(localAction))
-                localState = toLocalState(self.state)
-                return .none
-            },
-            environment: ()
-        )
+        if useNewScope {
+            var isSending = false
+            let localStore = Store<LocalState, LocalAction>(
+                initialState: toLocalState(state),
+                reducer: Reducer { localState, localAction, _ in
+                    isSending = true
+                    defer { isSending = false }
+                    self.send(fromLocalAction(localAction))
+                    localState = toLocalState(self.state)
+                    return .none
+                },
+                environment: (),
+                useNewScope: useNewScope
+            )
+            
+            relay
+                .skip(1)
+                .subscribe(onNext: { [weak localStore] newValue in
+                    guard !isSending else { return }
+                    localStore?.state = toLocalState(newValue)
+                })
+                .disposed(by: localStore.disposeBag)
+            
+            return localStore
+        } else {
+            let localStore = Store<LocalState, LocalAction>(
+                initialState: toLocalState(state),
+                reducer: Reducer { localState, localAction, _ in
+                    self.send(fromLocalAction(localAction))
+                    localState = toLocalState(self.state)
+                    return .none
+                },
+                environment: (),
+                useNewScope: useNewScope
+            )
 
-        relay
-            .subscribe(onNext: { [weak localStore] newValue in
-                localStore?.state = toLocalState(newValue)
-            })
-            .disposed(by: localStore.disposeBag)
+            relay
+                .subscribe(onNext: { [weak localStore] newValue in
+                    localStore?.state = toLocalState(newValue)
+                })
+                .disposed(by: localStore.disposeBag)
 
-        return localStore
+            return localStore
+        }
     }
 
     public func scope<LocalState>(
         state toLocalState: @escaping (State) -> LocalState
     ) -> Store<LocalState, Action> {
-        scope(state: toLocalState, action: { $0 })
-    }
-
-    /// Scopes the store to a publisher of stores of more local state and local actions.
-    ///
-    /// - Parameters:
-    ///   - toLocalState: A function that transforms a publisher of `State` into a publisher of
-    ///     `LocalState`.
-    ///   - fromLocalAction: A function that transforms `LocalAction` into `Action`.
-    /// - Returns: A publisher of stores with its domain (state and action) transformed.
-    public func scope<LocalState, LocalAction>(
-        state toLocalState: @escaping (Observable<State>) -> Observable<LocalState>,
-        action fromLocalAction: @escaping (LocalAction) -> Action
-    ) -> Observable<Store<LocalState, LocalAction>> {
-        func extractLocalState(_ state: State) -> LocalState? {
-            var localState: LocalState?
-            _ = toLocalState(Observable.just(state)).subscribe(onNext: { localState = $0 })
-            return localState
-        }
-
-        return toLocalState(relay.asObservable())
-            .map { localState in
-                let localStore = Store<LocalState, LocalAction>(
-                    initialState: localState,
-                    reducer: Reducer { localState, localAction, _ in
-                        self.send(fromLocalAction(localAction))
-                        localState = extractLocalState(self.state) ?? localState
-                        return .none
-                    },
-                    environment: ()
-                )
-
-                self.relay.asObservable()
-                    .subscribe(onNext: { [weak localStore] state in
-                        guard let localStore = localStore else { return }
-                        localStore.state = extractLocalState(state) ?? localStore.state
-                    })
-                    .disposed(by: self.disposeBag)
-
-                return localStore
-            }
-    }
-
-    /// Scopes the store to a publisher of stores of more local state and local actions.
-    ///
-    /// - Parameter toLocalState: A function that transforms a publisher of `State` into a publisher
-    ///   of `LocalState`.
-    /// - Returns: A publisher of stores with its domain (state and action)
-    ///   transformed.
-    public func scope<LocalState>(
-        state toLocalState: @escaping (Observable<State>) -> Observable<LocalState>
-    ) -> Observable<Store<LocalState, Action>> {
         scope(state: toLocalState, action: { $0 })
     }
 
@@ -248,39 +269,71 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                 return state.first(where: { $0.id == identifier })
             }
         }
-
-        // skip if element on parent state wasn't found
-        guard let element = toLocalState(identifier, state) else { return nil }
-
-        let localStore = Store<State.Element, LocalAction>(
-            initialState: element,
-            reducer: Reducer { localState, localAction, _ in
-                self.send(fromLocalAction(localAction))
-                guard let finalState = toLocalState(identifier, self.state) else {
+        if useNewScope {
+            var isSending = false
+            // skip if element on parent state wasn't found
+            guard let element = toLocalState(identifier, state) else { return nil }
+            let localStore = Store<State.Element, LocalAction>(
+                initialState: element,
+                reducer: Reducer { localState, localAction, _ in
+                    isSending = true
+                    defer { isSending = false }
+                    self.send(fromLocalAction(localAction))
+                    guard let finalState = toLocalState(identifier, self.state) else {
+                        return .none
+                    }
+                    localState = finalState
                     return .none
+                },
+                environment: (),
+                useNewScope: useNewScope
+            )
+            
+            relay
+                .skip(1)
+                .subscribe(onNext: { [weak localStore] newValue in
+                    guard !isSending else { return }
+                    guard let element = toLocalState(identifier, newValue) else { return }
+                    localStore?.state = element
+                })
+                .disposed(by: localStore.disposeBag)
+            
+            return localStore
+        } else {
+            // skip if element on parent state wasn't found
+            guard let element = toLocalState(identifier, state) else { return nil }
+
+            let localStore = Store<State.Element, LocalAction>(
+                initialState: element,
+                reducer: Reducer { localState, localAction, _ in
+                    self.send(fromLocalAction(localAction))
+                    guard let finalState = toLocalState(identifier, self.state) else {
+                        return .none
+                    }
+
+                    localState = finalState
+                    return .none
+                },
+                environment: (),
+                useNewScope: useNewScope
+            )
+
+            // reflect changes on store parent to local store
+            relay
+                .distinctUntilChanged()
+                .flatMapLatest { newValue -> Observable<State.Element> in
+                    guard let newElement = toLocalState(identifier, newValue) else {
+                        return .empty()
+                    }
+
+                    return .just(newElement)
                 }
+                .subscribe(onNext: { [weak localStore] newValue in
+                    localStore?.state = newValue
+                })
+                .disposed(by: localStore.disposeBag)
 
-                localState = finalState
-                return .none
-            },
-            environment: ()
-        )
-
-        // reflect changes on store parent to local store
-        relay
-            .distinctUntilChanged()
-            .flatMapLatest { newValue -> Observable<State.Element> in
-                guard let newElement = toLocalState(identifier, newValue) else {
-                    return .empty()
-                }
-
-                return .just(newElement)
-            }
-            .subscribe(onNext: { [weak localStore] newValue in
-                localStore?.state = newValue
-            })
-            .disposed(by: localStore.disposeBag)
-
-        return localStore
+            return localStore
+        }
     }
 }
