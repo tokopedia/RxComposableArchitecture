@@ -280,7 +280,8 @@ The Composable Architecture comes with a number of tools to aid in debugging.
 
 ## Requirements
 
-The Composable Architecture depends on the Combine framework, so it requires minimum deployment targets of iOS 11.
+The RxComposableArchitecture depends on the RxSwift framework.
+It requires minimum deployment targets of iOS 11.
 
 ## Installation
 

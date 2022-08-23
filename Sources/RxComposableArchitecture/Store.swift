@@ -105,6 +105,44 @@ public final class Store<State, Action> {
         }
     }
 
+    private func newSend(_ action: Action) {
+        bufferedActions.append(action)
+        guard !isSending else { return }
+        
+        isSending = true
+        var currentState = state
+        defer {
+            self.isSending = false
+            self.state = currentState
+        }
+        while !bufferedActions.isEmpty {
+            let action = bufferedActions.removeFirst()
+            let effect = reducer(&currentState, action)
+            
+            var didComplete = false
+            var disposeKey: CompositeDisposable.DisposeKey?
+            
+            let effectDisposable = effect.subscribe(
+                onNext: { [weak self] action in
+                    self?.send(action)
+                },
+                onError: { err in
+                    assertionFailure("Error during effect handling: \(err.localizedDescription)")
+                },
+                onCompleted: { [weak self] in
+                    didComplete = true
+                    if let disposeKey = disposeKey {
+                        self?.effectDisposables.remove(for: disposeKey)
+                    }
+                }
+            )
+            
+            if !didComplete {
+                disposeKey = effectDisposables.insert(effectDisposable)
+            }
+        }
+    }
+    
     public func send(_ action: Action, originatingFrom originatingAction: Action? = nil) {
         self.threadCheck(status: .send(action, originatingAction: originatingAction))
         guard !useNewScope else {
@@ -227,10 +265,10 @@ public final class Store<State, Action> {
     }
     
     private enum ThreadCheckStatus {
-      case effectCompletion(Action)
-      case `init`
-      case scope
-      case send(Action, originatingAction: Action?)
+        case effectCompletion(Action)
+        case `init`
+        case scope
+        case send(Action, originatingAction: Action?)
     }
 
     @inline(__always)
@@ -238,94 +276,93 @@ public final class Store<State, Action> {
       #if DEBUG
         guard self.mainThreadChecksEnabled && !Thread.isMainThread
         else { return }
-
+        
         switch status {
         case let .effectCompletion(action):
-          runtimeWarning(
+            runtimeWarning(
             """
             An effect completed on a non-main thread. …
-
+            
               Effect returned from:
                 %@
-
+            
             Make sure to use ".receive(on:)" on any effects that execute on background threads to \
             receive their output on the main thread, or create your store via "Store.unchecked" to \
             opt out of the main thread checker.
-
+            
             The "Store" class is not thread-safe, and so all interactions with an instance of \
             "Store" (including all of its scopes and derived view stores) must be done on the same \
             thread.
             """,
             [debugCaseOutput(action)]
-          )
-
+            )
+            
         case .`init`:
-          runtimeWarning(
+            runtimeWarning(
             """
             A store initialized on a non-main thread. …
-
+            
             If a store is intended to be used on a background thread, create it via \
             "Store.unchecked" to opt out of the main thread checker.
-
+            
             The "Store" class is not thread-safe, and so all interactions with an instance of \
             "Store" (including all of its scopes and derived view stores) must be done on the same \
             thread.
             """
-          )
-
+            )
+            
         case .scope:
-          runtimeWarning(
+            runtimeWarning(
             """
             "Store.scope" was called on a non-main thread. …
-
+            
             Make sure to use "Store.scope" on the main thread, or create your store via \
             "Store.unchecked" to opt out of the main thread checker.
-
+            
             The "Store" class is not thread-safe, and so all interactions with an instance of \
             "Store" (including all of its scopes and derived view stores) must be done on the same \
             thread.
             """
-          )
-
+            )
+            
         case let .send(action, originatingAction: nil):
-          runtimeWarning(
+            runtimeWarning(
             """
             "Store.send" was called on a non-main thread with: %@ …
-
+            
             Make sure that "ViewStore.send" is always called on the main thread, or create your \
             store via "Store.unchecked" to opt out of the main thread checker.
-
+            
             The "Store" class is not thread-safe, and so all interactions with an instance of \
             "Store" (including all of its scopes and derived view stores) must be done on the same \
             thread.
             """,
             [debugCaseOutput(action)]
-          )
-
+            )
+            
         case let .send(action, originatingAction: .some(originatingAction)):
-          runtimeWarning(
+            runtimeWarning(
             """
             An effect published an action on a non-main thread. …
-
+            
               Effect published:
                 %@
-
+            
               Effect returned from:
                 %@
-
+            
             Make sure to use ".receive(on:)" on any effects that execute on background threads to \
             receive their output on the main thread, or create this store via "Store.unchecked" to \
             disable the main thread checker.
-
+            
             The "Store" class is not thread-safe, and so all interactions with an instance of \
             "Store" (including all of its scopes and derived view stores) must be done on the same \
             thread.
             """,
             [
-              debugCaseOutput(action),
-              debugCaseOutput(originatingAction),
-            ]
-          )
+                debugCaseOutput(action),
+                debugCaseOutput(originatingAction),
+            ])
         }
       #endif
     }
