@@ -104,44 +104,6 @@ public final class Store<State, Action> {
             }
         }
     }
-
-    private func newSend(_ action: Action) {
-        bufferedActions.append(action)
-        guard !isSending else { return }
-        
-        isSending = true
-        var currentState = state
-        defer {
-            self.isSending = false
-            self.state = currentState
-        }
-        while !bufferedActions.isEmpty {
-            let action = bufferedActions.removeFirst()
-            let effect = reducer(&currentState, action)
-            
-            var didComplete = false
-            var disposeKey: CompositeDisposable.DisposeKey?
-            
-            let effectDisposable = effect.subscribe(
-                onNext: { [weak self] action in
-                    self?.send(action)
-                },
-                onError: { err in
-                    assertionFailure("Error during effect handling: \(err.localizedDescription)")
-                },
-                onCompleted: { [weak self] in
-                    didComplete = true
-                    if let disposeKey = disposeKey {
-                        self?.effectDisposables.remove(for: disposeKey)
-                    }
-                }
-            )
-            
-            if !didComplete {
-                disposeKey = effectDisposables.insert(effectDisposable)
-            }
-        }
-    }
     
     public func send(_ action: Action, originatingFrom originatingAction: Action? = nil) {
         self.threadCheck(status: .send(action, originatingAction: originatingAction))
