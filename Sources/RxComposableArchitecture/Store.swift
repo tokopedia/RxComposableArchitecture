@@ -28,19 +28,23 @@ public final class Store<State, Action> {
         return relay.asObservable()
     }
 
-    public convenience init<Environment>(
+    public init<Environment>(
         initialState: State,
         reducer: Reducer<State, Action, Environment>,
         environment: Environment,
-        useNewScope: Bool = false
+        useNewScope: Bool = false,
+        mainThreadChecksEnabled: Bool = false
     ) {
-        self.init(
-            initialState: initialState,
-            reducer: reducer,
-            environment: environment,
-            useNewScope: useNewScope,
-            mainThreadChecksEnabled: false
-        )
+        relay = BehaviorRelay(value: initialState)
+        self.reducer = { state, action in reducer.run(&state, action, environment) }
+        self.useNewScope = useNewScope
+        
+        #if DEBUG
+        self.mainThreadChecksEnabled = mainThreadChecksEnabled
+        #endif
+        
+        state = initialState
+        
         self.threadCheck(status: .`init`)
     }
     
@@ -83,11 +87,11 @@ public final class Store<State, Action> {
         }
         while !bufferedActions.isEmpty {
             let action = bufferedActions.removeFirst()
-            
+
             let processCallbackInfo = Instrumentation.CallbackInfo(storeKind: Self.self, action: action, originatingAction: nil).eraseToAny()
             instrumentation.callback?(processCallbackInfo, .pre, .storeProcessEvent)
             defer { instrumentation.callback?(processCallbackInfo, .post, .storeProcessEvent) }
-            
+
             let effect = reducer(&currentState, action)
             
             var didComplete = false
@@ -114,7 +118,7 @@ public final class Store<State, Action> {
             }
         }
     }
-
+    
     public func send(_ action: Action, originatingFrom originatingAction: Action? = nil, instrumentation: Instrumentation = .shared) {
         self.threadCheck(status: .send(action, originatingAction: originatingAction))
         guard !useNewScope else {
@@ -256,10 +260,10 @@ public final class Store<State, Action> {
     }
     
     private enum ThreadCheckStatus {
-      case effectCompletion(Action)
-      case `init`
-      case scope
-      case send(Action, originatingAction: Action?)
+        case effectCompletion(Action)
+        case `init`
+        case scope
+        case send(Action, originatingAction: Action?)
     }
 
     @inline(__always)
@@ -267,46 +271,46 @@ public final class Store<State, Action> {
       #if DEBUG
         guard self.mainThreadChecksEnabled && !Thread.isMainThread
         else { return }
-
+        
         switch status {
         case let .effectCompletion(action):
-          runtimeWarning(
+            runtimeWarning(
             """
             An effect completed on a non-main thread. …
-
+            
               Effect returned from:
                 %@
-
+            
             Make sure to use ".receive(on:)" on any effects that execute on background threads to \
             receive their output on the main thread, or create your store via "Store.unchecked" to \
             opt out of the main thread checker.
-
+            
             The "Store" class is not thread-safe, and so all interactions with an instance of \
             "Store" (including all of its scopes and derived view stores) must be done on the same \
             thread.
             """,
             [debugCaseOutput(action)]
-          )
-
+            )
+            
         case .`init`:
-          runtimeWarning(
+            runtimeWarning(
             """
             A store initialized on a non-main thread. …
-
+            
             If a store is intended to be used on a background thread, create it via \
             "Store.unchecked" to opt out of the main thread checker.
-
+            
             The "Store" class is not thread-safe, and so all interactions with an instance of \
             "Store" (including all of its scopes and derived view stores) must be done on the same \
             thread.
             """
-          )
-
+            )
+            
         case .scope:
-          runtimeWarning(
+            runtimeWarning(
             """
             "Store.scope" was called on a non-main thread. …
-
+            
             Make sure to use "Store.scope" on the main thread, or create your store via \
             "Store.unchecked" to opt out of the main thread checker.
 
@@ -314,34 +318,34 @@ public final class Store<State, Action> {
             "Store" (including all of its scopes and derived view stores) must be done on the same \
             thread.
             """
-          )
-
+            )
+            
         case let .send(action, originatingAction: nil):
-          runtimeWarning(
+            runtimeWarning(
             """
             "Store.send" was called on a non-main thread with: %@ …
-
+            
             Make sure that "ViewStore.send" is always called on the main thread, or create your \
             store via "Store.unchecked" to opt out of the main thread checker.
-
+            
             The "Store" class is not thread-safe, and so all interactions with an instance of \
             "Store" (including all of its scopes and derived view stores) must be done on the same \
             thread.
             """,
             [debugCaseOutput(action)]
-          )
-
+            )
+            
         case let .send(action, originatingAction: .some(originatingAction)):
-          runtimeWarning(
+            runtimeWarning(
             """
             An effect published an action on a non-main thread. …
-
+            
               Effect published:
                 %@
-
+            
               Effect returned from:
                 %@
-
+            
             Make sure to use ".receive(on:)" on any effects that execute on background threads to \
             receive their output on the main thread, or create this store via "Store.unchecked" to \
             disable the main thread checker.
@@ -351,10 +355,9 @@ public final class Store<State, Action> {
             thread.
             """,
             [
-              debugCaseOutput(action),
-              debugCaseOutput(originatingAction),
-            ]
-          )
+                debugCaseOutput(action),
+                debugCaseOutput(originatingAction),
+            ])
         }
       #endif
     }
@@ -377,7 +380,6 @@ public final class Store<State, Action> {
                 return isDuplicate($0, $1)
             }
             .eraseToEffect()
-//        return relay.map(toLocalState).distinctUntilChanged(isDuplicate).eraseToEffect()
     }
 
     public func subscribe<LocalState: Equatable>(
@@ -385,24 +387,6 @@ public final class Store<State, Action> {
         instrumentation: Instrumentation = .shared
     ) -> Effect<LocalState> {
         return subscribe(toLocalState, removeDuplicates: ==, instrumentation: instrumentation)
-    }
-    
-    private init<Environment>(
-        initialState: State,
-        reducer: Reducer<State, Action, Environment>,
-        environment: Environment,
-        useNewScope: Bool,
-        mainThreadChecksEnabled: Bool
-    ) {
-        relay = BehaviorRelay(value: initialState)
-        self.reducer = { state, action in reducer.run(&state, action, environment) }
-        self.useNewScope = useNewScope
-        
-        #if DEBUG
-        self.mainThreadChecksEnabled = mainThreadChecksEnabled
-        #endif
-        
-        state = initialState
     }
 }
 
@@ -556,9 +540,9 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                     guard !isSending else { return }
                     let callbackInfo = Instrumentation.CallbackInfo<Self.Type, Any>(storeKind: Self.self, action: nil).eraseToAny()
                     instrumentation.callback?(callbackInfo, .pre, .storeToLocal)
-                    guard let element = toLocalState(identifier, newValue) else {
+                    guard let element = toLocalState(identifier, newValue) else { 
                         instrumentation.callback?(callbackInfo, .post, .storeToLocal)
-                        return
+                        return 
                     }
                     instrumentation.callback?(callbackInfo, .post, .storeToLocal)
                     localStore?.state = element
