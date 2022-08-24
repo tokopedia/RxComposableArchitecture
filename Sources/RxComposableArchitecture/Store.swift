@@ -19,6 +19,10 @@ public final class Store<State, Action> {
     private let relay: BehaviorRelay<State>
     
     private let useNewScope: Bool
+    
+    #if DEBUG
+    private let mainThreadChecksEnabled: Bool
+    #endif
 
     public var observable: Observable<State> {
         return relay.asObservable()
@@ -28,15 +32,45 @@ public final class Store<State, Action> {
         initialState: State,
         reducer: Reducer<State, Action, Environment>,
         environment: Environment,
-        useNewScope: Bool = false
+        useNewScope: Bool = false,
+        mainThreadChecksEnabled: Bool = false
     ) {
         relay = BehaviorRelay(value: initialState)
         self.reducer = { state, action in reducer.run(&state, action, environment) }
         self.useNewScope = useNewScope
+        
+        #if DEBUG
+        self.mainThreadChecksEnabled = mainThreadChecksEnabled
+        #endif
+        
         state = initialState
+        
+        self.threadCheck(status: .`init`)
     }
     
-    private func newSend(_ action: Action) {
+    /// Initializes a store from an initial state, a reducer, and an environment, and the main thread
+    /// check is disabled for all interactions with this store.
+    ///
+    /// - Parameters:
+    ///   - initialState: The state to start the application in.
+    ///   - reducer: The reducer that powers the business logic of the application.
+    ///   - environment: The environment of dependencies for the application.
+    public static func unchecked<Environment>(
+        initialState: State,
+        reducer: Reducer<State, Action, Environment>,
+        environment: Environment,
+        useNewScope: Bool = false
+    ) -> Self {
+        Self(
+            initialState: initialState,
+            reducer: reducer,
+            environment: environment,
+            useNewScope: useNewScope,
+            mainThreadChecksEnabled: false
+        )
+    }
+    
+    private func newSend(_ action: Action, originatingFrom originatingAction: Action? = nil) {
         bufferedActions.append(action)
         guard !isSending else { return }
         
@@ -54,13 +88,14 @@ public final class Store<State, Action> {
             var disposeKey: CompositeDisposable.DisposeKey?
             
             let effectDisposable = effect.subscribe(
-                onNext: { [weak self] action in
-                    self?.send(action)
+                onNext: { [weak self] effectAction in
+                    self?.send(effectAction, originatingFrom: action)
                 },
                 onError: { err in
                     assertionFailure("Error during effect handling: \(err.localizedDescription)")
                 },
                 onCompleted: { [weak self] in
+                    self?.threadCheck(status: .effectCompletion(action))
                     didComplete = true
                     if let disposeKey = disposeKey {
                         self?.effectDisposables.remove(for: disposeKey)
@@ -73,10 +108,11 @@ public final class Store<State, Action> {
             }
         }
     }
-
-    public func send(_ action: Action) {
+    
+    public func send(_ action: Action, originatingFrom originatingAction: Action? = nil) {
+        self.threadCheck(status: .send(action, originatingAction: originatingAction))
         guard !useNewScope else {
-            newSend(action)
+            newSend(action, originatingFrom: originatingAction)
             return
         }
         if !isSending {
@@ -100,11 +136,11 @@ public final class Store<State, Action> {
             var disposeKey: CompositeDisposable.DisposeKey?
 
             let effectDisposable = effect.subscribe(
-                onNext: { [weak self] action in
+                onNext: { [weak self] effectAction in
                     if isProcessingEffects {
-                        self?.synchronousActionsToSend.append(action)
+                        self?.synchronousActionsToSend.append(effectAction)
                     } else {
-                        self?.send(action)
+                        self?.send(effectAction, originatingFrom: action)
                     }
                 },
                 onError: { err in
@@ -130,6 +166,7 @@ public final class Store<State, Action> {
         state toLocalState: @escaping (State) -> LocalState,
         action fromLocalAction: @escaping (LocalAction) -> Action
     ) -> Store<LocalState, LocalAction> {
+        self.threadCheck(status: .scope)
         if useNewScope {
             var isSending = false
             let localStore = Store<LocalState, LocalAction>(
@@ -191,6 +228,109 @@ public final class Store<State, Action> {
     public var actionless: Store<State, Never> {
         func absurd<A>(_: Never) -> A {}
         return scope(state: { $0 }, action: absurd)
+    }
+    
+    private enum ThreadCheckStatus {
+        case effectCompletion(Action)
+        case `init`
+        case scope
+        case send(Action, originatingAction: Action?)
+    }
+
+    @inline(__always)
+    private func threadCheck(status: ThreadCheckStatus) {
+      #if DEBUG
+        guard self.mainThreadChecksEnabled && !Thread.isMainThread
+        else { return }
+        
+        switch status {
+        case let .effectCompletion(action):
+            runtimeWarning(
+            """
+            An effect completed on a non-main thread. …
+            
+              Effect returned from:
+                %@
+            
+            Make sure to use ".receive(on:)" on any effects that execute on background threads to \
+            receive their output on the main thread, or create your store via "Store.unchecked" to \
+            opt out of the main thread checker.
+            
+            The "Store" class is not thread-safe, and so all interactions with an instance of \
+            "Store" (including all of its scopes and derived view stores) must be done on the same \
+            thread.
+            """,
+            [debugCaseOutput(action)]
+            )
+            
+        case .`init`:
+            runtimeWarning(
+            """
+            A store initialized on a non-main thread. …
+            
+            If a store is intended to be used on a background thread, create it via \
+            "Store.unchecked" to opt out of the main thread checker.
+            
+            The "Store" class is not thread-safe, and so all interactions with an instance of \
+            "Store" (including all of its scopes and derived view stores) must be done on the same \
+            thread.
+            """
+            )
+            
+        case .scope:
+            runtimeWarning(
+            """
+            "Store.scope" was called on a non-main thread. …
+            
+            Make sure to use "Store.scope" on the main thread, or create your store via \
+            "Store.unchecked" to opt out of the main thread checker.
+            
+            The "Store" class is not thread-safe, and so all interactions with an instance of \
+            "Store" (including all of its scopes and derived view stores) must be done on the same \
+            thread.
+            """
+            )
+            
+        case let .send(action, originatingAction: nil):
+            runtimeWarning(
+            """
+            "Store.send" was called on a non-main thread with: %@ …
+            
+            Make sure that "ViewStore.send" is always called on the main thread, or create your \
+            store via "Store.unchecked" to opt out of the main thread checker.
+            
+            The "Store" class is not thread-safe, and so all interactions with an instance of \
+            "Store" (including all of its scopes and derived view stores) must be done on the same \
+            thread.
+            """,
+            [debugCaseOutput(action)]
+            )
+            
+        case let .send(action, originatingAction: .some(originatingAction)):
+            runtimeWarning(
+            """
+            An effect published an action on a non-main thread. …
+            
+              Effect published:
+                %@
+            
+              Effect returned from:
+                %@
+            
+            Make sure to use ".receive(on:)" on any effects that execute on background threads to \
+            receive their output on the main thread, or create this store via "Store.unchecked" to \
+            disable the main thread checker.
+            
+            The "Store" class is not thread-safe, and so all interactions with an instance of \
+            "Store" (including all of its scopes and derived view stores) must be done on the same \
+            thread.
+            """,
+            [
+                debugCaseOutput(action),
+                debugCaseOutput(originatingAction),
+            ])
+        }
+      #endif
     }
 
     public func subscribe<LocalState>(
@@ -259,6 +399,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
         at identifier: State.Element.IdentifierType,
         action fromLocalAction: @escaping (LocalAction) -> Action
     ) -> Store<State.Element, LocalAction>? {
+        self.threadCheck(status: .scope)
         let toLocalState: (State.Element.IdentifierType, State) -> State.Element? = { identifier, state in
             /**
              if current state is IdentifiedArray, use pre exist subscript by identifier, to improve performance
