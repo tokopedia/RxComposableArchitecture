@@ -157,18 +157,31 @@ import RxSwift
 /// wait longer than the 0.5 seconds, because if it wasn't and it delivered an action when we did
 /// not expect it would cause a test failure.
 ///
-public final class TestStore<State, LocalState, Action: Equatable, LocalAction, Environment> {
+public final class TestStore<State, LocalState, Action, LocalAction, Environment> {
+    
+    /// The current environment.
+    ///
+    /// The environment can be modified throughout a test store's lifecycle in order to influence
+    /// how it produces effects.
     public var environment: Environment
+    
+    /// The current state.
+    ///
+    /// When read from a trailing closure assertion in ``send(_:_:file:line:)`` or
+    /// ``receive(_:_:file:line:)``, it will equal the `inout` state passed to the closure.
+    public private(set) var state: State
     
     private let file: StaticString
     private let fromLocalAction: (LocalAction) -> Action
     private var line: UInt
-    private var longLivingEffects: Set<LongLivingEffect> = []
+    private var inFlightEffects: Set<LongLivingEffect> = []
     private var receivedActions: [(action: Action, state: State)] = []
     private let reducer: Reducer<State, Action, Environment>
-    private var snapshotState: State
     private var store: Store<State, TestAction>!
     private let toLocalState: (State) -> LocalState
+    
+    private let failingWhenNothingChange: Bool
+
     public var stateDiffMode: DiffMode = .distinct
     public var actionDiffMode: DiffMode = .distinct
     
@@ -179,15 +192,17 @@ public final class TestStore<State, LocalState, Action: Equatable, LocalAction, 
         initialState: State,
         line: UInt,
         reducer: Reducer<State, Action, Environment>,
-        toLocalState: @escaping (State) -> LocalState
+        toLocalState: @escaping (State) -> LocalState,
+        failingWhenNothingChange: Bool
     ) {
         self.environment = environment
         self.file = file
         self.fromLocalAction = fromLocalAction
         self.line = line
         self.reducer = reducer
-        snapshotState = initialState
+        state = initialState
         self.toLocalState = toLocalState
+        self.failingWhenNothingChange = failingWhenNothingChange
         
         store = Store(
             initialState: initialState,
@@ -196,7 +211,7 @@ public final class TestStore<State, LocalState, Action: Equatable, LocalAction, 
                 switch action.origin {
                 case let .send(localAction):
                     effects = self.reducer.run(&state, self.fromLocalAction(localAction), self.environment)
-                    self.snapshotState = state
+                    self.state = state
                     
                 case let .receive(action):
                     effects = self.reducer.run(&state, action, self.environment)
@@ -206,9 +221,9 @@ public final class TestStore<State, LocalState, Action: Equatable, LocalAction, 
                 let effect = LongLivingEffect(file: action.file, line: action.line)
                 return effects
                     .do(
-                        onCompleted: { [weak self] in self?.longLivingEffects.remove(effect) },
-                        onSubscribe: { [weak self] in self?.longLivingEffects.insert(effect) },
-                        onDispose: { [weak self] in self?.longLivingEffects.remove(effect) }
+                        onCompleted: { [weak self] in self?.inFlightEffects.remove(effect) },
+                        onSubscribe: { [weak self] in self?.inFlightEffects.insert(effect) },
+                        onDispose: { [weak self] in self?.inFlightEffects.remove(effect) }
                     )
                     .map { .init(origin: .receive($0), file: action.file, line: action.line) }
                     .eraseToEffect()
@@ -235,7 +250,7 @@ public final class TestStore<State, LocalState, Action: Equatable, LocalAction, 
                 file: file, line: line
             )
         }
-        for effect in longLivingEffects {
+        for effect in inFlightEffects {
             XCTFail(
                 """
                 An effect returned for this action is still running. It must complete before the end of \
@@ -274,6 +289,27 @@ public final class TestStore<State, LocalState, Action: Equatable, LocalAction, 
             id.hash(into: &hasher)
         }
     }
+    
+    private struct TestAction: CustomDebugStringConvertible {
+        let origin: Origin
+        let file: StaticString
+        let line: UInt
+        
+        enum Origin {
+            case send(LocalAction)
+            case receive(Action)
+        }
+        
+        var debugDescription: String {
+            switch self.origin {
+            case let .send(action):
+                return debugCaseOutput(action)
+                
+            case let .receive(action):
+                return debugCaseOutput(action)
+            }
+        }
+    }
 }
 
 extension TestStore where State == LocalState, Action == LocalAction {
@@ -287,6 +323,7 @@ extension TestStore where State == LocalState, Action == LocalAction {
         initialState: State,
         reducer: Reducer<State, Action, Environment>,
         environment: Environment,
+        failingWhenNothingChange: Bool = true,
         file: StaticString = #file,
         line: UInt = #line
     ) {
@@ -297,7 +334,8 @@ extension TestStore where State == LocalState, Action == LocalAction {
             initialState: initialState,
             line: line,
             reducer: reducer,
-            toLocalState: { $0 }
+            toLocalState: { $0 },
+            failingWhenNothingChange: failingWhenNothingChange
         )
     }
 }
@@ -305,9 +343,9 @@ extension TestStore where State == LocalState, Action == LocalAction {
 extension TestStore where LocalState: Equatable {
     public func send(
         _ action: LocalAction,
+        _ updateExpectingResult: ((inout LocalState) throws -> Void)? = nil,
         file: StaticString = #file,
-        line: UInt = #line,
-        _ update: @escaping (inout LocalState) throws -> Void = { _ in }
+        line: UInt = #line
     ) {
         if !receivedActions.isEmpty {
             var actions = ""
@@ -322,29 +360,92 @@ extension TestStore where LocalState: Equatable {
                 file: file, line: line
             )
         }
-        var expectedState = toLocalState(snapshotState)
+        var expectedState = toLocalState(self.state)
+        let previousState = self.state
         self.store.send(.init(origin: .send(action), file: file, line: line))
         do {
-            try update(&expectedState)
+            let currentState = self.state
+            self.state = previousState
+            defer { self.state = currentState }
+            try expectedStateShouldMatch(
+                expected: &expectedState,
+                actual: toLocalState(currentState),
+                modify: updateExpectingResult,
+                file: file,
+                line: line
+            )
         } catch {
             XCTFail("Threw error: \(error)", file: file, line: line)
         }
-        expectedStateShouldMatch(
-            expected: expectedState,
-            actual: toLocalState(snapshotState),
-            file: file,
-            line: line
-        )
+        
         if "\(self.file)" == "\(file)" {
             self.line = line
         }
     }
     
+    private func expectedStateShouldMatch(
+        expected: inout LocalState,
+        actual: LocalState,
+        modify: ((inout LocalState) throws -> Void)? = nil,
+        file: StaticString,
+        line: UInt
+    ) throws {
+        let current = expected
+        if let modify = modify {
+            try modify(&expected)
+        }
+        if expected != actual {
+            let difference =
+            diff(expected, actual, format: .proportional)
+                .map { "\($0.indent(by: 4))\n\n(Expected: −, Actual: +)" }
+            ?? """
+              Expected:
+              \(String(describing: expected).indent(by: 2))
+              
+              Actual:
+              \(String(describing: actual).indent(by: 2))
+              """
+            
+            let messageHeading = modify != nil
+            ? "A state change does not match expectation"
+            : "State was not expected to change, but a change occurred"
+            XCTFail(
+              """
+              \(messageHeading): …
+              
+              \(difference)
+              """,
+              file: file,
+              line: line
+            )
+        } else if expected == current && modify != nil && failingWhenNothingChange {
+            XCTFail(
+              """
+              Expected state to change, but no change occurred.
+              
+              The trailing closure made no observable modifications to state. If no change to state is \
+              expected, omit the trailing closure.
+              """,
+              file: file, line: line
+            )
+        }
+    }
+}
+
+extension TestStore where LocalState: Equatable, Action: Equatable {
+    /// Asserts an action was received from an effect and asserts when state changes.
+    ///
+    /// - Parameters:
+    ///   - expectedAction: An action expected from an effect.
+    ///   - updateExpectingResult: A closure that asserts state changed by sending the action to the
+    ///     store. The mutable state sent to this closure must be modified to match the state of the
+    ///     store after processing the given action. Do not provide a closure if no change is
+    ///     expected.
     public func receive(
         _ expectedAction: Action,
+        _ updateExpectingResult: ((inout LocalState) throws -> Void)? = nil,
         file: StaticString = #file,
-        line: UInt = #line,
-        _ update: @escaping (inout LocalState) throws -> Void = { _ in }
+        line: UInt = #line
     ) {
         guard !receivedActions.isEmpty else {
             XCTFail(
@@ -377,19 +478,20 @@ extension TestStore where LocalState: Equatable {
                 file: file, line: line
             )
         }
-        var expectedState = toLocalState(snapshotState)
+        var expectedState = toLocalState(self.state)
         do {
-            try update(&expectedState)
+            try expectedStateShouldMatch(
+                expected: &expectedState,
+                actual: toLocalState(state),
+                modify: updateExpectingResult,
+                file: file,
+                line: line
+            )
         } catch {
             XCTFail("Threw error: \(error)", file: file, line: line)
         }
-        expectedStateShouldMatch(
-            expected: expectedState,
-            actual: toLocalState(state),
-            file: file,
-            line: line
-        )
-        snapshotState = state
+        
+        self.state = state
         if "\(self.file)" == "\(file)" {
             self.line = line
         }
@@ -415,9 +517,9 @@ extension TestStore where LocalState: Equatable {
         func assert(step: Step) {
             switch step.type {
             case let .send(action, update):
-                self.send(action, file: step.file, line: step.line, update)
+                self.send(action, update, file: step.file, line: step.line)
             case let .receive(expectedAction, update):
-                self.receive(expectedAction, file: step.file, line: step.line, update)
+                self.receive(expectedAction, update, file: step.file, line: step.line)
             case let .environment(work):
                 if !self.receivedActions.isEmpty {
                     var actions = ""
@@ -472,37 +574,6 @@ extension TestStore where LocalState: Equatable {
         
         self.completed()
     }
-    
-    private func expectedStateShouldMatch(
-        expected: LocalState,
-        actual: LocalState,
-        file: StaticString,
-        line: UInt
-    ) {
-        if expected != actual {
-            let difference =
-            diff(expected, actual, format: .proportional)
-                .map { "\($0.indent(by: 4))\n\n(Expected: −, Actual: +)" }
-            ?? """
-              Expected:
-              \(String(describing: expected).indent(by: 2))
-              
-              Actual:
-              \(String(describing: actual).indent(by: 2))
-              """
-            
-            let messageHeading = "A state change does not match expectation"
-            XCTFail(
-              """
-              \(messageHeading): …
-              
-              \(difference)
-              """,
-              file: file,
-              line: line
-            )
-        }
-    }
 }
 
 extension TestStore {
@@ -528,7 +599,8 @@ extension TestStore {
             initialState: store.state,
             line: line,
             reducer: reducer,
-            toLocalState: { toLocalState(self.toLocalState($0)) }
+            toLocalState: { toLocalState(self.toLocalState($0)) },
+            failingWhenNothingChange: failingWhenNothingChange
         )
     }
     
@@ -545,6 +617,7 @@ extension TestStore {
         scope(state: toLocalState, action: { $0 })
     }
     
+    /// Deprecated
     /// A single step of a `TestStore` assertion.
     public struct Step {
         internal let type: StepType
@@ -571,11 +644,11 @@ extension TestStore {
         ///   store's state is expected to change.
         public static func send(
             _ action: LocalAction,
+            _ updateExpectingResult: ((inout LocalState) throws -> Void)? = nil,
             file: StaticString = #file,
-            line: UInt = #line,
-            _ update: @escaping (inout LocalState) throws -> Void = { _ in }
+            line: UInt = #line
         ) -> Step {
-            Step(.send(action, update), file: file, line: line)
+            Step(.send(action, updateExpectingResult), file: file, line: line)
         }
         
         /// A step that describes an action received by an effect and asserts against how the store's
@@ -588,11 +661,11 @@ extension TestStore {
         ///   the store's state is expected to change.
         public static func receive(
             _ action: Action,
+            _ updateExpectingResult: ((inout LocalState) throws -> Void)? = nil,
             file: StaticString = #file,
-            line: UInt = #line,
-            _ update: @escaping (inout LocalState) throws -> Void = { _ in }
+            line: UInt = #line
         ) -> Step {
-            Step(.receive(action, update), file: file, line: line)
+            Step(.receive(action, updateExpectingResult), file: file, line: line)
         }
         
         /// A step that updates a test store's environment.
@@ -634,22 +707,11 @@ extension TestStore {
         }
         
         internal enum StepType {
-            case send(LocalAction, (inout LocalState) throws -> Void)
-            case receive(Action, (inout LocalState) throws -> Void)
+            case send(LocalAction, ((inout LocalState) throws -> Void)?)
+            case receive(Action, ((inout LocalState) throws -> Void)?)
             case environment((inout Environment) throws -> Void)
             case `do`(() throws -> Void)
             case group(String, [Step])
-        }
-    }
-    
-    private struct TestAction {
-        let origin: Origin
-        let file: StaticString
-        let line: UInt
-        
-        enum Origin {
-            case send(LocalAction)
-            case receive(Action)
         }
     }
     

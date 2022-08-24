@@ -1,5 +1,4 @@
 import RxSwift
-//import TestSupport
 import XCTest
 
 @testable import RxComposableArchitecture
@@ -472,19 +471,16 @@ internal final class StoreTests: XCTestCase {
             },
             environment: ()
         )
-
-        store.assert(
-            .send(.initialize),
-            .send(.incrementTapped),
-            .receive(.doIncrement) {
-                $0 = 1
-            },
-            .send(.incrementTapped),
-            .receive(.doIncrement) {
-                $0 = 2
-            },
-            .do { subject.onCompleted() }
-        )
+        store.send(.initialize)
+        store.send(.incrementTapped)
+        store.receive(.doIncrement) {
+            $0 = 1
+        }
+        store.send(.incrementTapped)
+        store.receive(.doIncrement) {
+            $0 = 2
+        }
+        subject.onCompleted()
     }
     
     internal func testCoalesceSynchronousActions() {
