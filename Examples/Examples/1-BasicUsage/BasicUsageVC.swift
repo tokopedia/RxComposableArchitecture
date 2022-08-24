@@ -58,11 +58,11 @@ class BasicUsageVC: UIScrollVC {
             })
             .disposed(by: disposeBag)
         
-        store.subscribe(\.errorMessage)
-            .subscribe(onNext: { [errorLabel] in
-                errorLabel.text = $0
-            })
-            .disposed(by: disposeBag)
+//        store.subscribe(\.errorMessage)
+//            .subscribe(onNext: { [errorLabel] in
+//                errorLabel.text = $0
+//            })
+//            .disposed(by: disposeBag)
         
         plusButton.addTarget(self, action: #selector(didTapPlus), for: .touchUpInside)
         minusButton.addTarget(self, action: #selector(didTapMinus), for: .touchUpInside)
