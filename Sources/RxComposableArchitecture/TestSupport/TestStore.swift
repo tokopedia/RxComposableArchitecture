@@ -179,6 +179,8 @@ public final class TestStore<State, LocalState, Action, LocalAction, Environment
     private let reducer: Reducer<State, Action, Environment>
     private var store: Store<State, TestAction>!
     private let toLocalState: (State) -> LocalState
+    
+    private let failingWhenNothingChange: Bool
 
     public var stateDiffMode: DiffMode = .distinct
     public var actionDiffMode: DiffMode = .distinct
@@ -190,7 +192,8 @@ public final class TestStore<State, LocalState, Action, LocalAction, Environment
         initialState: State,
         line: UInt,
         reducer: Reducer<State, Action, Environment>,
-        toLocalState: @escaping (State) -> LocalState
+        toLocalState: @escaping (State) -> LocalState,
+        failingWhenNothingChange: Bool
     ) {
         self.environment = environment
         self.file = file
@@ -199,6 +202,7 @@ public final class TestStore<State, LocalState, Action, LocalAction, Environment
         self.reducer = reducer
         state = initialState
         self.toLocalState = toLocalState
+        self.failingWhenNothingChange = failingWhenNothingChange
         
         store = Store(
             initialState: initialState,
@@ -319,6 +323,7 @@ extension TestStore where State == LocalState, Action == LocalAction {
         initialState: State,
         reducer: Reducer<State, Action, Environment>,
         environment: Environment,
+        failingWhenNothingChange: Bool = true,
         file: StaticString = #file,
         line: UInt = #line
     ) {
@@ -329,7 +334,8 @@ extension TestStore where State == LocalState, Action == LocalAction {
             initialState: initialState,
             line: line,
             reducer: reducer,
-            toLocalState: { $0 }
+            toLocalState: { $0 },
+            failingWhenNothingChange: failingWhenNothingChange
         )
     }
 }
@@ -412,7 +418,7 @@ extension TestStore where LocalState: Equatable {
               file: file,
               line: line
             )
-        } else if expected == current && modify != nil {
+        } else if expected == current && modify != nil && failingWhenNothingChange {
             XCTFail(
               """
               Expected state to change, but no change occurred.
@@ -593,7 +599,8 @@ extension TestStore {
             initialState: store.state,
             line: line,
             reducer: reducer,
-            toLocalState: { toLocalState(self.toLocalState($0)) }
+            toLocalState: { toLocalState(self.toLocalState($0)) },
+            failingWhenNothingChange: failingWhenNothingChange
         )
     }
     
