@@ -1,18 +1,12 @@
-//
-//  ReducerInstrumentation.swift
-//  RxComposableArchitecture
-//
-//  Created by Wendy Liga on 28/05/20.
-//
-
-import os.signpost
 import RxSwift
+import os.signpost
 
-extension Reducer {
+@available(iOS, deprecated: 9999.0, message: "Use a 'ReducerProtocol' conformance, instead.")
+@available(macOS, deprecated: 9999.0, message: "Use a 'ReducerProtocol' conformance, instead.")
+@available(tvOS, deprecated: 9999.0, message: "Use a 'ReducerProtocol' conformance, instead.")
+@available(watchOS, deprecated: 9999.0, message: "Use a 'ReducerProtocol' conformance, instead.")
+extension AnyReducer {
     /// Instruments the reducer with
-    ///
-    /// ⚠️ Only works on iOS 12 or newer
-    ///
     /// [signposts](https://developer.apple.com/documentation/os/logging/recording_performance_data).
     /// Each invocation of the reducer will be measured by an interval, and the lifecycle of its
     /// effects will be measured with interval and event signposts.
@@ -34,18 +28,18 @@ extension Reducer {
     public func signpost(
         _ prefix: String = "",
         log: OSLog = OSLog(
-            subsystem: "com.tokopedia.Tokopedia",
+            subsystem: "co.pointfree.composable-architecture",
             category: "Reducer Instrumentation"
         )
     ) -> Self {
         if #available(iOS 12.0, *) {
             guard log.signpostsEnabled else { return self }
-
+            
             // NB: Prevent rendering as "N/A" in Instruments
             let zeroWidthSpace = "\u{200B}"
-
+            
             let prefix = prefix.isEmpty ? zeroWidthSpace : "[\(prefix)] "
-
+            
             return Self { state, action, environment in
                 var actionOutput: String!
                 if log.signpostsEnabled {
@@ -56,9 +50,9 @@ extension Reducer {
                 if log.signpostsEnabled {
                     os_signpost(.end, log: log, name: "Action")
                     return
-                        effects
-                            .effectSignpost(prefix, log: log, actionOutput: actionOutput)
-                            .eraseToEffect()
+                    effects
+                        .effectSignpost(prefix, log: log, actionOutput: actionOutput)
+                        .eraseToEffect()
                 }
                 return effects
             }
@@ -70,9 +64,10 @@ extension Reducer {
 
 extension ObservableType {
     @available(iOS 12.0, *)
+    @usableFromInline
     internal func effectSignpost(_ prefix: String, log: OSLog, actionOutput: String) -> Observable<Element> {
         let sid = OSSignpostID(log: log)
-
+        
         return `do`(
             onNext: { _ in
                 os_signpost(.event, log: log, name: "Effect Output", "%sOutput from %s", prefix, actionOutput)
@@ -93,7 +88,42 @@ extension ObservableType {
     }
 }
 
-internal func debugCaseOutput(_ value: Any) -> String {
+//extension Publisher where Failure == Never {
+//  @usableFromInline
+//  func effectSignpost(
+//    _ prefix: String,
+//    log: OSLog,
+//    actionOutput: String
+//  ) -> Publishers.HandleEvents<Self> {
+//    let sid = OSSignpostID(log: log)
+//
+//    return
+//      self
+//      .handleEvents(
+//        receiveSubscription: { _ in
+//          os_signpost(
+//            .begin, log: log, name: "Effect", signpostID: sid, "%sStarted from %s", prefix,
+//            actionOutput)
+//        },
+//        receiveOutput: { value in
+//          os_signpost(
+//            .event, log: log, name: "Effect Output", "%sOutput from %s", prefix, actionOutput)
+//        },
+//        receiveCompletion: { completion in
+//          switch completion {
+//          case .finished:
+//            os_signpost(.end, log: log, name: "Effect", signpostID: sid, "%sFinished", prefix)
+//          }
+//        },
+//        receiveCancel: {
+//          os_signpost(.end, log: log, name: "Effect", signpostID: sid, "%sCancelled", prefix)
+//        }
+//      )
+//  }
+//}
+
+@usableFromInline
+func debugCaseOutput(_ value: Any) -> String {
     func debugCaseOutputHelp(_ value: Any) -> String {
         let mirror = Mirror(reflecting: value)
         switch mirror.displayStyle {
@@ -108,17 +138,18 @@ internal func debugCaseOutput(_ value: Any) -> String {
             return mirror.children.map { label, value in
                 let childOutput = debugCaseOutputHelp(value)
                 return
-                    "\(label.map { isUnlabeledArgument($0) ? "_:" : "\($0):" } ?? "")\(childOutput.isEmpty ? "" : " \(childOutput)")"
+                "\(label.map { isUnlabeledArgument($0) ? "_:" : "\($0):" } ?? "")\(childOutput.isEmpty ? "" : " \(childOutput)")"
             }
             .joined(separator: ", ")
         default:
             return ""
         }
     }
-
-    return "\(type(of: value))\(debugCaseOutputHelp(value))"
+    
+    return (value as? CustomDebugStringConvertible)?.debugDescription
+    ?? "\(typeName(type(of: value)))\(debugCaseOutputHelp(value))"
 }
 
 private func isUnlabeledArgument(_ label: String) -> Bool {
-    !label.contains(where: { $0 != "." && !$0.isNumber })
+    label.firstIndex(where: { $0 != "." && !$0.isNumber }) == nil
 }

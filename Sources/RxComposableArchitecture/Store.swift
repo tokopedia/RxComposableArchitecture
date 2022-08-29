@@ -12,7 +12,11 @@ public final class Store<State, Action> {
     private var synchronousActionsToSend: [Action] = []
     private var bufferedActions: [Action] = []
 
+#if swift(>=5.7) && !DEBUG
+    private let reducer: any ReducerProtocol<State, Action>
+#else
     private let reducer: (inout State, Action) -> Effect<Action>
+#endif
 
     private let disposeBag = DisposeBag()
     internal var effectDisposables = CompositeDisposable()
@@ -26,6 +30,22 @@ public final class Store<State, Action> {
 
     public var observable: Observable<State> {
         return relay.asObservable()
+    }
+    
+    /// Initializes a store from an initial state and a reducer.
+    ///
+    /// - Parameters:
+    ///   - initialState: The state to start the application in.
+    ///   - reducer: The reducer that powers the business logic of the application.
+    public convenience init<R: ReducerProtocol>(
+      initialState: R.State,
+      reducer: R
+    ) where R.State == State, R.Action == Action {
+      self.init(
+        initialState: initialState,
+        reducer: reducer,
+        mainThreadChecksEnabled: true
+      )
     }
 
     public init<Environment>(
@@ -331,6 +351,29 @@ public final class Store<State, Action> {
             ])
         }
       #endif
+    }
+    
+    init<R: ReducerProtocol>(
+        initialState: R.State,
+        reducer: R,
+        useNewScope: Bool = false,
+        mainThreadChecksEnabled: Bool
+    ) where R.State == State, R.Action == Action {
+        relay = BehaviorRelay(value: initialState)
+        
+        #if swift(>=5.7) && !DEBUG
+            self.reducer = reducer
+        #else
+            self.reducer = reducer.reduce
+        #endif
+        
+        self.useNewScope = useNewScope
+        
+        #if DEBUG
+            self.mainThreadChecksEnabled = mainThreadChecksEnabled
+        #endif
+        state = initialState
+        self.threadCheck(status: .`init`)
     }
 
     public func subscribe<LocalState>(

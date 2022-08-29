@@ -1,3 +1,4 @@
+@usableFromInline
 func typeName(_ type: Any.Type) -> String {
   var name = _typeName(type)
   if let index = name.firstIndex(of: ".") {

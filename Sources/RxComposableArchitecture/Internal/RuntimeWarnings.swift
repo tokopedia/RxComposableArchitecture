@@ -6,7 +6,8 @@ import os
 //     To work around this, we hook into SwiftUI's runtime issue delivery mechanism, instead.
 //
 // Feedback filed: https://gist.github.com/stephencelis/a8d06383ed6ccde3e5ef5d1b3ad52bbc
-private let rw = (
+@usableFromInline
+let rw = (
     dso: { () -> UnsafeMutableRawPointer in
         let count = _dyld_image_count()
         for i in 0..<count {
@@ -26,27 +27,36 @@ private let rw = (
 #endif
 
 @_transparent
+@usableFromInline
 @inline(__always)
 func runtimeWarning(
     _ message: @autoclosure () -> StaticString,
-    _ args: @autoclosure () -> [CVarArg] = []
+    _ args: @autoclosure () -> [CVarArg] = [],
+    file: StaticString? = nil,
+    line: UInt? = nil
 ) {
-    #if DEBUG
+#if DEBUG
+    let message = message()
     if _XCTIsTesting {
-        XCTFail(String(format: "\(message())", arguments: args()))
+        // TODO: How to expose internal XCTFail? We don't uses XCTDynamicOverlay, so make our XCTFail public make duplicate symbol on the test.
+//        if let file = file, let line = line {
+//            XCTFail(String(format: "\(message)", arguments: args()), file: file, line: line)
+//        } else {
+//            XCTFail(String(format: "\(message)", arguments: args()))
+//        }
     } else {
         if #available(iOS 12.0, *) {
             unsafeBitCast(
                 os_log as (OSLogType, UnsafeRawPointer, OSLog, StaticString, CVarArg...) -> Void,
                 to: ((OSLogType, UnsafeRawPointer, OSLog, StaticString, [CVarArg]) -> Void).self
-            )(.fault, rw.dso, rw.log, message(), args())
+            )(.fault, rw.dso, rw.log, message, args())
         } else {
             fputs(
-                "\(message())",
+                "\(message)",
                 stderr
             )
             raise(SIGTRAP)
         }
     }
-    #endif
+#endif
 }

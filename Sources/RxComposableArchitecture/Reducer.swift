@@ -2,22 +2,28 @@ import CasePaths
 import Darwin
 import RxSwift
 
-public struct Reducer<State, Action, Environment> {
+@available(iOS, deprecated: 9999.0, renamed: "AnyReducer")
+@available(macOS, deprecated: 9999.0, renamed: "AnyReducer")
+@available(tvOS, deprecated: 9999.0, renamed: "AnyReducer")
+@available(watchOS, deprecated: 9999.0, renamed: "AnyReducer")
+public typealias Reducer = AnyReducer
+
+public struct AnyReducer<State, Action, Environment> {
     private let reducer: (inout State, Action, Environment) -> Effect<Action>
 
     public init(_ reducer: @escaping (inout State, Action, Environment) -> Effect<Action>) {
         self.reducer = reducer
     }
 
-    public static var empty: Reducer {
+    public static var empty: AnyReducer {
         Self { _, _, _ in .none }
     }
 
-    public static func combine(_ reducers: Reducer...) -> Reducer {
+    public static func combine(_ reducers: AnyReducer...) -> AnyReducer {
         .combine(reducers)
     }
 
-    public static func combine(_ reducers: [Reducer]) -> Reducer {
+    public static func combine(_ reducers: [AnyReducer]) -> AnyReducer {
         Self { value, action, environment in
             .merge(reducers.map { $0.reducer(&value, action, environment) })
         }
@@ -41,11 +47,11 @@ public struct Reducer<State, Action, Environment> {
     ///     struct AppEnvironment { var settings: SettingsEnvironment, /* rest of dependencies */ }
     ///
     ///     // A reducer that works on the local domain:
-    ///     let settingsReducer = Reducer<SettingsState, SettingsAction, SettingsEnvironment> { ... }
+    ///     let settingsAnyReducer = AnyReducer<SettingsState, SettingsAction, SettingsEnvironment> { ... }
     ///
     ///     // Pullback the settings reducer so that it works on all of the app domain:
-    ///     let appReducer: Reducer<AppState, AppAction, AppEnvironment> = .combine(
-    ///       settingsReducer.pullback(
+    ///     let appAnyReducer: AnyReducer<AppState, AppAction, AppEnvironment> = .combine(
+    ///       settingsAnyReducer.pullback(
     ///         state: \.settings,
     ///         action: /AppAction.settings,
     ///         environment: { $0.settings }
@@ -65,7 +71,7 @@ public struct Reducer<State, Action, Environment> {
         state toLocalState: WritableKeyPath<GlobalState, State>,
         action toLocalAction: CasePath<GlobalAction, Action>,
         environment toLocalEnvironment: @escaping (GlobalEnvironment) -> Environment
-    ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment> {
+    ) -> AnyReducer<GlobalState, GlobalAction, GlobalEnvironment> {
         .init { globalState, globalAction, globalEnvironment in
             guard let localAction = toLocalAction.extract(from: globalAction) else { return .none }
             return self.reducer(
@@ -81,7 +87,7 @@ public struct Reducer<State, Action, Environment> {
         state toLocalState: StatePath,
         action toLocalAction: ActionPath,
         environment toLocalEnvironment: @escaping (GlobalEnvironment) -> Environment
-    ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment>
+    ) -> AnyReducer<GlobalState, GlobalAction, GlobalEnvironment>
         where
         StatePath: WritablePath, StatePath.Root == GlobalState, StatePath.Value == State,
         ActionPath: WritablePath, ActionPath.Root == GlobalAction, ActionPath.Value == Action {
@@ -116,16 +122,16 @@ public struct Reducer<State, Action, Environment> {
     ///     struct AppEnvironment { var mainQueue: AnySchedulerOf<DispatchQueue> }
     ///
     ///     // A reducer that works on the non-optional local domain:
-    ///     let modalReducer = Reducer<ModalState, ModalAction, ModalEnvironment { ... }
+    ///     let modalAnyReducer = AnyReducer<ModalState, ModalAction, ModalEnvironment { ... }
     ///
     ///     // Pullback the local modal reducer so that it works on all of the app domain:
-    ///     let appReducer = Reducer<AppState, AppAction, AppEnvironment>.combine(
-    ///       modalReducer.optional().pullback(
+    ///     let appAnyReducer = AnyReducer<AppState, AppAction, AppEnvironment>.combine(
+    ///       modalAnyReducer.optional().pullback(
     ///         state: \.modal,
     ///         action: /AppAction.modal,
     ///         environment: { ModalEnvironment(mainQueue: $0.mainQueue) }
     ///       ),
-    ///       Reducer { state, action, environment in
+    ///       AnyReducer { state, action, environment in
     ///         ...
     ///       }
     ///     )
@@ -138,9 +144,9 @@ public struct Reducer<State, Action, Environment> {
     ///   * A parent reducer sets child state to `nil` when processing a child action and runs
     ///     _before_ the child reducer:
     ///
-    ///         let parentReducer = Reducer<ParentState, ParentAction, ParentEnvironment>.combine(
+    ///         let parentAnyReducer = AnyReducer<ParentState, ParentAction, ParentEnvironment>.combine(
     ///           // When combining reducers, the parent reducer runs first
-    ///           Reducer { state, action, environment in
+    ///           AnyReducer { state, action, environment in
     ///             switch action {
     ///             case .child(.didDisappear):
     ///               // And `nil`s out child state when processing a child action
@@ -150,10 +156,10 @@ public struct Reducer<State, Action, Environment> {
     ///             }
     ///           },
     ///           // Before the child reducer runs
-    ///           childReducer.optional().pullback(...)
+    ///           childAnyReducer.optional().pullback(...)
     ///         )
     ///
-    ///         let childReducer = Reducer<
+    ///         let childAnyReducer = AnyReducer<
     ///           ChildState, ChildAction, ChildEnvironment
     ///         > { state, action environment in
     ///           case .didDisappear:
@@ -164,18 +170,18 @@ public struct Reducer<State, Action, Environment> {
     ///     To ensure that a child reducer can process any action that a parent may use to `nil` out
     ///     its state, combine it _before_ the parent:
     ///
-    ///         let parentReducer = Reducer<ParentState, ParentAction, ParentEnvironment>.combine(
+    ///         let parentAnyReducer = AnyReducer<ParentState, ParentAction, ParentEnvironment>.combine(
     ///           // The child runs first
-    ///           childReducer.optional().pullback(...),
+    ///           childAnyReducer.optional().pullback(...),
     ///           // The parent runs after
-    ///           Reducer { state, action, environment in
+    ///           AnyReducer { state, action, environment in
     ///             ...
     ///           }
     ///         )
     ///
     ///   * A child effect feeds a child action back into the store when child state is `nil`:
     ///
-    ///         let childReducer = Reducer<
+    ///         let childAnyReducer = AnyReducer<
     ///           ChildState, ChildAction, ChildEnvironment
     ///         > { state, action environment in
     ///           switch action {
@@ -195,7 +201,7 @@ public struct Reducer<State, Action, Environment> {
     ///     for example one-off effects that you don't want to cancel. However, many long-living
     ///     effects _should_ be explicitly canceled when tearing down a child domain:
     ///
-    ///         let childReducer = Reducer<
+    ///         let childAnyReducer = AnyReducer<
     ///           ChildState, ChildAction, ChildEnvironment
     ///         > { state, action environment in
     ///           struct MotionId: Hashable {}
@@ -250,7 +256,7 @@ public struct Reducer<State, Action, Environment> {
         breakpointOnNil: Bool = true,
         _ file: StaticString = #file,
         _ line: UInt = #line
-    ) -> Reducer<
+    ) -> AnyReducer<
         State?, Action, Environment
     > {
         .init { state, action, environment in
@@ -260,7 +266,7 @@ public struct Reducer<State, Action, Environment> {
                         fputs(
                             """
                             ---
-                            Warning: Reducer.optional@\(file):\(line)
+                            Warning: AnyReducer.optional@\(file):\(line)
 
                             "\(debugCaseOutput(action))" was received by an optional reducer when its state was \
                             "nil". This is generally considered an application logic error, and can happen for a \
@@ -299,7 +305,7 @@ public struct Reducer<State, Action, Environment> {
         breakpointOnNil: Bool = true,
         _ file: StaticString = #file,
         _ line: UInt = #line
-    ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment> {
+    ) -> AnyReducer<GlobalState, GlobalAction, GlobalEnvironment> {
         .init { globalState, globalAction, globalEnvironment in
             guard let (key, localAction) = toLocalAction.extract(from: globalAction) else { return .none }
             if globalState[keyPath: toLocalState][key] == nil {
@@ -308,7 +314,7 @@ public struct Reducer<State, Action, Environment> {
                         fputs(
                             """
                             ---
-                            Warning: Reducer.forEach@\(file):\(line)
+                            Warning: AnyReducer.forEach@\(file):\(line)
 
                             "\(debugCaseOutput(localAction))" was received by a "forEach" reducer at key \(key) \
                             when its state contained no element at this key. This is generally considered an \
@@ -356,16 +362,16 @@ public struct Reducer<State, Action, Environment> {
     ///     struct AppEnvironment { var mainQueue: AnySchedulerOf<DispatchQueue> }
     ///
     ///     // A reducer that works on a local domain:
-    ///     let todoReducer = Reducer<Todo, TodoAction, TodoEnvironment> { ... }
+    ///     let todoAnyReducer = AnyReducer<Todo, TodoAction, TodoEnvironment> { ... }
     ///
     ///     // Pullback the local todo reducer so that it works on all of the app domain:
-    ///     let appReducer = Reducer<AppState, AppAction, AppEnvironment>.combine(
-    ///       todoReducer.forEach(
+    ///     let appAnyReducer = AnyReducer<AppState, AppAction, AppEnvironment>.combine(
+    ///       todoAnyReducer.forEach(
     ///         state: \.todos,
     ///         action: /AppAction.todo(id:action:),
     ///         environment: { _ in TodoEnvironment() }
     ///       ),
-    ///       Reducer { state, action, environment in
+    ///       AnyReducer { state, action, environment in
     ///         ...
     ///       }
     ///     )
@@ -391,7 +397,7 @@ public struct Reducer<State, Action, Environment> {
         breakpointOnNil: Bool = true,
         _ file: StaticString = #file,
         _ line: UInt = #line
-    ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment> {
+    ) -> AnyReducer<GlobalState, GlobalAction, GlobalEnvironment> {
         .init { globalState, globalAction, globalEnvironment in
             guard let (id, localAction) = toLocalAction.extract(from: globalAction) else { return .none }
             if globalState[keyPath: toLocalState][id: id] == nil {
@@ -400,7 +406,7 @@ public struct Reducer<State, Action, Environment> {
                         fputs(
                             """
                             ---
-                            Warning: Reducer.forEach@\(file):\(line)
+                            Warning: AnyReducer.forEach@\(file):\(line)
 
                             "\(debugCaseOutput(localAction))" was received by a "forEach" reducer at id \(id) \
                             when its state contained no element at this id. This is generally considered an \
@@ -442,7 +448,7 @@ public struct Reducer<State, Action, Environment> {
         }
     }
 
-    public func combined(with other: Reducer) -> Reducer {
+    public func combined(with other: AnyReducer) -> AnyReducer {
         .combine(self, other)
     }
 
