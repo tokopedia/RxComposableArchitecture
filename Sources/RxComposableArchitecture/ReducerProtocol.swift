@@ -244,3 +244,5 @@ extension ReducerProtocol where Body: ReducerProtocol, Body.State == State, Body
     self.body.reduce(into: &state, action: action)
   }
 }
+
+public typealias StoreOf<R: ReducerProtocol> = Store<R.State, R.Action>

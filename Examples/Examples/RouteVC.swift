@@ -32,9 +32,8 @@ class RouteVC: UITableViewController {
         switch selectedRoute {
         case .basic:
             let viewController = BasicUsageVC(store: Store(
-                initialState: BasicState(number: 0),
-                reducer: basicUsageReducer,
-                environment: ()
+                initialState: Basic.State(number: 0),
+                reducer: Basic()
             ))
             navigationController?.pushViewController(viewController, animated: true)
         case .environment:

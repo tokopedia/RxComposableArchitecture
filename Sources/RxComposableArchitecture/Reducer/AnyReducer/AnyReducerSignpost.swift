@@ -49,8 +49,7 @@ extension AnyReducer {
                 let effects = self.run(&state, action, environment)
                 if log.signpostsEnabled {
                     os_signpost(.end, log: log, name: "Action")
-                    return
-                    effects
+                    return effects
                         .effectSignpost(prefix, log: log, actionOutput: actionOutput)
                         .eraseToEffect()
                 }
@@ -137,8 +136,7 @@ func debugCaseOutput(_ value: Any) -> String {
         case .tuple:
             return mirror.children.map { label, value in
                 let childOutput = debugCaseOutputHelp(value)
-                return
-                "\(label.map { isUnlabeledArgument($0) ? "_:" : "\($0):" } ?? "")\(childOutput.isEmpty ? "" : " \(childOutput)")"
+                return "\(label.map { isUnlabeledArgument($0) ? "_:" : "\($0):" } ?? "")\(childOutput.isEmpty ? "" : " \(childOutput)")"
             }
             .joined(separator: ", ")
         default:

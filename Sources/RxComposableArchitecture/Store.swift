@@ -521,3 +521,91 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
         }
     }
 }
+
+//extension Store {
+//    @available(iOS 13.0, *)
+//    func send(
+//        _ action: Action,
+//        originatingFrom originatingAction: Action? = nil
+//    ) -> Task<Void, Never>? {
+//        self.threadCheck(status: .send(action, originatingAction: originatingAction))
+//        
+//        self.bufferedActions.append(action)
+//        guard !self.isSending else { return nil }
+//        
+//        self.isSending = true
+//        var currentState = self.state
+//        defer {
+//            self.isSending = false
+//            self.state = currentState
+//        }
+//        
+//        let tasks = Box<[Task<Void, Never>]>(wrappedValue: [])
+//        
+//        while !self.bufferedActions.isEmpty {
+//            let action = self.bufferedActions.removeFirst()
+//            #if swift(>=5.7) && !DEBUG
+//            let effect = self.reducer.reduce(into: &currentState, action: action)
+//            #else
+//            let effect = self.reducer(&currentState, action)
+//            #endif
+//            
+//            var didComplete = false
+//            var disposeKey: CompositeDisposable.DisposeKey?
+//            
+//            let boxedTask = Box<Task<Void, Never>?>(wrappedValue: nil)
+//            let effectDisposable = effect
+//                .do(onDispose: { [weak self] in
+//                    self?.threadCheck(status: .effectCompletion(action))
+//                    if let disposeKey = disposeKey {
+//                        self?.effectDisposables.remove(for: disposeKey)
+//                    }
+//                })
+//                    .subscribe(
+//                        onNext: { [weak self] effectAction in
+//                            guard let self = self else { return }
+//                            if let task = self.send(effectAction, originatingFrom: action) {
+//                                tasks.wrappedValue.append(task)
+//                            }
+//                        },
+//                        onError: { err in
+//                            assertionFailure("Error during effect handling: \(err.localizedDescription)")
+//                        },
+//                        onCompleted: { [weak self] in
+//                            self?.threadCheck(status: .effectCompletion(action))
+//                            boxedTask.wrappedValue?.cancel()
+//                            didComplete = true
+//                            if let disposeKey = disposeKey {
+//                                self?.effectDisposables.remove(for: disposeKey)
+//                            }
+//                        }
+//                    )
+//                    
+//                    if !didComplete {
+//                        let task = Task<Void, Never> { @MainActor in
+//                            for await _ in AsyncStream<Void>.never {}
+//                            effectDisposable.dispose()
+//                        }
+//                        boxedTask.wrappedValue = task
+//                        tasks.wrappedValue.append(task)
+//                        disposeKey = effectDisposables.insert(effectDisposable)
+//                    }
+//        }
+//        
+//        return Task {
+//            await withTaskCancellationHandler {
+//                var index = tasks.wrappedValue.startIndex
+//                while index < tasks.wrappedValue.endIndex {
+//                    defer { index += 1 }
+//                    tasks.wrappedValue[index].cancel()
+//                }
+//            } operation: {
+//                var index = tasks.wrappedValue.startIndex
+//                while index < tasks.wrappedValue.endIndex {
+//                    defer { index += 1 }
+//                    await tasks.wrappedValue[index].value
+//                }
+//            }
+//        }
+//    }
+//}

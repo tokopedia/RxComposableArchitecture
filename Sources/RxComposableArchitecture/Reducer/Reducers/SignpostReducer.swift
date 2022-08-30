@@ -69,8 +69,7 @@ public struct _SignpostReducer<Base: ReducerProtocol>: ReducerProtocol {
         let effects = self.base.reduce(into: &state, action: action)
         if self.log.signpostsEnabled {
             os_signpost(.end, log: self.log, name: "Action")
-            return
-            effects
+            return effects
                 .effectSignpost(self.prefix, log: self.log, actionOutput: actionOutput)
                 .eraseToEffect()
         }

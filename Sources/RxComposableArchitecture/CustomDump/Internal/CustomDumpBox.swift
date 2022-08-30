@@ -1,4 +1,4 @@
-enum Box<T> {}
+private enum DumpBox<T> {}
 
 // MARK: - Equatable
 
@@ -6,7 +6,7 @@ protocol AnyEquatable {
   static func isEqual(_ lhs: Any, _ rhs: Any) -> Bool
 }
 
-extension Box: AnyEquatable where T: Equatable {
+extension DumpBox: AnyEquatable where T: Equatable {
   static func isEqual(_ lhs: Any, _ rhs: Any) -> Bool {
     lhs as? T == rhs as? T
   }
@@ -14,7 +14,7 @@ extension Box: AnyEquatable where T: Equatable {
 
 func isMirrorEqual(_ lhs: Any, _ rhs: Any) -> Bool {
   func open<LHS>(_: LHS.Type) -> Bool? {
-    (Box<LHS>.self as? AnyEquatable.Type)?.isEqual(lhs, rhs)
+    (DumpBox<LHS>.self as? AnyEquatable.Type)?.isEqual(lhs, rhs)
   }
   if let isEqual = _openExistential(type(of: lhs), do: open) { return isEqual }
   let lhsMirror = Mirror(customDumpReflecting: lhs)
@@ -40,7 +40,7 @@ protocol AnyIdentifiable {
 }
 
 @available(iOS 13, macOS 10.15, tvOS 13, watchOS 6, *)
-extension Box: AnyIdentifiable where T: Identifiable {
+extension DumpBox: AnyIdentifiable where T: Identifiable {
   static func isIdentityEqual(_ lhs: Any, _ rhs: Any) -> Bool {
     guard let lhs = lhs as? T, let rhs = rhs as? T else { return false }
     return lhs.id == rhs.id
@@ -50,7 +50,7 @@ extension Box: AnyIdentifiable where T: Identifiable {
 func isIdentityEqual(_ lhs: Any, _ rhs: Any) -> Bool {
   guard #available(iOS 13, macOS 10.15, tvOS 13, watchOS 6, *) else { return false }
   func open<LHS>(_: LHS.Type) -> Bool? {
-    (Box<LHS>.self as? AnyIdentifiable.Type)?.isIdentityEqual(lhs, rhs)
+    (DumpBox<LHS>.self as? AnyIdentifiable.Type)?.isIdentityEqual(lhs, rhs)
   }
   return _openExistential(type(of: lhs), do: open) ?? false
 }
@@ -61,7 +61,7 @@ protocol AnyStringProtocol {
   static func string(from value: Any) -> String?
 }
 
-extension Box: AnyStringProtocol where T: StringProtocol {
+extension DumpBox: AnyStringProtocol where T: StringProtocol {
   static func string(from value: Any) -> String? {
     (value as? T).map { String($0) }
   }
@@ -69,7 +69,7 @@ extension Box: AnyStringProtocol where T: StringProtocol {
 
 func stringFromStringProtocol(_ value: Any) -> String? {
   func open<STR>(_: STR.Type) -> String? {
-    (Box<STR>.self as? AnyStringProtocol.Type)?.string(from: value)
+    (DumpBox<STR>.self as? AnyStringProtocol.Type)?.string(from: value)
   }
   return _openExistential(type(of: value), do: open)
 }
