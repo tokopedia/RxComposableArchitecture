@@ -589,4 +589,111 @@ internal final class StoreTests: XCTestCase {
         // State should be at 2 now
         XCTAssertEqual(parentStore.state, 2)
     }
+    
+    internal func testCoalesceSynchronousActions() {
+        let store = Store(
+            initialState: 0,
+            reducer: Reducer<Int, Int, Void> { state, action, _ in
+                switch action {
+                case 0:
+                    return .merge(
+                        Effect(value: 1),
+                        Effect(value: 2),
+                        Effect(value: 3)
+                    )
+                default:
+                    state = action
+                    return .none
+                }
+            },
+            environment: ()
+        )
+        
+        var emissions: [Int] = []
+        store.subscribe { $0 }
+            .subscribe { emissions.append($0) }
+            .disposed(by: disposeBag)
+        
+        XCTAssertEqual(emissions, [0])
+        
+        store.send(0)
+        
+        XCTAssertEqual(emissions, [0, 1, 2, 3])
+    }
+    
+    internal func testCoalesceSynchronousActionsUsingNewScope() {
+        let store = Store(
+            initialState: 0,
+            reducer: Reducer<Int, Int, Void> { state, action, _ in
+                switch action {
+                case 0:
+                    return .merge(
+                        Effect(value: 1),
+                        Effect(value: 2),
+                        Effect(value: 3)
+                    )
+                default:
+                    state = action
+                    return .none
+                }
+            },
+            environment: (),
+            useNewScope: true
+        )
+        
+        var emissions: [Int] = []
+        store.subscribe { $0 }
+            .subscribe { emissions.append($0) }
+            .disposed(by: disposeBag)
+        
+        XCTAssertEqual(emissions, [0])
+        
+        store.send(0)
+        
+        XCTAssertEqual(emissions, [0, 3])
+    }
+    
+    internal func testSyncEffectsFromEnvironment() {
+        enum Action: Equatable {
+            // subscribes to a long living effect, potentially feeding data
+            // back into the store
+            case onAppear
+            
+            // Talks to the environment, eventually feeding data back into the store
+            case onUserAction
+            
+            // External event coming in from the environment, updating state
+            case externalAction
+        }
+        
+        struct Environment {
+            var externalEffects = PublishSubject<Action>()
+        }
+        
+        let counterReducer = Reducer<Int, Action, Environment> { state, action, env in
+            switch action {
+            case .onAppear:
+                return env.externalEffects.eraseToEffect()
+            case .onUserAction:
+                return .fireAndForget {
+                    // This would actually do something async in the environment
+                    // that feeds back eventually via the `externalEffectPublisher`
+                    // Here we send an action sync, which could e.g. happen for an error case, ..
+                    env.externalEffects.onNext(.externalAction)
+                }
+            case .externalAction:
+                state += 1
+            }
+            return .none
+        }
+        let parentStore = Store(initialState: 1, reducer: counterReducer, environment: Environment(), useNewScope: true)
+        
+        // subscribes to a long living publisher of actions
+        parentStore.send(.onAppear)
+        
+        parentStore.send(.onUserAction)
+        
+        // State should be at 2 now
+        XCTAssertEqual(parentStore.state, 2)
+    }
 }
