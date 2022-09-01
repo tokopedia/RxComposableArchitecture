@@ -6,7 +6,6 @@
 //
 
 import RxSwift
-//import TestSupport
 import XCTest
 
 @testable import RxComposableArchitecture
@@ -129,7 +128,7 @@ internal final class EffectTests: XCTestCase {
     }
 
     internal func testEffectSubscriberInitializer_WithCancellation() {
-        struct CancelId: Hashable {}
+        enum CancelId {}
 
         let effect = Effect<Int>.run { subscriber in
             subscriber.onNext(1)
@@ -142,7 +141,7 @@ internal final class EffectTests: XCTestCase {
 
             return Disposables.create()
         }
-        .cancellable(id: CancelId())
+        .cancellable(id: CancelId.self)
 
         var values: [Int] = []
         var isComplete = false
@@ -153,7 +152,7 @@ internal final class EffectTests: XCTestCase {
         XCTAssertEqual(values, [1])
         XCTAssertEqual(isComplete, false)
 
-        Effect<Void>.cancel(id: CancelId())
+        Effect<Void>.cancel(id: CancelId.self)
             .subscribe(onNext: {})
             .disposed(by: disposeBag)
 
