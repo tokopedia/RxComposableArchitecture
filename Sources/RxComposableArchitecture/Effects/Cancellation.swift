@@ -57,16 +57,21 @@ extension Effect {
                     }
             })
 
-            cancellationCancellables[id, default: []].insert(
-                cancellationDisposable
-            )
-
             return Observable.from(values)
                 .concat(subject)
                 .do(
                     onError: { _ in cancellationDisposable.dispose() },
                     onCompleted: cancellationDisposable.dispose,
-                    onSubscribed: { isCaching = false },
+                    onSubscribed: {
+                        isCaching = false
+                        cancellablesLock.sync {
+                            subject.onCompleted()
+                            disposable.dispose()
+                            cancellationCancellables[id, default: []].insert(
+                                cancellationDisposable
+                            )
+                        }
+                    },
                     onDispose: cancellationDisposable.dispose
                 )
         }
