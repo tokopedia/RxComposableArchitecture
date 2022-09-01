@@ -31,6 +31,7 @@ extension Effect {
             cancellablesLock.lock()
             defer { cancellablesLock.unlock() }
 
+            let id = CancelToken(id: id)
             let subject = PublishSubject<Output>()
             /// Workaround for testing `testEffectSubscriberInitializer_WithCancellation`
             var values: [Output] = []
@@ -81,11 +82,30 @@ extension Effect {
     public static func cancel(id: AnyHashable) -> Effect {
         return .fireAndForget {
             cancellablesLock.sync {
-                cancellationCancellables[id]?.forEach { $0.dispose() }
+                cancellationCancellables[CancelToken(id: id)]?.forEach { $0.dispose() }
             }
         }
     }
+    
+    /// An effect that will cancel multiple currently in-flight effects with the given identifiers.
+    ///
+    /// - Parameter ids: An array of effect identifiers.
+    /// - Returns: A new effect that will cancel any currently in-flight effects with the given
+    ///   identifiers.
+    public static func cancel(ids: [AnyHashable]) -> Effect {
+        .merge(ids.map(Effect.cancel(id:)))
+    }
 }
 
-internal var cancellationCancellables: [AnyHashable: Set<AnyDisposable>] = [:]
+struct CancelToken: Hashable {
+    let id: AnyHashable
+    let discriminator: ObjectIdentifier
+    
+    init(id: AnyHashable) {
+        self.id = id
+        self.discriminator = ObjectIdentifier(type(of: id.base))
+    }
+}
+
+internal var cancellationCancellables: [CancelToken: Set<AnyDisposable>] = [:]
 internal let cancellablesLock = NSRecursiveLock()
