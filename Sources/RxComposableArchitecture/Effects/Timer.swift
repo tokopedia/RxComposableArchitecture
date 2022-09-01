@@ -21,9 +21,9 @@ extension Effect where Output: RxAbstractInteger {
     /// we can see how effects emit. However, because `Timer.publish` takes a concrete `RunLoop` as
     /// its scheduler, we can't substitute in a `TestScheduler` during tests`.
     ///
-    /// That is why we provide the `Effect.timer` effect. It allows you to create a timer that works
-    /// with any scheduler, not just a run loop, which means you can use a `DispatchQueue` or
-    /// `RunLoop` when running your live app, but use a `TestScheduler` in tests.
+    /// That is why we provide `Effect.timer`. It allows you to create a timer that works with any
+    /// scheduler, not just a run loop, which means you can use a `DispatchQueue` or `RunLoop` when
+    /// running your live app, but use a `TestScheduler` in tests.
     ///
     /// To start and stop a timer in your feature you can create the timer effect from an action
     /// and then use the `.cancel(id:)` effect to stop the timer:
@@ -106,5 +106,31 @@ extension Effect where Output: RxAbstractInteger {
             .interval(interval, scheduler: scheduler)
             .eraseToEffect()
             .cancellable(id: id, cancelInFlight: true)
+    }
+    
+    /// Returns an effect that repeatedly emits the current time of the given scheduler on the given
+    /// interval.
+    ///
+    /// A convenience for calling ``Effect/timer(id:every:tolerance:on:options:)-4exe6`` with a
+    /// static type as the effect's unique identifier.
+    ///
+    /// - Parameters:
+    ///   - id: A unique type identifying the effect.
+    ///   - interval: The time interval on which to publish events. For example, a value of `0.5`
+    ///     publishes an event approximately every half-second.
+    ///   - scheduler: The scheduler on which the timer runs.
+    ///   - tolerance: The allowed timing variance when emitting events. Defaults to `nil`, which
+    ///     allows any variance.
+    ///   - options: Scheduler options passed to the timer. Defaults to `nil`.
+    public static func timer(
+        id: Any.Type,
+        every interval: RxTimeInterval,
+        on scheduler: SchedulerType
+    ) -> Effect {
+        self.timer(
+            id: ObjectIdentifier(id),
+            every: interval,
+            on: scheduler
+        )
     }
 }
