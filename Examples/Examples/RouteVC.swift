@@ -34,7 +34,8 @@ class RouteVC: UITableViewController {
             let viewController = BasicUsageVC(store: Store(
                 initialState: BasicState(number: 0),
                 reducer: basicUsageReducer,
-                environment: ()
+                environment: (),
+                useNewScope: true
             ))
             navigationController?.pushViewController(viewController, animated: true)
         case .environment:
@@ -43,28 +44,32 @@ class RouteVC: UITableViewController {
             let viewController = ScopingVC(store: Store(
                 initialState: ScopingState(),
                 reducer: scopingReducer,
-                environment: ()
+                environment: (),
+                useNewScope: true
             ))
             navigationController?.pushViewController(viewController, animated: true)
         case .pullback:
             let viewController = PullbackVC(store: Store(
                 initialState: PullbackState(),
                 reducer: pullbackReducer,
-                environment: ()
+                environment: (),
+                useNewScope: true
             ))
             navigationController?.pushViewController(viewController, animated: true)
         case .optionalIfLet:
             let viewController = OptionalIfLetVC(store: Store(
                 initialState: OptionalIfLetState(),
                 reducer: optionalIfLetReducer,
-                environment: ()
+                environment: (),
+                useNewScope: true
             ))
             navigationController?.pushViewController(viewController, animated: true)
         case .neverEqual:
             let viewController = NeverEqualVC(store: Store(
                 initialState: NeverEqualState(),
                 reducer: neverEqualDemoReducer,
-                environment: ()
+                environment: (),
+                useNewScope: true
             ))
             navigationController?.pushViewController(viewController, animated: true)
         }

@@ -15,7 +15,8 @@ final class NeverEqualReducerTests: XCTestCase {
         let testStore = TestStore(
             initialState: NeverEqualState(),
             reducer: neverEqualDemoReducer,
-            environment: ()
+            environment: (),
+            useNewScope: true
         )
         testStore.send(.didTapShowAlert) {
             $0.showAlert = "This is an alert"
@@ -30,7 +31,8 @@ final class NeverEqualReducerTests: XCTestCase {
         let testStore = TestStore(
             initialState: NeverEqualState(),
             reducer: neverEqualDemoReducer,
-            environment: ()
+            environment: (),
+            useNewScope: true
         )
         testStore.stateDiffMode = .full
         testStore.send(.didTapScrollToTop) {

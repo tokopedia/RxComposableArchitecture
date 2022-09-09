@@ -469,7 +469,8 @@ internal final class StoreTests: XCTestCase {
                     return .none
                 }
             },
-            environment: ()
+            environment: (),
+            useNewScope: true
         )
         store.send(.initialize)
         store.send(.incrementTapped)
