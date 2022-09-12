@@ -42,7 +42,8 @@ internal final class ReducerTests: XCTestCase {
         let store = TestStore(
             initialState: 0,
             reducer: .combine(fastReducer, slowReducer),
-            environment: scheduler
+            environment: scheduler,
+            useNewScope: true
         )
 
         store.send(.increment) {
@@ -79,7 +80,8 @@ internal final class ReducerTests: XCTestCase {
         let store = TestStore(
             initialState: 0,
             reducer: mainReducer,
-            environment: ()
+            environment: (),
+            useNewScope: true
         )
 
         store.send(.increment) {
