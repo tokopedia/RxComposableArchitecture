@@ -181,6 +181,7 @@ public final class TestStore<State, LocalState, Action, LocalAction, Environment
     private let toLocalState: (State) -> LocalState
     
     private let failingWhenNothingChange: Bool
+    private let useNewScope: Bool
 
     public var stateDiffMode: DiffMode = .distinct
     public var actionDiffMode: DiffMode = .distinct
@@ -193,7 +194,8 @@ public final class TestStore<State, LocalState, Action, LocalAction, Environment
         line: UInt,
         reducer: Reducer<State, Action, Environment>,
         toLocalState: @escaping (State) -> LocalState,
-        failingWhenNothingChange: Bool
+        failingWhenNothingChange: Bool,
+        useNewScope: Bool
     ) {
         self.environment = environment
         self.file = file
@@ -203,6 +205,7 @@ public final class TestStore<State, LocalState, Action, LocalAction, Environment
         state = initialState
         self.toLocalState = toLocalState
         self.failingWhenNothingChange = failingWhenNothingChange
+        self.useNewScope = useNewScope
         
         store = Store(
             initialState: initialState,
@@ -228,7 +231,8 @@ public final class TestStore<State, LocalState, Action, LocalAction, Environment
                     .map { .init(origin: .receive($0), file: action.file, line: action.line) }
                     .eraseToEffect()
             },
-            environment: ()
+            environment: (),
+            useNewScope: useNewScope
         )
     }
     
@@ -319,11 +323,14 @@ extension TestStore where State == LocalState, Action == LocalAction {
     ///   - initialState: The state to start the test from.
     ///   - reducer: A reducer.
     ///   - environment: The environment to start the test from.
+    ///   - failingWhenNothingChange: Flag to failing the test if the trailing closure on send and receive  is provided but nothing is changed
+    ///   - useNewScope: Use improved store.
     public convenience init(
         initialState: State,
         reducer: Reducer<State, Action, Environment>,
         environment: Environment,
         failingWhenNothingChange: Bool = true,
+        useNewScope: Bool = false,
         file: StaticString = #file,
         line: UInt = #line
     ) {
@@ -335,7 +342,8 @@ extension TestStore where State == LocalState, Action == LocalAction {
             line: line,
             reducer: reducer,
             toLocalState: { $0 },
-            failingWhenNothingChange: failingWhenNothingChange
+            failingWhenNothingChange: failingWhenNothingChange,
+            useNewScope: useNewScope
         )
     }
 }
@@ -343,9 +351,9 @@ extension TestStore where State == LocalState, Action == LocalAction {
 extension TestStore where LocalState: Equatable {
     public func send(
         _ action: LocalAction,
-        _ updateExpectingResult: ((inout LocalState) throws -> Void)? = nil,
         file: StaticString = #file,
-        line: UInt = #line
+        line: UInt = #line,
+        _ updateExpectingResult: ((inout LocalState) throws -> Void)? = nil
     ) {
         if !receivedActions.isEmpty {
             var actions = ""
@@ -443,9 +451,9 @@ extension TestStore where LocalState: Equatable, Action: Equatable {
     ///     expected.
     public func receive(
         _ expectedAction: Action,
-        _ updateExpectingResult: ((inout LocalState) throws -> Void)? = nil,
         file: StaticString = #file,
-        line: UInt = #line
+        line: UInt = #line,
+        _ updateExpectingResult: ((inout LocalState) throws -> Void)? = nil
     ) {
         guard !receivedActions.isEmpty else {
             XCTFail(
@@ -517,9 +525,9 @@ extension TestStore where LocalState: Equatable, Action: Equatable {
         func assert(step: Step) {
             switch step.type {
             case let .send(action, update):
-                self.send(action, update, file: step.file, line: step.line)
+                self.send(action, file: step.file, line: step.line, update)
             case let .receive(expectedAction, update):
-                self.receive(expectedAction, update, file: step.file, line: step.line)
+                self.receive(expectedAction, file: step.file, line: step.line, update)
             case let .environment(work):
                 if !self.receivedActions.isEmpty {
                     var actions = ""
@@ -600,7 +608,8 @@ extension TestStore {
             line: line,
             reducer: reducer,
             toLocalState: { toLocalState(self.toLocalState($0)) },
-            failingWhenNothingChange: failingWhenNothingChange
+            failingWhenNothingChange: failingWhenNothingChange,
+            useNewScope: useNewScope
         )
     }
     

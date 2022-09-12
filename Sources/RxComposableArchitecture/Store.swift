@@ -33,7 +33,7 @@ public final class Store<State, Action> {
         reducer: Reducer<State, Action, Environment>,
         environment: Environment,
         useNewScope: Bool = false,
-        mainThreadChecksEnabled: Bool = false
+        mainThreadChecksEnabled: Bool = true
     ) {
         relay = BehaviorRelay(value: initialState)
         self.reducer = { state, action in reducer.run(&state, action, environment) }
@@ -46,28 +46,6 @@ public final class Store<State, Action> {
         state = initialState
         
         self.threadCheck(status: .`init`)
-    }
-    
-    /// Initializes a store from an initial state, a reducer, and an environment, and the main thread
-    /// check is disabled for all interactions with this store.
-    ///
-    /// - Parameters:
-    ///   - initialState: The state to start the application in.
-    ///   - reducer: The reducer that powers the business logic of the application.
-    ///   - environment: The environment of dependencies for the application.
-    public static func unchecked<Environment>(
-        initialState: State,
-        reducer: Reducer<State, Action, Environment>,
-        environment: Environment,
-        useNewScope: Bool = false
-    ) -> Self {
-        Self(
-            initialState: initialState,
-            reducer: reducer,
-            environment: environment,
-            useNewScope: useNewScope,
-            mainThreadChecksEnabled: false
-        )
     }
     
     private func newSend(_ action: Action, originatingFrom originatingAction: Action? = nil) {
@@ -296,7 +274,7 @@ public final class Store<State, Action> {
             """
             "Store.send" was called on a non-main thread with: %@ …
             
-            Make sure that "ViewStore.send" is always called on the main thread, or create your \
+            Make sure that "store.send" is always called on the main thread, or create your \
             store via "Store.unchecked" to opt out of the main thread checker.
             
             The "Store" class is not thread-safe, and so all interactions with an instance of \
