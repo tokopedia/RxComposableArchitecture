@@ -329,7 +329,7 @@ extension TestStore where State == LocalState, Action == LocalAction {
         initialState: State,
         reducer: Reducer<State, Action, Environment>,
         environment: Environment,
-        failingWhenNothingChange: Bool = true,
+        failingWhenNothingChange: Bool = false,
         useNewScope: Bool = false,
         file: StaticString = #file,
         line: UInt = #line
