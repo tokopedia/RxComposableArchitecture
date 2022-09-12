@@ -17,6 +17,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/ReactiveX/RxSwift", from: "5.1.1"),
         .package(url: "https://github.com/pointfreeco/swift-case-paths", from: "0.8.1"),
+        .package(name: "Benchmark", url: "https://github.com/google/swift-benchmark", from: "0.1.0"),
     ],
     targets: [
         .target(
@@ -29,5 +30,11 @@ let package = Package(
         .testTarget(
             name: "RxComposableArchitectureTests",
             dependencies: ["RxComposableArchitecture"]),
+        .executableTarget(
+            name: "RxComposableArchitecture-Benchmark",
+            dependencies: [
+                "RxComposableArchitecture",
+                .product(name: "Benchmark", package: "Benchmark")
+            ])
     ]
 )
