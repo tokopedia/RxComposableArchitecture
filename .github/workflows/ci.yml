@@ -23,7 +23,7 @@ jobs:
       - name: Run build
         run: swift build
       - name: Run benchmark
-        run: swift run -configuration RxComposableArchitecture-Benchmark
+        run: swift run -configuration release RxComposableArchitecture-Benchmark
   unit_test_monterey:
     strategy:
       matrix:
