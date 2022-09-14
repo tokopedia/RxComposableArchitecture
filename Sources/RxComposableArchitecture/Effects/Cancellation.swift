@@ -28,51 +28,57 @@ extension Effect {
     ///     canceled before starting this new one.
     /// - Returns: A new effect that is capable of being canceled by an identifier.
     public func cancellable(id: AnyHashable, cancelInFlight: Bool = false) -> Effect {
-        let effect = Observable<Output>.deferred {
+        Observable.deferred {
             cancellablesLock.lock()
             defer { cancellablesLock.unlock() }
-
+            
             let id = CancelToken(id: id)
-            let subject = PublishSubject<Output>()
-            /// Workaround for testing `testEffectSubscriberInitializer_WithCancellation`
-            var values: [Output] = []
-            var isCaching = true
-            let disposable =
-                self
-                    .do(onNext: { val in
-                        guard isCaching else { return }
-                        values.append(val)
-                    })
-                    .subscribe(subject)
-            var cancellationDisposable: AnyDisposable!
-            cancellationDisposable = AnyDisposable(
+            if cancelInFlight {
+                cancellationCancellables[id]?.forEach { $0.dispose() }
+            }
+            
+            /// Flag is used to prevent disposable to send event on disposed `cancellationSubject`
+            /// Thanks: https://github.com/dannyhertz/rxswift-composable-architecture/issues/5
+            var hasCompleted = false
+            
+            let cancellationSubject = PublishSubject<Void>()
+            
+            var cancellationCancellable: AnyDisposable!
+            cancellationCancellable = AnyDisposable(
                 Disposables.create {
                     cancellablesLock.sync {
-                        subject.onCompleted()
-                        disposable.dispose()
-                        cancellationCancellables[id]?.remove(cancellationDisposable)
+                        if !hasCompleted {
+                            cancellationSubject.onNext(())
+                            cancellationSubject.onCompleted()
+                        }
+                        cancellationCancellables[id]?.remove(cancellationCancellable)
                         if cancellationCancellables[id]?.isEmpty == .some(true) {
                             cancellationCancellables[id] = nil
                         }
                     }
-            })
-
-            cancellationCancellables[id, default: []].insert(
-                cancellationDisposable
+                }
             )
-
-            return Observable.from(values)
-                .concat(subject)
+            
+            return self.takeUntil(cancellationSubject)
                 .do(
-                    onError: { _ in cancellationDisposable.dispose() },
-                    onCompleted: cancellationDisposable.dispose,
-                    onSubscribed: { isCaching = false },
-                    onDispose: cancellationDisposable.dispose
+                    onError: { _ in
+                        hasCompleted = true
+                        cancellationCancellable.dispose()
+                    },
+                    onSubscribed: {
+                        _ = cancellablesLock.sync {
+                            cancellationCancellables[id, default: []].insert(
+                                cancellationCancellable
+                            )
+                        }
+                    },
+                    onDispose: {
+                        hasCompleted = true
+                        cancellationCancellable.dispose()
+                    }
                 )
         }
         .eraseToEffect()
-
-        return cancelInFlight ? .concatenate(.cancel(id: id), effect) : effect
     }
     
     /// Turns an effect into one that is capable of being canceled.
@@ -88,7 +94,7 @@ extension Effect {
     public func cancellable(id: Any.Type, cancelInFlight: Bool = false) -> Effect {
         self.cancellable(id: ObjectIdentifier(id), cancelInFlight: cancelInFlight)
     }
-
+    
     /// An effect that will cancel any currently in-flight effect with the given identifier.
     ///
     /// - Parameter id: An effect identifier.

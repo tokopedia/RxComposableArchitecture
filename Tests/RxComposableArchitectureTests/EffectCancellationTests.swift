@@ -122,7 +122,7 @@ internal final class EffectCancellationTests: XCTestCase {
             .subscribe()
             .disposed(by: disposeBag)
 
-        XCTAssertTrue(cancellationCancellables.isEmpty)
+        XCTAssertNoDifference([:], cancellationCancellables)
     }
 
     internal func testCancellablesCleanUp_OnCancel() {
@@ -138,7 +138,7 @@ internal final class EffectCancellationTests: XCTestCase {
         Effect<Never>.cancel(id: 1)
             .subscribe()
             .disposed(by: disposeBag)
-
+        
         XCTAssertTrue(cancellationCancellables.isEmpty)
     }
 
@@ -207,7 +207,7 @@ internal final class EffectCancellationTests: XCTestCase {
 
         disposeBag = DisposeBag()
 
-        XCTAssertTrue(cancellationCancellables.isEmpty)
+        XCTAssertNoDifference([:], cancellationCancellables)
     }
 
     internal func testSharedId() {
@@ -254,4 +254,50 @@ internal final class EffectCancellationTests: XCTestCase {
         scheduler.advance(by: .seconds(1))
         XCTAssertEqual(expectedOutput, [])
     }
+    
+    internal func testNestedMergeCancellation() {
+        let effect = Effect<Int>.merge(
+            Observable.of(1, 2)
+                .eraseToEffect()
+                .cancellable(id: 1)
+        )
+            .cancellable(id: 2)
+
+        var output: [Int] = []
+        effect
+            .subscribe(onNext: { output.append($0) })
+            .disposed(by: disposeBag)
+
+        XCTAssertEqual(output, [1, 2])
+    }
+
+    internal func testMultipleCancellations() {
+        let scheduler = TestScheduler(initialClock: 0)
+        var output: [AnyHashable] = []
+
+        struct A: Hashable {}
+        struct B: Hashable {}
+        struct C: Hashable {}
+
+        let ids: [AnyHashable] = [A(), B(), C()]
+        let effects = ids.map { id in
+            Observable.just(id)
+                .delay(.seconds(1), scheduler: scheduler)
+                .eraseToEffect()
+                .cancellable(id: id)
+        }
+
+        Effect<AnyHashable>.merge(effects)
+            .subscribe(onNext: { output.append($0) })
+            .disposed(by: disposeBag)
+
+        Effect<AnyHashable>
+            .cancel(ids: [A(), C()])
+            .subscribe(onNext: { _ in })
+            .disposed(by: disposeBag)
+
+        scheduler.advance(by: .seconds(1))
+        XCTAssertNoDifference(output, [B()])
+    }
+
 }

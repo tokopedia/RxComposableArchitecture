@@ -161,4 +161,16 @@ internal final class EffectTests: XCTestCase {
         XCTAssertEqual(values, [1])
         XCTAssertEqual(isComplete, true)
     }
+    
+    func testDoubleCancelInFlight() {
+        var result: Int?
+        
+        _ = Observable.just(42)
+            .eraseToEffect()
+            .cancellable(id: "id", cancelInFlight: true)
+            .cancellable(id: "id", cancelInFlight: true)
+            .subscribe { result = $0 }
+        
+        XCTAssertEqual(result, 42)
+    }
 }
