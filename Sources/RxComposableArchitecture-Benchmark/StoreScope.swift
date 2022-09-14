@@ -24,7 +24,7 @@ let storeScopeSuite = BenchmarkSuite(name: "Store scoping") { suite in
     }
 }
 
-let newStoreScopeSuite = BenchmarkSuite(name: "[NEW] Store scoping") { suite in
+let newStoreScopeSuite = BenchmarkSuite(name: "[NEW] Store scoping, with rescope") { suite in
     let counterReducer = Reducer<Int, Bool, Void> { state, action, _ in
         if action {
             state += 1
@@ -42,7 +42,7 @@ let newStoreScopeSuite = BenchmarkSuite(name: "[NEW] Store scoping") { suite in
     }
     let lastViewStore = viewStores.last!
     
-    suite.benchmark("[NEW] Nested store") {
+    suite.benchmark("[NEW] Nested store, with rescope") {
         lastViewStore.send(true)
     }
 }

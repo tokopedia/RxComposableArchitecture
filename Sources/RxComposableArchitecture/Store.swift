@@ -13,12 +13,13 @@ public final class Store<State, Action> {
     private var bufferedActions: [Action] = []
 
     private let reducer: (inout State, Action) -> Effect<Action>
-
-    private let disposeBag = DisposeBag()
+    
+    internal let disposeBag = DisposeBag()
     internal var effectDisposables = CompositeDisposable()
-    private let relay: BehaviorRelay<State>
+    internal let relay: BehaviorRelay<State>
     
     private let useNewScope: Bool
+    fileprivate var scope: AnyScope?
     
     #if DEBUG
     private let mainThreadChecksEnabled: Bool
@@ -146,29 +147,7 @@ public final class Store<State, Action> {
     ) -> Store<LocalState, LocalAction> {
         self.threadCheck(status: .scope)
         if useNewScope {
-            var isSending = false
-            let localStore = Store<LocalState, LocalAction>(
-                initialState: toLocalState(state),
-                reducer: Reducer { localState, localAction, _ in
-                    isSending = true
-                    defer { isSending = false }
-                    self.send(fromLocalAction(localAction))
-                    localState = toLocalState(self.state)
-                    return .none
-                },
-                environment: (),
-                useNewScope: useNewScope
-            )
-            
-            relay
-                .skip(1)
-                .subscribe(onNext: { [weak localStore] newValue in
-                    guard !isSending else { return }
-                    localStore?.state = toLocalState(newValue)
-                })
-                .disposed(by: localStore.disposeBag)
-            
-            return localStore
+            return (self.scope ?? Scope(root: self)).rescope(self, state: toLocalState, action: fromLocalAction)
         } else {
             let localStore = Store<LocalState, LocalAction>(
                 initialState: toLocalState(state),
@@ -454,5 +433,66 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
 
             return localStore
         }
+    }
+}
+
+private protocol AnyScope {
+    func rescope<ScopedState, ScopedAction, RescopedState, RescopedAction>(
+        _ store: Store<ScopedState, ScopedAction>,
+        state toRescopedState: @escaping (ScopedState) -> RescopedState,
+        action fromRescopedAction: @escaping (RescopedAction) -> ScopedAction
+    ) -> Store<RescopedState, RescopedAction>
+}
+
+private struct Scope<RootState, RootAction>: AnyScope {
+    let root: Store<RootState, RootAction>
+    let fromScopedAction: Any
+    
+    init(root: Store<RootState, RootAction>) {
+        self.init(root: root, fromScopedAction: { $0 })
+    }
+    
+    private init<ScopedAction>(
+        root: Store<RootState, RootAction>,
+        fromScopedAction: @escaping (ScopedAction) -> RootAction
+    ) {
+        self.root = root
+        self.fromScopedAction = fromScopedAction
+    }
+    
+    func rescope<ScopedState, ScopedAction, RescopedState, RescopedAction>(
+        _ scopedStore: Store<ScopedState, ScopedAction>,
+        state toRescopedState: @escaping (ScopedState) -> RescopedState,
+        action fromRescopedAction: @escaping (RescopedAction) -> ScopedAction
+    ) -> Store<RescopedState, RescopedAction> {
+        let fromScopedAction = self.fromScopedAction as! (ScopedAction) -> RootAction
+        
+        var isSending = false
+        let rescopedStore = Store<RescopedState, RescopedAction>(
+            initialState: toRescopedState(scopedStore.state),
+            reducer: Reducer { rescopedState, rescopedAction, _ in
+                isSending = true
+                defer { isSending = false }
+                self.root.send(fromScopedAction(fromRescopedAction(rescopedAction)))
+                rescopedState = toRescopedState(scopedStore.state)
+                return .none
+            },
+            environment: (),
+            useNewScope: true
+        )
+        
+        scopedStore.relay
+            .skip(1)
+            .subscribe(onNext: { [weak rescopedStore] newValue in
+                guard !isSending else { return }
+                rescopedStore?.relay.accept(toRescopedState(newValue))
+            })
+            .disposed(by: rescopedStore.disposeBag)
+        
+        rescopedStore.scope = Scope<RootState, RootAction>(
+            root: self.root,
+            fromScopedAction: { fromScopedAction(fromRescopedAction($0)) }
+        )
+        return rescopedStore
     }
 }
