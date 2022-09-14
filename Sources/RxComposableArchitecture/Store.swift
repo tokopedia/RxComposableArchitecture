@@ -59,8 +59,11 @@ public final class Store<State, Action> {
             self.isSending = false
             self.state = currentState
         }
-        while !bufferedActions.isEmpty {
-            let action = bufferedActions.removeFirst()
+        var index = bufferedActions.startIndex
+        defer { bufferedActions = [] }
+        while index < bufferedActions.endIndex {
+            defer { index += 1 }
+            let action = bufferedActions[index]
             let effect = reducer(&currentState, action)
             
             var didComplete = false
