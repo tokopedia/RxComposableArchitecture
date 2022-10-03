@@ -33,8 +33,9 @@ public final class Store<State, Action> {
         initialState: State,
         reducer: Reducer<State, Action, Environment>,
         environment: Environment,
-        useNewScope: Bool = false,
-        mainThreadChecksEnabled: Bool = true
+        useNewScope: Bool = StoreConfig.default.useNewScope(),
+        mainThreadChecksEnabled: Bool = StoreConfig.default.mainThreadChecksEnabled(),
+        cancelsEffectsOnDeinit: Bool = StoreConfig.default.cancelsEffectsOnDeinit()
     ) {
         relay = BehaviorRelay(value: initialState)
         self.reducer = { state, action in reducer.run(&state, action, environment) }
@@ -47,6 +48,11 @@ public final class Store<State, Action> {
         state = initialState
         
         self.threadCheck(status: .`init`)
+        
+        if cancelsEffectsOnDeinit {
+            // ties the disposables to the lifetime of the dispose bag for cleanup.
+            effectDisposables.disposed(by: disposeBag)
+        }
     }
     
     private func newSend(_ action: Action, originatingFrom originatingAction: Action? = nil) {
@@ -495,4 +501,18 @@ private struct Scope<RootState, RootAction>: AnyScope {
         )
         return rescopedStore
     }
+}
+
+public struct StoreConfig {
+    public let useNewScope: () -> Bool
+    public let mainThreadChecksEnabled: () -> Bool
+    public let cancelsEffectsOnDeinit: () -> Bool
+}
+
+extension StoreConfig {
+    public static var `default`: StoreConfig = .init(
+        useNewScope: { false },
+        mainThreadChecksEnabled: { true },
+        cancelsEffectsOnDeinit: { true }
+    )
 }
