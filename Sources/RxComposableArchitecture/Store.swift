@@ -19,10 +19,11 @@ public final class Store<State, Action> {
     internal let relay: BehaviorRelay<State>
     
     private let useNewScope: Bool
+    fileprivate let cancelsEffectsOnDeinit: Bool
     fileprivate var scope: AnyScope?
     
     #if DEBUG
-    private let mainThreadChecksEnabled: Bool
+    fileprivate let mainThreadChecksEnabled: Bool
     #endif
 
     public var observable: Observable<State> {
@@ -40,6 +41,7 @@ public final class Store<State, Action> {
         relay = BehaviorRelay(value: initialState)
         self.reducer = { state, action in reducer.run(&state, action, environment) }
         self.useNewScope = useNewScope
+        self.cancelsEffectsOnDeinit = cancelsEffectsOnDeinit
         
         #if DEBUG
         self.mainThreadChecksEnabled = mainThreadChecksEnabled
@@ -163,7 +165,9 @@ public final class Store<State, Action> {
                     return .none
                 },
                 environment: (),
-                useNewScope: useNewScope
+                useNewScope: useNewScope,
+                mainThreadChecksEnabled: mainThreadChecksEnabled,
+                cancelsEffectsOnDeinit: cancelsEffectsOnDeinit
             )
 
             relay
@@ -390,7 +394,9 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                     return .none
                 },
                 environment: (),
-                useNewScope: useNewScope
+                useNewScope: useNewScope,
+                mainThreadChecksEnabled: mainThreadChecksEnabled,
+                cancelsEffectsOnDeinit: cancelsEffectsOnDeinit
             )
             
             relay
@@ -419,7 +425,9 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                     return .none
                 },
                 environment: (),
-                useNewScope: useNewScope
+                useNewScope: useNewScope,
+                mainThreadChecksEnabled: mainThreadChecksEnabled,
+                cancelsEffectsOnDeinit: cancelsEffectsOnDeinit
             )
 
             // reflect changes on store parent to local store
@@ -484,7 +492,9 @@ private struct Scope<RootState, RootAction>: AnyScope {
                 return .none
             },
             environment: (),
-            useNewScope: true
+            useNewScope: true,
+            mainThreadChecksEnabled: root.mainThreadChecksEnabled,
+            cancelsEffectsOnDeinit: root.cancelsEffectsOnDeinit
         )
         
         scopedStore.relay
