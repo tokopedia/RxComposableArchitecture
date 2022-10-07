@@ -12,7 +12,7 @@ import UIKit
 class TimerVC: UIScrollVC {
     private let explanationTextView: UILabel = {
         let text = UILabel()
-        text.text = "This is a demo of NeverEqual property wrapper usage."
+        text.text = "This is a demo of a timer."
         text.numberOfLines = 0
         return text
     }()
