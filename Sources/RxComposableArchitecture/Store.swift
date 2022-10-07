@@ -23,7 +23,7 @@ public final class Store<State, Action> {
     fileprivate var scope: AnyScope?
     
     #if DEBUG
-    fileprivate let mainThreadChecksEnabled: Bool
+    private let mainThreadChecksEnabled: Bool
     #endif
 
     public var observable: Observable<State> {
@@ -166,7 +166,7 @@ public final class Store<State, Action> {
                 },
                 environment: (),
                 useNewScope: useNewScope,
-                mainThreadChecksEnabled: mainThreadChecksEnabled,
+                mainThreadChecksEnabled: isMainThreadChecksEnabled,
                 cancelsEffectsOnDeinit: cancelsEffectsOnDeinit
             )
 
@@ -322,6 +322,14 @@ extension Store {
             .map(\.wrappedValue)
             .eraseToEffect()
     }
+    
+    fileprivate var isMainThreadChecksEnabled: Bool {
+        #if DEBUG
+        return mainThreadChecksEnabled
+        #else
+        return false
+        #endif
+    }
 }
 
 extension Store where State: Equatable {
@@ -395,7 +403,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                 },
                 environment: (),
                 useNewScope: useNewScope,
-                mainThreadChecksEnabled: mainThreadChecksEnabled,
+                mainThreadChecksEnabled: isMainThreadChecksEnabled,
                 cancelsEffectsOnDeinit: cancelsEffectsOnDeinit
             )
             
@@ -426,7 +434,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                 },
                 environment: (),
                 useNewScope: useNewScope,
-                mainThreadChecksEnabled: mainThreadChecksEnabled,
+                mainThreadChecksEnabled: isMainThreadChecksEnabled,
                 cancelsEffectsOnDeinit: cancelsEffectsOnDeinit
             )
 
@@ -493,7 +501,7 @@ private struct Scope<RootState, RootAction>: AnyScope {
             },
             environment: (),
             useNewScope: true,
-            mainThreadChecksEnabled: root.mainThreadChecksEnabled,
+            mainThreadChecksEnabled: root.isMainThreadChecksEnabled,
             cancelsEffectsOnDeinit: root.cancelsEffectsOnDeinit
         )
         
