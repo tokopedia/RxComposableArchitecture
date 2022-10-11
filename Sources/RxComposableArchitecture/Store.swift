@@ -19,6 +19,7 @@ public final class Store<State, Action> {
     internal let relay: BehaviorRelay<State>
     
     private let useNewScope: Bool
+    fileprivate let cancelsEffectsOnDeinit: Bool
     fileprivate var scope: AnyScope?
     
     #if DEBUG
@@ -33,12 +34,14 @@ public final class Store<State, Action> {
         initialState: State,
         reducer: Reducer<State, Action, Environment>,
         environment: Environment,
-        useNewScope: Bool = false,
-        mainThreadChecksEnabled: Bool = true
+        useNewScope: Bool = StoreConfig.default.useNewScope(),
+        mainThreadChecksEnabled: Bool = StoreConfig.default.mainThreadChecksEnabled(),
+        cancelsEffectsOnDeinit: Bool = StoreConfig.default.cancelsEffectsOnDeinit()
     ) {
         relay = BehaviorRelay(value: initialState)
         self.reducer = { state, action in reducer.run(&state, action, environment) }
         self.useNewScope = useNewScope
+        self.cancelsEffectsOnDeinit = cancelsEffectsOnDeinit
         
         #if DEBUG
         self.mainThreadChecksEnabled = mainThreadChecksEnabled
@@ -47,6 +50,11 @@ public final class Store<State, Action> {
         state = initialState
         
         self.threadCheck(status: .`init`)
+        
+        if cancelsEffectsOnDeinit {
+            // ties the disposables to the lifetime of the dispose bag for cleanup.
+            effectDisposables.disposed(by: disposeBag)
+        }
     }
     
     private func newSend(_ action: Action, originatingFrom originatingAction: Action? = nil) {
@@ -157,7 +165,9 @@ public final class Store<State, Action> {
                     return .none
                 },
                 environment: (),
-                useNewScope: useNewScope
+                useNewScope: useNewScope,
+                mainThreadChecksEnabled: isMainThreadChecksEnabled,
+                cancelsEffectsOnDeinit: cancelsEffectsOnDeinit
             )
 
             relay
@@ -312,6 +322,14 @@ extension Store {
             .map(\.wrappedValue)
             .eraseToEffect()
     }
+    
+    fileprivate var isMainThreadChecksEnabled: Bool {
+        #if DEBUG
+        return mainThreadChecksEnabled
+        #else
+        return false
+        #endif
+    }
 }
 
 extension Store where State: Equatable {
@@ -384,7 +402,9 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                     return .none
                 },
                 environment: (),
-                useNewScope: useNewScope
+                useNewScope: useNewScope,
+                mainThreadChecksEnabled: isMainThreadChecksEnabled,
+                cancelsEffectsOnDeinit: cancelsEffectsOnDeinit
             )
             
             relay
@@ -413,7 +433,9 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                     return .none
                 },
                 environment: (),
-                useNewScope: useNewScope
+                useNewScope: useNewScope,
+                mainThreadChecksEnabled: isMainThreadChecksEnabled,
+                cancelsEffectsOnDeinit: cancelsEffectsOnDeinit
             )
 
             // reflect changes on store parent to local store
@@ -478,7 +500,9 @@ private struct Scope<RootState, RootAction>: AnyScope {
                 return .none
             },
             environment: (),
-            useNewScope: true
+            useNewScope: true,
+            mainThreadChecksEnabled: root.isMainThreadChecksEnabled,
+            cancelsEffectsOnDeinit: root.cancelsEffectsOnDeinit
         )
         
         scopedStore.relay
@@ -495,4 +519,18 @@ private struct Scope<RootState, RootAction>: AnyScope {
         )
         return rescopedStore
     }
+}
+
+public struct StoreConfig {
+    public let useNewScope: () -> Bool
+    public let mainThreadChecksEnabled: () -> Bool
+    public let cancelsEffectsOnDeinit: () -> Bool
+}
+
+extension StoreConfig {
+    public static var `default`: StoreConfig = .init(
+        useNewScope: { false },
+        mainThreadChecksEnabled: { true },
+        cancelsEffectsOnDeinit: { true }
+    )
 }
