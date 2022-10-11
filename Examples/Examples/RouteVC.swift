@@ -16,6 +16,7 @@ class RouteVC: UITableViewController {
         case pullback = "4. Pullback"
         case optionalIfLet = "5. IfLet & Reducer.optional"
         case neverEqual = "6. Demo NeverEqual"
+        case timer = "7. Demo Timer"
     }
 
     internal var routes: [Route] = Route.allCases
@@ -68,6 +69,14 @@ class RouteVC: UITableViewController {
             let viewController = NeverEqualVC(store: Store(
                 initialState: NeverEqualState(),
                 reducer: neverEqualDemoReducer,
+                environment: (),
+                useNewScope: true
+            ))
+            navigationController?.pushViewController(viewController, animated: true)
+        case .timer:
+            let viewController = TimerVC(store: Store(
+                initialState: TimerState(),
+                reducer: timerDemoReducer,
                 environment: (),
                 useNewScope: true
             ))

@@ -38,6 +38,8 @@
 		1D6402F9284DA71E00C4F882 /* NeverEqualVC+Reducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402F7284DA71E00C4F882 /* NeverEqualVC+Reducer.swift */; };
 		1D6402FA284DA71E00C4F882 /* NeverEqualVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402F8284DA71E00C4F882 /* NeverEqualVC.swift */; };
 		1D6402FC284DA73400C4F882 /* NeverEqualReducerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6402FB284DA73400C4F882 /* NeverEqualReducerTests.swift */; };
+		9C82D5B228EFE16200E623DF /* TimerVC+Reducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C82D5B028EFE13800E623DF /* TimerVC+Reducer.swift */; };
+		9C82D5B328EFE16200E623DF /* TimerVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C82D5B128EFE13800E623DF /* TimerVC.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -93,6 +95,8 @@
 		1D6402F7284DA71E00C4F882 /* NeverEqualVC+Reducer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NeverEqualVC+Reducer.swift"; sourceTree = "<group>"; };
 		1D6402F8284DA71E00C4F882 /* NeverEqualVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeverEqualVC.swift; sourceTree = "<group>"; };
 		1D6402FB284DA73400C4F882 /* NeverEqualReducerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeverEqualReducerTests.swift; sourceTree = "<group>"; };
+		9C82D5B028EFE13800E623DF /* TimerVC+Reducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TimerVC+Reducer.swift"; sourceTree = "<group>"; };
+		9C82D5B128EFE13800E623DF /* TimerVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerVC.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -153,6 +157,7 @@
 				1D6402DD2849B5AB00C4F882 /* 4-Pullback */,
 				1D6402EF284D9F3700C4F882 /* 5-OptionalIfLet */,
 				1D6402F6284DA71E00C4F882 /* 6-NeverEqual */,
+				9C82D5AF28EFE13800E623DF /* 7-Timer */,
 				1D43C28B2833C36C009C1A8B /* AppDelegate.swift */,
 				1D43C28D2833C36C009C1A8B /* SceneDelegate.swift */,
 				1D43C28F2833C36C009C1A8B /* RouteVC.swift */,
@@ -264,6 +269,15 @@
 				1D6402F8284DA71E00C4F882 /* NeverEqualVC.swift */,
 			);
 			path = "6-NeverEqual";
+			sourceTree = "<group>";
+		};
+		9C82D5AF28EFE13800E623DF /* 7-Timer */ = {
+			isa = PBXGroup;
+			children = (
+				9C82D5B028EFE13800E623DF /* TimerVC+Reducer.swift */,
+				9C82D5B128EFE13800E623DF /* TimerVC.swift */,
+			);
+			path = "7-Timer";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -399,6 +413,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9C82D5B228EFE16200E623DF /* TimerVC+Reducer.swift in Sources */,
+				9C82D5B328EFE16200E623DF /* TimerVC.swift in Sources */,
 				1D6402D12849855B00C4F882 /* EnvironmentDemoVC+Reducer.swift in Sources */,
 				1D43C2902833C36C009C1A8B /* RouteVC.swift in Sources */,
 				1D6402F3284D9FF400C4F882 /* OptionalIfLetVC+Reducer.swift in Sources */,
