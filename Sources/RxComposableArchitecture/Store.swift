@@ -522,9 +522,19 @@ private struct Scope<RootState, RootAction>: AnyScope {
 }
 
 public struct StoreConfig {
-    public let useNewScope: () -> Bool
-    public let mainThreadChecksEnabled: () -> Bool
-    public let cancelsEffectsOnDeinit: () -> Bool
+    public var useNewScope: () -> Bool
+    public var mainThreadChecksEnabled: () -> Bool
+    public var cancelsEffectsOnDeinit: () -> Bool
+    
+    public init(
+        useNewScope: @escaping () -> Bool,
+        mainThreadChecksEnabled: @escaping () -> Bool,
+        cancelsEffectsOnDeinit: @escaping () -> Bool
+    ) {
+        self.useNewScope = useNewScope
+        self.mainThreadChecksEnabled = mainThreadChecksEnabled
+        self.cancelsEffectsOnDeinit = cancelsEffectsOnDeinit
+    }
 }
 
 extension StoreConfig {
