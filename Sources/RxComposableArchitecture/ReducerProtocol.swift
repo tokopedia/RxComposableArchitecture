@@ -90,7 +90,7 @@
     ///     a side effect that can communicate with the outside world.
     /// - Returns: An effect that can communicate with the outside world and feed actions back into
     ///   the system.
-    func reduce(into state: inout State, action: Action) -> Effect<Action, Never>
+    func reduce(into state: inout State, action: Action) -> Effect<Action>
 
     /// The content and behavior of a reducer that is composed from other reducers.
     ///

@@ -32,31 +32,27 @@ extension AnyReducer {
             category: "Reducer Instrumentation"
         )
     ) -> Self {
-        if #available(iOS 12.0, *) {
-            guard log.signpostsEnabled else { return self }
-            
-            // NB: Prevent rendering as "N/A" in Instruments
-            let zeroWidthSpace = "\u{200B}"
-            
-            let prefix = prefix.isEmpty ? zeroWidthSpace : "[\(prefix)] "
-            
-            return Self { state, action, environment in
-                var actionOutput: String!
-                if log.signpostsEnabled {
-                    actionOutput = debugCaseOutput(action)
-                    os_signpost(.begin, log: log, name: "Action", "%s%s", prefix, actionOutput)
-                }
-                let effects = self.run(&state, action, environment)
-                if log.signpostsEnabled {
-                    os_signpost(.end, log: log, name: "Action")
-                    return effects
-                        .effectSignpost(prefix, log: log, actionOutput: actionOutput)
-                        .eraseToEffect()
-                }
-                return effects
+        guard log.signpostsEnabled else { return self }
+        
+        // NB: Prevent rendering as "N/A" in Instruments
+        let zeroWidthSpace = "\u{200B}"
+        
+        let prefix = prefix.isEmpty ? zeroWidthSpace : "[\(prefix)] "
+        
+        return Self { state, action, environment in
+            var actionOutput: String!
+            if log.signpostsEnabled {
+                actionOutput = debugCaseOutput(action)
+                os_signpost(.begin, log: log, name: "Action", "%s%s", prefix, actionOutput)
             }
-        } else {
-            return self
+            let effects = self.run(&state, action, environment)
+            if log.signpostsEnabled {
+                os_signpost(.end, log: log, name: "Action")
+                return effects
+                    .effectSignpost(prefix, log: log, actionOutput: actionOutput)
+                    .eraseToEffect()
+            }
+            return effects
         }
     }
 }

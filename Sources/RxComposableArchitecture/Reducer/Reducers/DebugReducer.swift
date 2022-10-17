@@ -1,179 +1,85 @@
 extension ReducerProtocol {
-  /// Enhances a reducer with debug logging of received actions and state mutations.
-  ///
-  /// > Note: Printing is only done in `DEBUG` configurations.
-  ///
-  /// - Parameters:
-  ///   - prefix: A string that will prefix all debug messages.
-  ///   - actionFormat: The format used to print actions.
-  ///   - logger: A function that is used to print debug messages.
-  /// - Returns: A reducer that prints debug messages for all received actions.
-  @inlinable
-  public func debug(
-    _ prefix: String = "",
-    actionFormat: ActionFormat = .prettyPrint,
-    environment debugEnvironment: DebugEnvironment = DebugEnvironment()
-//    to logger: @escaping @Sendable (String) async -> Void = { print($0) }
-  ) -> _DebugReducer<Self, State, Action> {
-    self.debug(
-      prefix,
-      state: { $0 },
-      action: { $0 },
-      actionFormat: actionFormat,
-      environment: debugEnvironment
-    )
-  }
-
-  /// Enhances a reducer with debug logging of received actions and state mutations.
-  ///
-  /// > Note: Printing is only done in `DEBUG` configurations.
-  ///
-  /// - Parameters:
-  ///   - prefix: A string with which to prefix all debug messages.
-  ///   - toChildState: A function that filters state to be printed.
-  ///   - toChildAction: A case path that filters actions to be printed.
-  ///   - actionFormat: The format used to print actions.
-  ///   - logger: A function that is used to print debug messages.
-  /// - Returns: A reducer that prints debug messages for all received, filtered actions.
-  @inlinable
-  public func debug<ChildState, ChildAction>(
-    _ prefix: String = "",
-    state toChildState: @escaping (State) -> ChildState,
-    action toChildAction: @escaping (Action) -> ChildAction?,
-    actionFormat: ActionFormat = .prettyPrint,
-    environment toDebugEnvironment: DebugEnvironment
-  ) -> _DebugReducer<Self, ChildState, ChildAction> {
-    .init(
-      base: self,
-      prefix: prefix,
-      state: toChildState,
-      action: toChildAction,
-      actionFormat: actionFormat,
-      debugEnvironment: toDebugEnvironment
-    )
-  }
+    /// Enhances a reducer with debug logging of received actions and state mutations for the given
+    /// printer.
+    ///
+    /// > Note: Printing is only done in `DEBUG` configurations.
+    ///
+    /// - Parameter printer: A printer for printing debug messages.
+    /// - Returns: A reducer that prints debug messages for all received actions.
+    @inlinable
+    public func _printChanges(
+        _ printer: _ReducerPrinter<State, Action>? = .customDump
+    ) -> _PrintChangesReducer<Self> {
+        _PrintChangesReducer<Self>(base: self, printer: printer)
+    }
 }
 
-/// Determines how the string description of an action should be printed when using the
-/// ``ReducerProtocol/debug(_:state:action:actionFormat:to:)`` higher-order reducer.
-public enum ActionFormat: Sendable {
-  /// Prints the action in a single line by only specifying the labels of the associated values:
-  ///
-  /// ```swift
-  /// Action.screenA(.row(index:, action: .textChanged(query:)))
-  /// ```
-  case labelsOnly
-
-  /// Prints the action in a multiline, pretty-printed format, including all the labels of
-  /// any associated values, as well as the data held in the associated values:
-  ///
-  /// ```swift
-  /// Action.screenA(
-  ///   ScreenA.row(
-  ///     index: 1,
-  ///     action: RowAction.textChanged(
-  ///       query: "Hi"
-  ///     )
-  ///   )
-  /// )
-  /// ```
-  case prettyPrint
+public struct _ReducerPrinter<State, Action> {
+    private let _printChange: (_ receivedAction: Action, _ oldState: State, _ newState: State) -> Void
+    
+    public init(
+        printChange: @escaping (_ receivedAction: Action, _ oldState: State, _ newState: State) -> Void
+    ) {
+        self._printChange = printChange
+    }
+    
+    public func printChange(receivedAction: Action, oldState: State, newState: State) {
+        self._printChange(receivedAction, oldState, newState)
+    }
 }
 
-public struct _DebugReducer<Base: ReducerProtocol, DebugState, DebugAction>: ReducerProtocol {
-  @usableFromInline
-  let base: Base
+extension _ReducerPrinter {
+    public static var customDump: Self {
+        Self { receivedAction, oldState, newState in
+            var target = ""
+            target.write("received action:\n")
+            RxComposableArchitecture.customDump(receivedAction, to: &target, indent: 2)
+            target.write("\n")
+            target.write(diff(oldState, newState).map { "\($0)\n" } ?? "  (No state changes)\n")
+            print(target)
+        }
+    }
+    
+    public static var actionLabels: Self {
+        Self { receivedAction, _, _ in
+            print("received action: \(debugCaseOutput(receivedAction))")
+        }
+    }
+}
 
-  @usableFromInline
-  let prefix: String
-
-  @usableFromInline
-  let toDebugState: (State) -> DebugState
-
-  @usableFromInline
-  let toDebugAction: (Action) -> DebugAction?
-
-  @usableFromInline
-  let actionFormat: ActionFormat
-  
-  @usableFromInline
-  let debugEnvironment: DebugEnvironment
-
-  @usableFromInline
-  init(
-    base: Base,
-    prefix: String,
-    state toDebugState: @escaping (State) -> DebugState,
-    action toDebugAction: @escaping (Action) -> DebugAction?,
-    actionFormat: ActionFormat,
-    debugEnvironment: DebugEnvironment
-  ) {
-    self.base = base
-    self.prefix = prefix
-    self.toDebugState = toDebugState
-    self.toDebugAction = toDebugAction
-    self.actionFormat = actionFormat
-    self.debugEnvironment = debugEnvironment
-  }
-
-  @inlinable
-  public func reduce(
-    into state: inout Base.State, action: Base.Action
-  ) -> Effect<Base.Action> {
-    #if DEBUG
-      let previousState = self.toDebugState(state)
-      let effects = self.base.reduce(into: &state, action: action)
-      guard let debugAction = self.toDebugAction(action) else { return effects }
-      let nextState = self.toDebugState(state)
-      return .merge(
-        .fireAndForget {
-            debugEnvironment.queue.async {
-                var actionOutput = ""
-                if actionFormat == .prettyPrint {
-                    customDump(debugAction, to: &actionOutput, indent: 2)
-                } else {
-                    actionOutput.write(debugCaseOutput(debugAction).indent(by: 2))
-                }
-                let stateOutput =
-                DebugState.self == Void.self
-                ? ""
-                : diff(previousState, nextState).map { "\($0)\n" } ?? "  (No state changes)\n"
-                debugEnvironment.printer(
-                    """
-                    \(prefix.isEmpty ? "" : "\(prefix): ")received action:
-                    \(actionOutput)
-                    \(stateOutput)
-                    """
+public struct _PrintChangesReducer<Base: ReducerProtocol>: ReducerProtocol {
+    @usableFromInline
+    let base: Base
+    
+    @usableFromInline
+    let printer: _ReducerPrinter<Base.State, Base.Action>?
+    
+    @usableFromInline
+    init(base: Base, printer: _ReducerPrinter<Base.State, Base.Action>?) {
+        self.base = base
+        self.printer = printer
+    }
+    
+    @usableFromInline
+    @Dependency(\.context) var context
+    
+    @inlinable
+    public func reduce(
+        into state: inout Base.State, action: Base.Action
+    ) -> Effect<Base.Action> {
+        #if DEBUG
+            if self.context != .test, let printer = self.printer {
+                let oldState = state
+                let effects = self.base.reduce(into: &state, action: action)
+                return Effect.merge(
+                    effects,
+                    .fireAndForget { [newState = state] in
+                        printer.printChange(receivedAction: action, oldState: oldState, newState: newState)
+                    }
                 )
             }
-        },
-        effects
-      )
-      // TODO: async when supporting iOS 13+
-//      return .merge(
-//        .fireAndForget { [actionFormat] in
-//          var actionOutput = ""
-//          if actionFormat == .prettyPrint {
-//            customDump(debugAction, to: &actionOutput, indent: 2)
-//          } else {
-//            actionOutput.write(debugCaseOutput(debugAction).indent(by: 2))
-//          }
-//          let stateOutput =
-//          DebugState.self == Void.self
-//          ? ""
-//          : diff(previousState, nextState).map { "\($0)\n" } ?? "  (No state changes)\n"
-//          await self.logger(
-//            """
-//            \(self.prefix.isEmpty ? "" : "\(self.prefix): ")received action:
-//            \(actionOutput)
-//            \(stateOutput)
-//            """
-//          )
-//        },
-//        effects
-//      )
-    #else
-      return self.base.reduce(into: &state, action: action)
-    #endif
-  }
+        #endif
+        return self.base.reduce(into: &state, action: action)
+    }
 }
+
