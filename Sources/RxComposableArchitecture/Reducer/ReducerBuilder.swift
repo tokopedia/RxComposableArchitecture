@@ -1,5 +1,13 @@
+/// A result builder for combining reducers into a single reducer by running each, one after the
+/// other, and returning their merged effects.
+///
+/// It is most common to encounter a reducer builder context when conforming a type to
+/// ``ReducerProtocol`` and implementing its ``ReducerProtocol/body-swift.property-97ymy`` property.
+///
+/// See ``CombineReducers`` for an entry point into a reducer builder context.
 @resultBuilder
 public enum ReducerBuilder<State, Action> {
+  @inlinable
   public static func buildArray<R: ReducerProtocol>(_ reducers: [R]) -> _SequenceMany<R>
   where R.State == State, R.Action == Action {
     _SequenceMany(reducers: reducers)
@@ -44,28 +52,7 @@ public enum ReducerBuilder<State, Action> {
     reducer
   }
 
-  #if swift(>=5.7)
-    @_disfavoredOverload
-    @available(
-      *,
-      deprecated,
-      message:
-        """
-        Reducer bodies should return 'some ReducerProtocol<State, Action>' instead of 'Reduce<State, Action>'.
-        """
-    )
-    @inlinable
-    public static func buildFinalResult<R: ReducerProtocol>(_ reducer: R) -> Reduce<State, Action>
-    where R.State == State, R.Action == Action {
-      Reduce(reducer)
-    }
-
-    @_disfavoredOverload
-    @inlinable
-    public static func buildFinalResult(_ reducer: Reduce<State, Action>) -> Reduce<State, Action> {
-      reducer
-    }
-  #else
+  #if swift(<5.7)
     @_disfavoredOverload
     @inlinable
     public static func buildFinalResult<R: ReducerProtocol>(_ reducer: R) -> Reduce<State, Action>
@@ -110,9 +97,8 @@ public enum ReducerBuilder<State, Action> {
     case first(First)
     case second(Second)
 
-    public func reduce(into state: inout First.State, action: First.Action) -> Effect<
-      First.Action
-    > {
+    @inlinable
+    public func reduce(into state: inout First.State, action: First.Action) -> Effect<First.Action> {
       switch self {
       case let .first(first):
         return first.reduce(into: &state, action: action)
@@ -161,10 +147,10 @@ public enum ReducerBuilder<State, Action> {
 
     @inlinable
     public func reduce(into state: inout R0.State, action: R0.Action) -> Effect<R0.Action> {
-      .merge(
-        self.r0.reduce(into: &state, action: action),
-        self.r1.reduce(into: &state, action: action)
-      )
+        .merge(
+            self.r0.reduce(into: &state, action: action),
+            self.r1.reduce(into: &state, action: action)
+        )
     }
   }
 
@@ -181,7 +167,12 @@ public enum ReducerBuilder<State, Action> {
     public func reduce(
       into state: inout Element.State, action: Element.Action
     ) -> Effect<Element.Action> {
-      .merge(self.reducers.map { $0.reduce(into: &state, action: action) })
+        self.reducers.reduce(.none) {
+            .merge(
+                $0,
+                $1.reduce(into: &state, action: action)
+            )
+        }
     }
   }
 }
