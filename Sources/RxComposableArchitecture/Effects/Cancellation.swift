@@ -27,13 +27,13 @@ extension Effect {
     ///     canceled before starting this new one.
     /// - Returns: A new effect that is capable of being canceled by an identifier.
     public func cancellable(id: AnyHashable, cancelInFlight: Bool = false) -> Effect {
-        let effect = Observable<Output>.deferred {
+        let effect = Observable<Action>.deferred {
             cancellablesLock.lock()
             defer { cancellablesLock.unlock() }
 
-            let subject = PublishSubject<Output>()
+            let subject = PublishSubject<Action>()
             /// Workaround for testing `testEffectSubscriberInitializer_WithCancellation`
-            var values: [Output] = []
+            var values: [Action] = []
             var isCaching = true
             let disposable =
                 self

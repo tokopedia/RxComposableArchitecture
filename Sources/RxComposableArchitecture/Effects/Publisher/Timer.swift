@@ -7,7 +7,7 @@
 
 import RxSwift
 
-extension Effect where Output: RxAbstractInteger {
+extension Effect where Action: RxAbstractInteger {
     /// Returns an effect that repeatedly emits the current time of the given scheduler on the given
     /// interval.
     ///

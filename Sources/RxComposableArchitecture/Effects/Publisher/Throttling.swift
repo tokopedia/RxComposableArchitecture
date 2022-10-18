@@ -25,9 +25,9 @@ extension Effect {
         for interval: RxTimeInterval,
         scheduler: SchedulerType,
         latest: Bool
-    ) -> Effect<Output> {
+    ) -> Effect<Action> {
         self.observeOn(scheduler)
-            .flatMap { value -> Observable<Output> in
+            .flatMap { value -> Observable<Action> in
                 throttleLock.lock()
                 defer { throttleLock.unlock() }
                 
@@ -37,7 +37,7 @@ extension Effect {
                     return .just(value)
                 }
                 
-                let value = latest ? value : (throttleValues[id] as! Output? ?? value)
+                let value = latest ? value : (throttleValues[id] as! Action? ?? value)
                 throttleValues[id] = value
                 guard
                     scheduler.now.timeIntervalSince1970 - throttleTime.timeIntervalSince1970
@@ -83,7 +83,7 @@ extension Effect {
         for interval: RxTimeInterval,
         scheduler: SchedulerType,
         latest: Bool
-    ) -> Effect<Output> {
+    ) -> Effect<Action> {
         self.throttle(id: ObjectIdentifier(id), for: interval, scheduler: scheduler, latest: latest)
     }
 }
