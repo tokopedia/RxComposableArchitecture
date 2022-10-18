@@ -12,70 +12,71 @@ class EnvironmentDemoVC: UIScrollVC {
     private let explanationTextView: UITextView = {
         let textView = UITextView()
         textView.text = """
-        In this example, you will learn how to use Environment.
-        You'll also learn how to use side effect (such as networking and analytics)
-        Because we can initialize the environment in init, you can easily swap the environment from the EnvironmentRoute.swift. You can try to change from .live to .mock
-        """
+            In this example, you will learn how to use Environment.
+            You'll also learn how to use side effect (such as networking and analytics)
+            Because we can initialize the environment in init, you can easily swap the environment from the EnvironmentRoute.swift. You can try to change from .live to .mock
+            """
         textView.isScrollEnabled = false
         return textView
     }()
-    
+
     private let textLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
         return label
     }()
-    
+
     private let dateTextLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
         return label
     }()
-    
+
     private let uuidTextLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
         return label
     }()
-    
+
     private let loadingIndicator = UIActivityIndicatorView()
-    
+
     private let reloadButton = UIButton.template(title: "Reload")
     private let getDateButton = UIButton.template(title: "Get new Date")
     private let getUUIDButton = UIButton.template(title: "Get new UUID")
-    
+
     private let store: Store<EnvironmentState, EnvironmentAction>
-    
+
     init(store: Store<EnvironmentState, EnvironmentAction>) {
         self.store = store
         super.init()
     }
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        let stack = UIStackView.vertical(subviews: [
-            explanationTextView,
-            UIStackView.vertical(subviews: [
-                UIStackView.horizontal(subviews: [textLabel, loadingIndicator]),
-                reloadButton,
-                UIView.divider()
-            ]),
-            UIStackView.vertical(subviews: [dateTextLabel, getDateButton, UIView.divider()]),
-            UIStackView.vertical(subviews: [uuidTextLabel, getUUIDButton]),
-        ], spacing: 8)
-        
+
+        let stack = UIStackView.vertical(
+            subviews: [
+                explanationTextView,
+                UIStackView.vertical(subviews: [
+                    UIStackView.horizontal(subviews: [textLabel, loadingIndicator]),
+                    reloadButton,
+                    UIView.divider(),
+                ]),
+                UIStackView.vertical(subviews: [dateTextLabel, getDateButton, UIView.divider()]),
+                UIStackView.vertical(subviews: [uuidTextLabel, getUUIDButton]),
+            ], spacing: 8)
+
         contentView.addSubview(stack)
         stack.fillSuperview(padding: UIEdgeInsets(top: 0, left: 16, bottom: 16, right: 16))
-        
+
         reloadButton.addTarget(self, action: #selector(didTapReload), for: .touchUpInside)
         getDateButton.addTarget(self, action: #selector(didTapGetDate), for: .touchUpInside)
         getUUIDButton.addTarget(self, action: #selector(didTapGenerateUUID), for: .touchUpInside)
-        
+
         bindState()
         store.send(.didLoad)
     }
-    
+
     private func bindState() {
         store.subscribe(\.text)
             .subscribe(onNext: { [textLabel] in
@@ -106,10 +107,13 @@ class EnvironmentDemoVC: UIScrollVC {
         store.subscribe(\.alertMessage)
             .subscribe(onNext: { [weak self] message in
                 if let message = message {
-                    let alert = UIAlertController(title: message, message: nil, preferredStyle: .alert)
-                    let okAction = UIAlertAction(title: "Ok", style: .default, handler: { _ in
-                        self?.store.send(.dismissAlert)
-                    })
+                    let alert = UIAlertController(
+                        title: message, message: nil, preferredStyle: .alert)
+                    let okAction = UIAlertAction(
+                        title: "Ok", style: .default,
+                        handler: { _ in
+                            self?.store.send(.dismissAlert)
+                        })
                     alert.addAction(okAction)
                     self?.navigationController?.present(alert, animated: true)
                 }
@@ -126,19 +130,19 @@ class EnvironmentDemoVC: UIScrollVC {
             })
             .disposed(by: disposeBag)
     }
-    
+
     @objc private func didTapReload() {
         store.send(.refresh)
     }
-    
+
     @objc private func didTapGetDate() {
         store.send(.getCurrentDate)
     }
-    
+
     @objc private func didTapGenerateUUID() {
         store.send(.generateUUID)
     }
-    
+
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

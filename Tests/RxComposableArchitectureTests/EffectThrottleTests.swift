@@ -6,14 +6,14 @@ import XCTest
 final class EffectThrottleTests: XCTestCase {
     var disposeBag = DisposeBag()
     let scheduler = TestScheduler(initialClock: 0)
-    
+
     func testThrottleLatest() {
         var values: [Int] = []
         var effectRuns = 0
-        
+
         func runThrottledEffect(value: Int) {
             enum CancelToken {}
-            
+
             Observable.deferred { () -> Observable<Int> in
                 effectRuns += 1
                 return .just(value)
@@ -27,42 +27,42 @@ final class EffectThrottleTests: XCTestCase {
             })
             .disposed(by: disposeBag)
         }
-        
+
         runThrottledEffect(value: 1)
 
         scheduler.advance()
-        
+
         // A value emits right away.
         XCTAssertEqual(values, [1])
-        
+
         runThrottledEffect(value: 2)
-        
+
         scheduler.advance()
-        
+
         // A second value is throttled.
         XCTAssertEqual(values, [1])
-        
+
         scheduler.advance(by: .milliseconds(250))
-        
+
         runThrottledEffect(value: 3)
-        
+
         scheduler.advance(by: .milliseconds(250))
-        
+
         runThrottledEffect(value: 4)
-        
+
         scheduler.advance(by: .milliseconds(250))
-        
+
         runThrottledEffect(value: 5)
-        
+
         // A third value is throttled.
         XCTAssertEqual(values, [1])
-        
+
         scheduler.advance(by: .milliseconds(250))
-        
+
         // The latest value emits.
         XCTAssertEqual(values, [1, 5])
     }
-    
+
     func testThrottleFirst() {
         var values: [Int] = []
         var effectRuns = 0

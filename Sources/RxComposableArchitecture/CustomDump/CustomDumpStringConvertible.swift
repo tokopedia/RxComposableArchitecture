@@ -61,6 +61,6 @@
 /// <redacted>
 /// ```
 public protocol CustomDumpStringConvertible {
-  /// The custom dump description for this instance.
-  var customDumpDescription: String { get }
+    /// The custom dump description for this instance.
+    var customDumpDescription: String { get }
 }

@@ -107,7 +107,7 @@ extension Effect where Output: RxAbstractInteger {
             .eraseToEffect()
             .cancellable(id: id, cancelInFlight: true)
     }
-    
+
     /// Returns an effect that repeatedly emits the current time of the given scheduler on the given
     /// interval.
     ///

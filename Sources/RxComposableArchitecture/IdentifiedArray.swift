@@ -44,7 +44,7 @@ import Foundation
 ///       }
 ///     }
 public struct IdentifiedArray<ID, Element>: MutableCollection, RandomAccessCollection
-    where ID: Hashable {
+where ID: Hashable {
     /// A key path to a value that identifies an element.
     public let id: KeyPath<Element, ID>
 
@@ -63,7 +63,8 @@ public struct IdentifiedArray<ID, Element>: MutableCollection, RandomAccessColle
     /// - Parameters:
     ///   - elements: A sequence of elements.
     ///   - id: A key path to a value that identifies an element.
-    public init<S>(_ elements: S, id: KeyPath<Element, ID>) where S: Sequence, S.Element == Element {
+    public init<S>(_ elements: S, id: KeyPath<Element, ID>)
+    where S: Sequence, S.Element == Element {
         self.id = id
 
         let idsAndElements = elements.map { (id: $0[keyPath: id], element: $0) }
@@ -201,9 +202,9 @@ public struct IdentifiedArray<ID, Element>: MutableCollection, RandomAccessColle
     }
 
     /// Unavailable, if needed, please implement this, The implementation of `move` is in SwitUI.Collection.Array
-//    public mutating func move(fromOffsets source: IndexSet, toOffset destination: Int) {
-//        self.ids.move(fromOffsets: source, toOffset: destination)
-//    }
+    //    public mutating func move(fromOffsets source: IndexSet, toOffset destination: Int) {
+    //        self.ids.move(fromOffsets: source, toOffset: destination)
+    //    }
 
     public mutating func sort(by areInIncreasingOrder: (Element, Element) throws -> Bool) rethrows {
         try ids.sort {
@@ -243,7 +244,8 @@ extension IdentifiedArray: CustomStringConvertible {
     }
 }
 
-extension IdentifiedArray: Decodable where Element: Decodable & HashDiffable, ID == Element.IdentifierType {
+extension IdentifiedArray: Decodable
+where Element: Decodable & HashDiffable, ID == Element.IdentifierType {
     public init(from decoder: Decoder) throws {
         self.init(try [Element](from: decoder))
     }
@@ -265,7 +267,8 @@ extension IdentifiedArray where Element: Comparable {
     }
 }
 
-extension IdentifiedArray: ExpressibleByArrayLiteral where Element: HashDiffable, ID == Element.IdentifierType {
+extension IdentifiedArray: ExpressibleByArrayLiteral
+where Element: HashDiffable, ID == Element.IdentifierType {
     public init(arrayLiteral elements: Element...) {
         self.init(elements)
     }
@@ -278,13 +281,13 @@ extension IdentifiedArray where Element: HashDiffable, ID == Element.IdentifierT
 }
 
 extension IdentifiedArray: RangeReplaceableCollection
-    where Element: HashDiffable, ID == Element.IdentifierType {
+where Element: HashDiffable, ID == Element.IdentifierType {
     public init() {
         self.init([], id: \.id)
     }
 
     public mutating func replaceSubrange<C, R>(_ subrange: R, with newElements: C)
-        where C: Collection, R: RangeExpression, Element == C.Element, Index == R.Bound {
+    where C: Collection, R: RangeExpression, Element == C.Element, Index == R.Bound {
         let replacingIds = ids[subrange]
         let newIds = newElements.map { $0.id }
         ids.replaceSubrange(subrange, with: newIds)
@@ -301,7 +304,7 @@ extension IdentifiedArray: RangeReplaceableCollection
 
 /// A convenience type to specify an `IdentifiedArray` by an identifiable element.
 public typealias IdentifiedArrayOf<Element> = IdentifiedArray<Element.IdentifierType, Element>
-    where Element: HashDiffable
+where Element: HashDiffable
 
 extension IdentifiedArrayOf where Element: HashDiffable, Element.IdentifierType == ID {
     public func removeDuplicates() -> Self {

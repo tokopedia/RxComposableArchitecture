@@ -19,7 +19,7 @@ struct Benchmarking: AnyBenchmark {
     private let _run: () throws -> Void
     private let _setUp: () -> Void
     private let _tearDown: () -> Void
-    
+
     init(
         name: String,
         run: @escaping () throws -> Void,
@@ -31,15 +31,15 @@ struct Benchmarking: AnyBenchmark {
         self._setUp = setUp
         self._tearDown = tearDown
     }
-    
+
     func setUp() {
         self._setUp()
     }
-    
+
     func run(_ state: inout BenchmarkState) throws {
         try self._run()
     }
-    
+
     func tearDown() {
         self._tearDown()
     }
@@ -49,6 +49,6 @@ struct Benchmarking: AnyBenchmark {
 func doNotOptimizeAway<T>(_ x: T) {
     @_optimize(none)
     func assumePointeeIsRead(_ x: UnsafeRawPointer) {}
-    
+
     withUnsafePointer(to: x) { assumePointeeIsRead($0) }
 }

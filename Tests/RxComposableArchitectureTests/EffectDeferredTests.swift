@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import RxSwift
 import RxComposableArchitecture
+import RxSwift
 import XCTest
 
 internal final class EffectDeferredTests: XCTestCase {

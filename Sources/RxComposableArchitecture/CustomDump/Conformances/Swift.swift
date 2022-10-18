@@ -1,24 +1,24 @@
 extension Character: CustomDumpRepresentable {
-  public var customDumpValue: Any {
-    String(self)
-  }
+    public var customDumpValue: Any {
+        String(self)
+    }
 }
 
 extension ObjectIdentifier: CustomDumpStringConvertible {
-  public var customDumpDescription: String {
-    self.debugDescription
-      .replacingOccurrences(of: "0x0*", with: "0x", options: .regularExpression)
-  }
+    public var customDumpDescription: String {
+        self.debugDescription
+            .replacingOccurrences(of: "0x0*", with: "0x", options: .regularExpression)
+    }
 }
 
 extension StaticString: CustomDumpRepresentable {
-  public var customDumpValue: Any {
-    "\(self)"
-  }
+    public var customDumpValue: Any {
+        "\(self)"
+    }
 }
 
 extension UnicodeScalar: CustomDumpRepresentable {
-  public var customDumpValue: Any {
-    String(self)
-  }
+    public var customDumpValue: Any {
+        String(self)
+    }
 }

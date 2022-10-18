@@ -12,7 +12,7 @@ extension Reducer {
     public var optional: Reducer<State?, Action, Environment> {
         self.optional()
     }
-    
+
     /// https://github.com/pointfreeco/swift-composable-architecture/pull/641
     @available(*, deprecated, message: "Use the 'IdentifiedArray'-based version, instead.")
     public func forEach<GlobalState, GlobalAction, GlobalEnvironment>(
@@ -83,14 +83,17 @@ extension Reducer where State: HashDiffable {
         action toLocalAction: CasePath<GlobalAction, (Identifier, Action)>,
         environment toLocalEnvironment: @escaping (GlobalEnvironment) -> Environment
     ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment>
-        where Identifier == State.IdentifierType {
+    where Identifier == State.IdentifierType {
         .init { globalState, globalAction, globalEnvironment in
             guard let (identifier, localAction) = toLocalAction.extract(from: globalAction) else {
                 return .none
             }
 
             // search index of identifier
-            guard let index = globalState[keyPath: toLocalState].firstIndex(where: { $0.id == identifier })
+            guard
+                let index = globalState[keyPath: toLocalState].firstIndex(where: {
+                    $0.id == identifier
+                })
             else {
                 assertionFailure("\(identifier) is not exist on Global State")
                 return .none

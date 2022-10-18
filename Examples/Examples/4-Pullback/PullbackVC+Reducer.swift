@@ -18,7 +18,8 @@ internal enum PullbackAction: Equatable {
     case counter(CounterAction)
 }
 
-internal let pullbackCounterReducer = Reducer<CounterState, CounterAction, Void> { state, action, _ in
+internal let pullbackCounterReducer = Reducer<CounterState, CounterAction, Void> {
+    state, action, _ in
     switch action {
     case .didTapMinus:
         state.number -= 1

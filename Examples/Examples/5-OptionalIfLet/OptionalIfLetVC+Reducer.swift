@@ -24,7 +24,7 @@ internal let optionalIfLetReducer = Reducer<OptionalIfLetState, OptionalIfLetAct
             state: \.counter,
             action: /OptionalIfLetAction.counter,
             environment: { _ in }
-    ),
+        ),
     Reducer { state, action, _ in
         switch action {
         case .didToggle:

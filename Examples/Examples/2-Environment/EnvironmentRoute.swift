@@ -22,53 +22,59 @@ class EnvironmentRouteVC: UITableViewController {
         title = "RxComposableArchitecture Examples"
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
     }
-    
+
     override internal func tableView(_: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
         let selectedRoute = routes[indexPath.row]
         switch selectedRoute {
         case .live:
-            let viewController = EnvironmentDemoVC(store: Store(
-                initialState: EnvironmentState(),
-                reducer: environmentReducer,
-                environment: EnvironmentVCEnvironment.live
-            ))
+            let viewController = EnvironmentDemoVC(
+                store: Store(
+                    initialState: EnvironmentState(),
+                    reducer: environmentReducer,
+                    environment: EnvironmentVCEnvironment.live
+                ))
             navigationController?.pushViewController(viewController, animated: true)
         case .mockSuccess:
-            let viewController = EnvironmentDemoVC(store: Store(
-                initialState: EnvironmentState(),
-                reducer: environmentReducer,
-                environment: EnvironmentVCEnvironment.mockSuccess
-            ))
+            let viewController = EnvironmentDemoVC(
+                store: Store(
+                    initialState: EnvironmentState(),
+                    reducer: environmentReducer,
+                    environment: EnvironmentVCEnvironment.mockSuccess
+                ))
             navigationController?.pushViewController(viewController, animated: true)
         case .mockFailed:
-            let viewController = EnvironmentDemoVC(store: Store(
-                initialState: EnvironmentState(),
-                reducer: environmentReducer,
-                environment: EnvironmentVCEnvironment.mockFailed
-            ))
+            let viewController = EnvironmentDemoVC(
+                store: Store(
+                    initialState: EnvironmentState(),
+                    reducer: environmentReducer,
+                    environment: EnvironmentVCEnvironment.mockFailed
+                ))
             navigationController?.pushViewController(viewController, animated: true)
         case .mockRandom:
-            let viewController = EnvironmentDemoVC(store: Store(
-                initialState: EnvironmentState(),
-                reducer: environmentReducer,
-                environment: EnvironmentVCEnvironment.mockRandom
-            ))
+            let viewController = EnvironmentDemoVC(
+                store: Store(
+                    initialState: EnvironmentState(),
+                    reducer: environmentReducer,
+                    environment: EnvironmentVCEnvironment.mockRandom
+                ))
             navigationController?.pushViewController(viewController, animated: true)
         }
     }
-    
+
     override func tableView(_: UITableView, numberOfRowsInSection _: Int) -> Int {
         routes.count
     }
 
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath)
+        -> UITableViewCell
+    {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         cell.textLabel?.text = routes[indexPath.row].rawValue
         return cell
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

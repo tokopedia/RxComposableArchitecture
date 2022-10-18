@@ -164,7 +164,8 @@
                 return
             }
 
-            filteredSections = data
+            filteredSections =
+                data
                 .compactMap { section -> Section? in
                     let filteredMocks = section.mocks
                         .filter { $0.title.lowercased().contains(searchKeyword.lowercased()) }
@@ -200,12 +201,15 @@
             filteredSections[section].mocks.count
         }
 
-        override open func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        override open func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
+        {
             tableView.deselectRow(at: indexPath, animated: true)
             filteredSections[indexPath.section].mocks[indexPath.row].apply()
         }
 
-        override open func tableView(_: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        override open func tableView(_: UITableView, cellForRowAt indexPath: IndexPath)
+            -> UITableViewCell
+        {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell") else {
                 return UITableViewCell()
             }
@@ -216,7 +220,9 @@
             return cell
         }
 
-        override open func tableView(_: UITableView, titleForHeaderInSection section: Int) -> String? {
+        override open func tableView(_: UITableView, titleForHeaderInSection section: Int)
+            -> String?
+        {
             filteredSections[section].title
         }
     }

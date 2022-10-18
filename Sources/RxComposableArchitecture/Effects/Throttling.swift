@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by jefferson.setiawan on 05/07/22.
 //
@@ -30,13 +30,13 @@ extension Effect {
             .flatMap { value -> Observable<Output> in
                 throttleLock.lock()
                 defer { throttleLock.unlock() }
-                
+
                 guard let throttleTime = throttleTimes[id] as! Date? else {
                     throttleTimes[id] = scheduler.now
                     throttleValues[id] = nil
                     return .just(value)
                 }
-                
+
                 let value = latest ? value : (throttleValues[id] as! Output? ?? value)
                 throttleValues[id] = value
                 guard
@@ -47,8 +47,10 @@ extension Effect {
                     throttleValues[id] = nil
                     return .just(value)
                 }
-                let delayTimeInMs = Int((throttleTime.addingTimeInterval(interval.convertToSecondsInterval).timeIntervalSince1970
-                                         - scheduler.now.timeIntervalSince1970) * 1_000)
+                let delayTimeInMs = Int(
+                    (throttleTime.addingTimeInterval(interval.convertToSecondsInterval)
+                        .timeIntervalSince1970
+                        - scheduler.now.timeIntervalSince1970) * 1_000)
                 return .just(value)
                     .delay(
                         .milliseconds(delayTimeInMs),
@@ -63,7 +65,7 @@ extension Effect {
             .eraseToEffect()
             .cancellable(id: id, cancelInFlight: true)
     }
-    
+
     /// Throttles an effect so that it only publishes one output per given interval.
     ///
     /// A convenience for calling ``Effect/throttle(id:for:scheduler:latest:)-5jfpx`` with a static

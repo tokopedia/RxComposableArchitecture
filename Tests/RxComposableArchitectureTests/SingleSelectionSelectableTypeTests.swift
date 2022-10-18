@@ -24,7 +24,7 @@ internal final class SingleSelectionSelectableTypeTests: XCTestCase {
             Item(id: 1, isSelected: false),
             Item(id: 2, isSelected: false),
             Item(id: 3, isSelected: false),
-            Item(id: 4, isSelected: false)
+            Item(id: 4, isSelected: false),
         ])
 
         let target = State(items: .init(wrappedValue: initialItems))
@@ -36,7 +36,7 @@ internal final class SingleSelectionSelectableTypeTests: XCTestCase {
             Item(id: 0, isSelected: true),
             Item(id: 1, isSelected: false),
             Item(id: 2, isSelected: false),
-            Item(id: 3, isSelected: false)
+            Item(id: 3, isSelected: false),
         ])
 
         let target = State(items: SingleSelection<Item>(wrappedValue: initialItems))
@@ -48,7 +48,7 @@ internal final class SingleSelectionSelectableTypeTests: XCTestCase {
             Item(id: 0, isSelected: false),
             Item(id: 1, isSelected: true),
             Item(id: 2, isSelected: true),
-            Item(id: 3, isSelected: true)
+            Item(id: 3, isSelected: true),
         ])
 
         let target = State(items: SingleSelection<Item>(wrappedValue: initialItems))
@@ -60,7 +60,7 @@ internal final class SingleSelectionSelectableTypeTests: XCTestCase {
             Item(id: 0, isSelected: true),
             Item(id: 1, isSelected: false),
             Item(id: 2, isSelected: false),
-            Item(id: 3, isSelected: false)
+            Item(id: 3, isSelected: false),
         ])
 
         var target = State(items: SingleSelection<Item>(wrappedValue: initialItems))
@@ -69,12 +69,14 @@ internal final class SingleSelectionSelectableTypeTests: XCTestCase {
         AssertSelection(target, selectionId: 1)
     }
 
-    internal func test_initWithMultipleSelection_shouldSelectTheFirstOne_thenChangeSelectionSeveralTime() {
+    internal func
+        test_initWithMultipleSelection_shouldSelectTheFirstOne_thenChangeSelectionSeveralTime()
+    {
         let initialItems = IdentifiedArray([
             Item(id: 0, isSelected: false),
             Item(id: 1, isSelected: true),
             Item(id: 2, isSelected: true),
-            Item(id: 3, isSelected: true)
+            Item(id: 3, isSelected: true),
         ])
 
         var target = State(items: SingleSelection<Item>(wrappedValue: initialItems))
@@ -96,7 +98,8 @@ internal final class SingleSelectionSelectableTypeTests: XCTestCase {
         }
 
         guard let element = selected[id: id] else {
-            XCTFail("element is not valid", file: file, line: line); return
+            XCTFail("element is not valid", file: file, line: line)
+            return
         }
 
         XCTAssertTrue(selected.count == 1 && element.isSelected, file: file, line: line)

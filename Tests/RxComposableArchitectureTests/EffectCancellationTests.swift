@@ -138,7 +138,7 @@ internal final class EffectCancellationTests: XCTestCase {
         Effect<Never>.cancel(id: 1)
             .subscribe()
             .disposed(by: disposeBag)
-        
+
         XCTAssertTrue(cancellationCancellables.isEmpty)
     }
 
@@ -197,7 +197,7 @@ internal final class EffectCancellationTests: XCTestCase {
             .eraseToEffect()
             .cancellable(id: 1)
 
-        for _ in 1 ... .random(in: 1 ... 1000) {
+        for _ in 1 ... .random(in: 1...1000) {
             effect = effect.cancellable(id: 1)
         }
 
@@ -254,14 +254,14 @@ internal final class EffectCancellationTests: XCTestCase {
         scheduler.advance(by: .seconds(1))
         XCTAssertEqual(expectedOutput, [])
     }
-    
+
     internal func testNestedMergeCancellation() {
         let effect = Effect<Int>.merge(
             Observable.of(1, 2)
                 .eraseToEffect()
                 .cancellable(id: 1)
         )
-            .cancellable(id: 2)
+        .cancellable(id: 2)
 
         var output: [Int] = []
         effect

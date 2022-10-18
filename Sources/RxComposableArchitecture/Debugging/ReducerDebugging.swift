@@ -210,9 +210,10 @@ extension Reducer {
                                 actionOutput.write(debugCaseOutput(localAction).indent(by: 2))
                             }
                             let stateOutput =
-                            LocalState.self == Void.self
-                            ? ""
-                            : diff(previousState, nextState).map { "\($0)\n" } ?? "  (No state changes)\n"
+                                LocalState.self == Void.self
+                                ? ""
+                                : diff(previousState, nextState).map { "\($0)\n" }
+                                    ?? "  (No state changes)\n"
                             debugEnvironment.printer(
                                 """
                                 \(prefix.isEmpty ? "" : "\(prefix): ")received action:

@@ -11,7 +11,7 @@ import RxSwift
 extension EnvironmentVCEnvironment {
     internal static let live = Self(
         loadData: {
-            Observable.just(Result.success(Int.random(in: 0 ... 10000)))
+            Observable.just(Result.success(Int.random(in: 0...10000)))
                 .delay(.milliseconds(500), scheduler: MainScheduler.instance)
                 .eraseToEffect()
         },
@@ -22,7 +22,7 @@ extension EnvironmentVCEnvironment {
 
     internal static let mockSuccess = Self(
         loadData: {
-            Observable.just(Result.success(Int.random(in: 0 ... 10000)))
+            Observable.just(Result.success(Int.random(in: 0...10000)))
                 .delay(.milliseconds(500), scheduler: MainScheduler.instance)
                 .eraseToEffect()
         },
@@ -37,9 +37,12 @@ extension EnvironmentVCEnvironment {
     )
     internal static let mockFailed = Self(
         loadData: {
-            Observable.just(Result.failure(CustomError(message: "Server Error code: \(Int.random(in: 0 ... 500))")))
-                .delay(.milliseconds(500), scheduler: MainScheduler.instance)
-                .eraseToEffect()
+            Observable.just(
+                Result.failure(
+                    CustomError(message: "Server Error code: \(Int.random(in: 0 ... 500))"))
+            )
+            .delay(.milliseconds(500), scheduler: MainScheduler.instance)
+            .eraseToEffect()
         },
         trackEvent: {
             print("MOCKING \($0)")
@@ -54,13 +57,15 @@ extension EnvironmentVCEnvironment {
     internal static let mockRandom = Self(
         loadData: {
             if Bool.random() {
-                return Observable.just(Result<Int, CustomError>.success(Int.random(in: 0 ... 10000)))
+                return Observable.just(Result<Int, CustomError>.success(Int.random(in: 0...10000)))
                     .delay(.milliseconds(500), scheduler: MainScheduler.instance)
                     .eraseToEffect()
             } else {
-                return Observable.just(Result<Int, CustomError>.failure(CustomError(message: "Server Error")))
-                    .delay(.milliseconds(500), scheduler: MainScheduler.instance)
-                    .eraseToEffect()
+                return Observable.just(
+                    Result<Int, CustomError>.failure(CustomError(message: "Server Error"))
+                )
+                .delay(.milliseconds(500), scheduler: MainScheduler.instance)
+                .eraseToEffect()
             }
         },
         trackEvent: {

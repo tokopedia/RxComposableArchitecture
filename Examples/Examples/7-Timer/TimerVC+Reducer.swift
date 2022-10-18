@@ -25,7 +25,7 @@ internal let timerDemoReducer = Reducer<TimerState, TimerAction, Void> { state, 
                 print(">> Timer tick")
                 return TimerAction.onTimerTick
             }
-        
+
     case .onTimerTick:
         state.tickCount += 1
         return .none

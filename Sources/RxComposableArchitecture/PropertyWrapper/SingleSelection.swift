@@ -5,94 +5,92 @@
 //  Created by Wendy Liga on 25/05/21.
 //
 
-/**
- PropertyWrapper to help manage single selection on `IdentifiedArray`.
-
- if you have state like this
-
- ```swift
- struct Item: HashDiffable, Equatable {
-     let id: Int
-     var isSelected: Bool
- }
-
- let itemReducer = Reducer... {
-    switch action {
-       case .tap:
-          state.isSelected = true
-    }
- }
-
- struct State {
-     var items: IdentifiedArrayOf<Item>
- }
-
- let stateReducer = Reducer... {
-    switch action {
-       case .item(id, .tap):
-            state.items = state.items.map { item in
-                var newItem = item
-                newItem.isSelected = newItem.id == id
-
-                return newItem
-            }
-    }
- }
- ```
-
- as you can see you need to handle the action on parent too, loop each item to select only on selected `id`
- here, `SingleSelection` comes to rescue.
-
- ```swift
- struct Item: HashDiffable, Equatable {
-     let id: Int
-     var isSelected: Bool
- }
-
- let itemReducer = Reducer... {
-    switch action {
-       case .tap:
-          state.isSelected = true
-    }
- }
-
- struct State {
-     @SingleSelection(wrappedValue: [], selection: \.isSelected)
-     var items: IdentifiedArrayOf<Item>
- }
-
- let stateReducer = Reducer... {
-    switch action {
-       case .item(id, .tap):
-       # you don't need to handle it manually on parent side #
-    }
- }
- ```
-
- ## how to use
- ```
- @SingleSelection(wrappedValue: [], selection: \.isSelected)
- ```
- by using `SingleSelection`, you don't need to handle the single selection manually,
- just set selection from child side, and `SingleSelection` will automatically unselect previous one and select the new one.
-
- your array item also can conform to `Selectable`, so you don't need to manually give the keypath
-
- ```swift
- struct Item: HashDiffable, Equatable, Selectable {
-     let id: Int
-     var isSelected: Bool
- }
-
- struct State {
-     @SingleSelection
-     var items: IdentifiedArrayOf<Item>
- }
- ```
-
- - Complexity: O(n)
- everytime array is mutated, SingleSelection need to check if only one item is selected every time mutation happend.
- */
+/// PropertyWrapper to help manage single selection on `IdentifiedArray`.
+///
+/// if you have state like this
+///
+/// ```swift
+/// struct Item: HashDiffable, Equatable {
+///     let id: Int
+///     var isSelected: Bool
+/// }
+///
+/// let itemReducer = Reducer... {
+///    switch action {
+///       case .tap:
+///          state.isSelected = true
+///    }
+/// }
+///
+/// struct State {
+///     var items: IdentifiedArrayOf<Item>
+/// }
+///
+/// let stateReducer = Reducer... {
+///    switch action {
+///       case .item(id, .tap):
+///            state.items = state.items.map { item in
+///                var newItem = item
+///                newItem.isSelected = newItem.id == id
+///
+///                return newItem
+///            }
+///    }
+/// }
+/// ```
+///
+/// as you can see you need to handle the action on parent too, loop each item to select only on selected `id`
+/// here, `SingleSelection` comes to rescue.
+///
+/// ```swift
+/// struct Item: HashDiffable, Equatable {
+///     let id: Int
+///     var isSelected: Bool
+/// }
+///
+/// let itemReducer = Reducer... {
+///    switch action {
+///       case .tap:
+///          state.isSelected = true
+///    }
+/// }
+///
+/// struct State {
+///     @SingleSelection(wrappedValue: [], selection: \.isSelected)
+///     var items: IdentifiedArrayOf<Item>
+/// }
+///
+/// let stateReducer = Reducer... {
+///    switch action {
+///       case .item(id, .tap):
+///       # you don't need to handle it manually on parent side #
+///    }
+/// }
+/// ```
+///
+/// ## how to use
+/// ```
+/// @SingleSelection(wrappedValue: [], selection: \.isSelected)
+/// ```
+/// by using `SingleSelection`, you don't need to handle the single selection manually,
+/// just set selection from child side, and `SingleSelection` will automatically unselect previous one and select the new one.
+///
+/// your array item also can conform to `Selectable`, so you don't need to manually give the keypath
+///
+/// ```swift
+/// struct Item: HashDiffable, Equatable, Selectable {
+///     let id: Int
+///     var isSelected: Bool
+/// }
+///
+/// struct State {
+///     @SingleSelection
+///     var items: IdentifiedArrayOf<Item>
+/// }
+/// ```
+///
+/// - Complexity: O(n)
+/// everytime array is mutated, SingleSelection need to check if only one item is selected every time mutation happend.
 @propertyWrapper
 public struct SingleSelection<Element> where Element: HashDiffable {
     private let _getSelection: (Element) -> Bool
@@ -159,7 +157,8 @@ public struct SingleSelection<Element> where Element: HashDiffable {
      */
     private mutating func set(_ values: IdentifiedArrayOf<Element>) {
         /// filter all element where `isSelected` is true, and map it to its `Element.IdentifierType` or `id`
-        let selectedIds = values
+        let selectedIds =
+            values
             .compactMap { value -> Element.IdentifierType? in
                 guard _getSelection(value) else { return nil }
                 return value.id
@@ -172,12 +171,12 @@ public struct SingleSelection<Element> where Element: HashDiffable {
             // if new given array has more than 1 item selected, will select first index and delesect else.
             if selectedIds.count > 1 {
                 // loop every other id that is selected other than intented
-                (1 ..< selectedIds.endIndex).forEach { offset in
+                (1..<selectedIds.endIndex).forEach { offset in
                     let id = selectedIds[offset]
                     // if not nil
                     _values[id: id].map { value in
                         var value = value
-                        _setSelection(&value, false) // unselect
+                        _setSelection(&value, false)  // unselect
                         _values[id: id] = value
                     }
                 }

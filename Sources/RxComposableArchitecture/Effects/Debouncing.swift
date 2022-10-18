@@ -34,7 +34,7 @@ extension Effect {
             .eraseToEffect()
             .cancellable(id: id, cancelInFlight: true)
     }
-    
+
     /// Turns an effect into one that can be debounced.
     ///
     /// A convenience for calling ``Effect/debounce(id:for:scheduler:options:)-76yye`` with a static

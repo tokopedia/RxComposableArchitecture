@@ -1,6 +1,6 @@
 import Foundation
-import RxSwift
 import RxComposableArchitecture
+import RxSwift
 import XCTest
 
 internal final class EffectDebounceTests: XCTestCase {

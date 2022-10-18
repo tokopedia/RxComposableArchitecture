@@ -22,15 +22,13 @@ internal struct Stack<Element> {
     }
 }
 
-/**
- `References`:
-    **About the Code Reference**
-    - https://github.com/Instagram/IGListKit/blob/master/Source/IGListDiff.mm
-
-    **If You want to learn the Algorithm**
-    - https://github.com/AmbarSeptian/DiffingSharingSession
-    - https://docs.google.com/spreadsheets/d/10CV51it4Oq_Uv1sTS8wBLdGyiE6t5OGtFBT-gCn7w1k/edit?usp=sharing
- */
+/// `References`:
+///    **About the Code Reference**
+///    - https://github.com/Instagram/IGListKit/blob/master/Source/IGListDiff.mm
+///
+///    **If You want to learn the Algorithm**
+///    - https://github.com/AmbarSeptian/DiffingSharingSession
+///    - https://docs.google.com/spreadsheets/d/10CV51it4Oq_Uv1sTS8wBLdGyiE6t5OGtFBT-gCn7w1k/edit?usp=sharing
 public enum DiffingInterfaceList {
     /// Used to track data stats while diffing.
     /// We expect to keep a reference of entry, thus its declaration as (final) class.
@@ -91,7 +89,8 @@ public enum DiffingInterfaceList {
         public var oldMap = [AnyHashable: Int]()
         public var newMap = [AnyHashable: Int]()
         public var hasChanges: Bool {
-            return (inserts.count > 0) || (deletes.count > 0) || (updates.count > 0) || (moves.count > 0)
+            return (inserts.count > 0) || (deletes.count > 0) || (updates.count > 0)
+                || (moves.count > 0)
         }
 
         public var changeCount: Int {
@@ -164,7 +163,9 @@ public enum DiffingInterfaceList {
         newRecords.enumerated().filter { $1.entry.occurOnBothSides }.forEach { i, newRecord in
             let entry = newRecord.entry
             // grab and pop the top old index. if the item was inserted this will be nil
-            assert(!entry.oldIndexes.isEmpty, "Old indexes is empty while iterating new item \(i). Should have nil")
+            assert(
+                !entry.oldIndexes.isEmpty,
+                "Old indexes is empty while iterating new item \(i). Should have nil")
             guard let oldIndex = entry.oldIndexes.pop() else {
                 return
             }
@@ -216,7 +217,7 @@ public enum DiffingInterfaceList {
                 if (oldIndex - deleteOffset + insertOffset) != i {
                     result.moves.append(MoveIndex(from: oldIndex, to: i))
                 }
-            } else { // add to inserts if the opposing index is nil
+            } else {  // add to inserts if the opposing index is nil
                 result.inserts.insert(i)
                 runningOffset += 1
             }
@@ -224,7 +225,10 @@ public enum DiffingInterfaceList {
             return insertOffset
         }
 
-        assert(result.validate(oldArray, newArray), "Sanity check failed applying \(result.inserts.count) inserts and \(result.deletes.count) deletes to old count \(oldArray.count) equaling new count \(newArray.count)")
+        assert(
+            result.validate(oldArray, newArray),
+            "Sanity check failed applying \(result.inserts.count) inserts and \(result.deletes.count) deletes to old count \(oldArray.count) equaling new count \(newArray.count)"
+        )
 
         return result
     }

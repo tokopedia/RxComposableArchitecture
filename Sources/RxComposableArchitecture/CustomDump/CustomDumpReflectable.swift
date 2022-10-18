@@ -120,12 +120,12 @@
 /// []
 /// ```
 public protocol CustomDumpReflectable {
-  /// The custom dump mirror for this instance.
-  var customDumpMirror: Mirror { get }
+    /// The custom dump mirror for this instance.
+    var customDumpMirror: Mirror { get }
 }
 
 extension Mirror {
-  init(customDumpReflecting subject: Any) {
-    self = (subject as? CustomDumpReflectable)?.customDumpMirror ?? Mirror(reflecting: subject)
-  }
+    init(customDumpReflecting subject: Any) {
+        self = (subject as? CustomDumpReflectable)?.customDumpMirror ?? Mirror(reflecting: subject)
+    }
 }

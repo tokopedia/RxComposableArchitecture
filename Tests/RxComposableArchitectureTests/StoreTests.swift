@@ -103,7 +103,7 @@ internal final class StoreTests: XCTestCase {
 
         XCTAssertEqual(numCalls1, 2)
     }
-    
+
     internal func testScopeCallCountUsingNewScope() {
         let counterReducer = Reducer<Int, Void, Void> { state, _, _ in state += 1
             return .none
@@ -165,7 +165,7 @@ internal final class StoreTests: XCTestCase {
         XCTAssertEqual(numCalls2, 11)
         XCTAssertEqual(numCalls3, 14)
     }
-    
+
     internal func testScopeCallCount2UsingNewScope() {
         let counterReducer = Reducer<Int, Void, Void> { state, _, _ in
             state += 1
@@ -176,19 +176,21 @@ internal final class StoreTests: XCTestCase {
         var numCalls2 = 0
         var numCalls3 = 0
 
-        let store = Store(initialState: 0, reducer: counterReducer, environment: (), useNewScope: true)
-            .scope(state: { (count: Int) -> Int in
-                numCalls1 += 1
-                return count
-            })
-            .scope(state: { (count: Int) -> Int in
-                numCalls2 += 1
-                return count
-            })
-            .scope(state: { (count: Int) -> Int in
-                numCalls3 += 1
-                return count
-            })
+        let store = Store(
+            initialState: 0, reducer: counterReducer, environment: (), useNewScope: true
+        )
+        .scope(state: { (count: Int) -> Int in
+            numCalls1 += 1
+            return count
+        })
+        .scope(state: { (count: Int) -> Int in
+            numCalls2 += 1
+            return count
+        })
+        .scope(state: { (count: Int) -> Int in
+            numCalls3 += 1
+            return count
+        })
 
         XCTAssertEqual(numCalls1, 1)
         XCTAssertEqual(numCalls2, 1)
@@ -212,7 +214,7 @@ internal final class StoreTests: XCTestCase {
         XCTAssertEqual(numCalls2, 4)
         XCTAssertEqual(numCalls3, 4)
     }
-    
+
     internal func testScopeAtIndexCallCount2() {
         struct Item: HashDiffable, Equatable {
             var id: Int
@@ -234,33 +236,35 @@ internal final class StoreTests: XCTestCase {
 
         var numCalls1 = 0
         var numCalls2 = 0
-        
+
         let mock = (1...3).map {
             Item(id: $0, qty: 1)
         }
 
-        let store = Store(initialState: IdentifiedArrayOf(mock), reducer: itemReducer, environment: ())
-            .scope(state: { (item: IdentifiedArrayOf<Item>) -> IdentifiedArrayOf<Item> in
-                numCalls1 += 1
-                return item
-            })
-            .scope(at: 1, action: Action.item)!
-            .scope(state: { (item: Item) -> Item in
-                numCalls2 += 1
-                return item
-            })
+        let store = Store(
+            initialState: IdentifiedArrayOf(mock), reducer: itemReducer, environment: ()
+        )
+        .scope(state: { (item: IdentifiedArrayOf<Item>) -> IdentifiedArrayOf<Item> in
+            numCalls1 += 1
+            return item
+        })
+        .scope(at: 1, action: Action.item)!
+        .scope(state: { (item: Item) -> Item in
+            numCalls2 += 1
+            return item
+        })
 
         store.send((1, .didTap))
         XCTAssertEqual(numCalls1, 4)
         XCTAssertEqual(numCalls2, 5)
         XCTAssertEqual(store.state.qty, 2)
-        
+
         store.send((1, .didTap))
         XCTAssertEqual(numCalls1, 6)
         XCTAssertEqual(numCalls2, 8)
         XCTAssertEqual(store.state.qty, 3)
     }
-    
+
     internal func testScopeAtIndexCallCount2UseNewScope() {
         struct Item: HashDiffable, Equatable {
             var id: Int
@@ -282,27 +286,30 @@ internal final class StoreTests: XCTestCase {
 
         var numCalls1 = 0
         var numCalls2 = 0
-        
+
         let mock = (1...3).map {
             Item(id: $0, qty: 1)
         }
 
-        let store = Store(initialState: IdentifiedArrayOf(mock), reducer: itemReducer, environment: (), useNewScope: true)
-            .scope(state: { (item: IdentifiedArrayOf<Item>) -> IdentifiedArrayOf<Item> in
-                numCalls1 += 1
-                return item
-            })
-            .scope(at: 1, action: Action.item)!
-            .scope(state: { (item: Item) -> Item in
-                numCalls2 += 1
-                return item
-            })
+        let store = Store(
+            initialState: IdentifiedArrayOf(mock), reducer: itemReducer, environment: (),
+            useNewScope: true
+        )
+        .scope(state: { (item: IdentifiedArrayOf<Item>) -> IdentifiedArrayOf<Item> in
+            numCalls1 += 1
+            return item
+        })
+        .scope(at: 1, action: Action.item)!
+        .scope(state: { (item: Item) -> Item in
+            numCalls2 += 1
+            return item
+        })
 
         store.send((1, .didTap))
         XCTAssertEqual(numCalls1, 2)
         XCTAssertEqual(numCalls2, 2)
         XCTAssertEqual(store.state.qty, 2)
-        
+
         store.send((1, .didTap))
         XCTAssertEqual(numCalls1, 3)
         XCTAssertEqual(numCalls2, 3)
@@ -483,7 +490,7 @@ internal final class StoreTests: XCTestCase {
         }
         subject.onCompleted()
     }
-    
+
     internal func testCoalesceSynchronousActions() {
         let store = Store(
             initialState: 0,
@@ -502,19 +509,19 @@ internal final class StoreTests: XCTestCase {
             },
             environment: ()
         )
-        
+
         var emissions: [Int] = []
         store.subscribe { $0 }
             .subscribe { emissions.append($0) }
             .disposed(by: disposeBag)
-        
+
         XCTAssertEqual(emissions, [0])
-        
+
         store.send(0)
-        
+
         XCTAssertEqual(emissions, [0, 1, 2, 3])
     }
-    
+
     internal func testCoalesceSynchronousActionsUsingNewScope() {
         let store = Store(
             initialState: 0,
@@ -534,36 +541,36 @@ internal final class StoreTests: XCTestCase {
             environment: (),
             useNewScope: true
         )
-        
+
         var emissions: [Int] = []
         store.subscribe { $0 }
             .subscribe { emissions.append($0) }
             .disposed(by: disposeBag)
-        
+
         XCTAssertEqual(emissions, [0])
-        
+
         store.send(0)
-        
+
         XCTAssertEqual(emissions, [0, 3])
     }
-    
+
     internal func testSyncEffectsFromEnvironment() {
         enum Action: Equatable {
             // subscribes to a long living effect, potentially feeding data
             // back into the store
             case onAppear
-            
+
             // Talks to the environment, eventually feeding data back into the store
             case onUserAction
-            
+
             // External event coming in from the environment, updating state
             case externalAction
         }
-        
+
         struct Environment {
             var externalEffects = PublishSubject<Action>()
         }
-        
+
         let counterReducer = Reducer<Int, Action, Environment> { state, action, env in
             switch action {
             case .onAppear:
@@ -580,13 +587,14 @@ internal final class StoreTests: XCTestCase {
             }
             return .none
         }
-        let parentStore = Store(initialState: 1, reducer: counterReducer, environment: Environment(), useNewScope: true)
-        
+        let parentStore = Store(
+            initialState: 1, reducer: counterReducer, environment: Environment(), useNewScope: true)
+
         // subscribes to a long living publisher of actions
         parentStore.send(.onAppear)
-        
+
         parentStore.send(.onUserAction)
-        
+
         // State should be at 2 now
         XCTAssertEqual(parentStore.state, 2)
     }

@@ -145,7 +145,7 @@ public struct BindingAction<Root>: Equatable {
         _ keyPath: WritableKeyPath<Root, Value>,
         _ value: Value
     ) -> Self
-        where Value: Equatable {
+    where Value: Equatable {
         .init(
             keyPath: keyPath,
             set: { $0[keyPath: keyPath] = value },
@@ -163,7 +163,8 @@ public struct BindingAction<Root>: Equatable {
         _ keyPath: WritableKeyPath<NewRoot, Root>
     ) -> BindingAction<NewRoot> {
         .init(
-            keyPath: (keyPath as AnyKeyPath).appending(path: self.keyPath) as! PartialKeyPath<NewRoot>,
+            keyPath: (keyPath as AnyKeyPath).appending(path: self.keyPath)
+                as! PartialKeyPath<NewRoot>,
             set: { self.set(&$0[keyPath: keyPath]) },
             value: value,
             valueIsEqualTo: valueIsEqualTo

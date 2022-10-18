@@ -26,10 +26,14 @@ internal final class IdentifiedArrayTests: XCTestCase {
     internal func testInsertContentsOf() {
         var array: IdentifiedArray = [User(id: 1, name: "Blob")]
 
-        array.insert(contentsOf: [User(id: 3, name: "Blob Sr."), User(id: 2, name: "Blob Jr.")], at: 0)
+        array.insert(
+            contentsOf: [User(id: 3, name: "Blob Sr."), User(id: 2, name: "Blob Jr.")], at: 0)
         XCTAssertEqual(
             array,
-            [User(id: 3, name: "Blob Sr."), User(id: 2, name: "Blob Jr."), User(id: 1, name: "Blob")]
+            [
+                User(id: 3, name: "Blob Sr."), User(id: 2, name: "Blob Jr."),
+                User(id: 1, name: "Blob"),
+            ]
         )
     }
 
@@ -37,7 +41,7 @@ internal final class IdentifiedArrayTests: XCTestCase {
         var array: IdentifiedArray = [
             User(id: 3, name: "Blob Sr."),
             User(id: 2, name: "Blob Jr."),
-            User(id: 1, name: "Blob")
+            User(id: 1, name: "Blob"),
         ]
 
         array.remove(at: 1)
@@ -48,7 +52,7 @@ internal final class IdentifiedArrayTests: XCTestCase {
         var array: IdentifiedArray = [
             User(id: 3, name: "Blob Sr."),
             User(id: 2, name: "Blob Jr."),
-            User(id: 1, name: "Blob")
+            User(id: 1, name: "Blob"),
         ]
 
         array.removeAll(where: { $0.name.starts(with: "Blob ") })
@@ -59,7 +63,7 @@ internal final class IdentifiedArrayTests: XCTestCase {
         var array: IdentifiedArray = [
             User(id: 3, name: "Blob Sr."),
             User(id: 2, name: "Blob Jr."),
-            User(id: 1, name: "Blob")
+            User(id: 1, name: "Blob"),
         ]
 
         array.remove(atOffsets: [0, 2])
@@ -71,22 +75,23 @@ internal final class IdentifiedArrayTests: XCTestCase {
             User(id: 3, name: "Blob Sr."),
             User(id: 2, name: "Blob Jr."),
             User(id: 1, name: "Blob"),
-            User(id: 2, name: "Blob Jr.")
+            User(id: 2, name: "Blob Jr."),
         ]
 
         array.replaceSubrange(
-            0 ... 1,
+            0...1,
             with: [
                 User(id: 4, name: "Flob IV"),
-                User(id: 5, name: "Flob V")
+                User(id: 5, name: "Flob V"),
             ]
         )
 
         XCTAssertEqual(
             array,
             [
-                User(id: 4, name: "Flob IV"), User(id: 5, name: "Flob V"), User(id: 1, name: "Blob"),
-                User(id: 2, name: "Blob Jr.")
+                User(id: 4, name: "Flob IV"), User(id: 5, name: "Flob V"),
+                User(id: 1, name: "Blob"),
+                User(id: 2, name: "Blob Jr."),
             ]
         )
     }
@@ -95,7 +100,7 @@ internal final class IdentifiedArrayTests: XCTestCase {
         var array: IdentifiedArray = [
             ComparableValue(id: 1, value: 100),
             ComparableValue(id: 2, value: 50),
-            ComparableValue(id: 3, value: 75)
+            ComparableValue(id: 3, value: 75),
         ]
 
         array.sort { $0.value < $1.value }
@@ -105,7 +110,7 @@ internal final class IdentifiedArrayTests: XCTestCase {
             [
                 ComparableValue(id: 2, value: 50),
                 ComparableValue(id: 3, value: 75),
-                ComparableValue(id: 1, value: 100)
+                ComparableValue(id: 1, value: 100),
             ], array
         )
     }
@@ -114,7 +119,7 @@ internal final class IdentifiedArrayTests: XCTestCase {
         var array: IdentifiedArray = [
             ComparableValue(id: 1, value: 100),
             ComparableValue(id: 2, value: 50),
-            ComparableValue(id: 3, value: 75)
+            ComparableValue(id: 3, value: 75),
         ]
 
         array.sort()
@@ -124,7 +129,7 @@ internal final class IdentifiedArrayTests: XCTestCase {
             [
                 ComparableValue(id: 2, value: 50),
                 ComparableValue(id: 3, value: 75),
-                ComparableValue(id: 1, value: 100)
+                ComparableValue(id: 1, value: 100),
             ], array
         )
     }
@@ -138,7 +143,7 @@ internal final class IdentifiedArrayTests: XCTestCase {
                 User(id: 2, name: "Blob Jr."),
                 User(id: 3, name: "Blob Sr."),
                 User(id: 4, name: "Foo Jr."),
-                User(id: 5, name: "Bar Jr.")
+                User(id: 5, name: "Bar Jr."),
             ]
             var lcrng = LCRNG(seed: 0)
             array.shuffle(using: &lcrng)
@@ -148,7 +153,7 @@ internal final class IdentifiedArrayTests: XCTestCase {
                     User(id: 3, name: "Blob Sr."),
                     User(id: 5, name: "Bar Jr."),
                     User(id: 4, name: "Foo Jr."),
-                    User(id: 2, name: "Blob Jr.")
+                    User(id: 2, name: "Blob Jr."),
                 ],
                 array.elements
             )
@@ -160,7 +165,7 @@ internal final class IdentifiedArrayTests: XCTestCase {
         var array: IdentifiedArray = [
             ComparableValue(id: 1, value: 100),
             ComparableValue(id: 2, value: 50),
-            ComparableValue(id: 3, value: 75)
+            ComparableValue(id: 3, value: 75),
         ]
 
         array.reverse()
@@ -170,7 +175,7 @@ internal final class IdentifiedArrayTests: XCTestCase {
             [
                 ComparableValue(id: 3, value: 75),
                 ComparableValue(id: 2, value: 50),
-                ComparableValue(id: 1, value: 100)
+                ComparableValue(id: 1, value: 100),
             ], array
         )
     }

@@ -21,6 +21,6 @@
 /// "deadbeef"
 /// ```
 public protocol CustomDumpRepresentable {
-  /// The custom dump value for this instance.
-  var customDumpValue: Any { get }
+    /// The custom dump value for this instance.
+    var customDumpValue: Any { get }
 }

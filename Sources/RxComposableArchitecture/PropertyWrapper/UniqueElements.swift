@@ -5,25 +5,23 @@
 //  Created by Kensen on 07/01/21.
 //
 
-
-/**
- Property wrapper to reduce boiler plate code to remove duplicates from a collection of HashDiffable.
-
- ```
- struct Element: Equatable, HashDiffable {}
-
- struct ParentState: Equatable {
-    @UniqueElements var arrayState: [Element]
-    @UniqueElements var identifiedArrayState: IdentifiedArrayOf<Element>
- }
- ```
-
- Everytime we set arrayState or identifiedArrayState, it will automatically remove all duplicates, making them having only unique elements.
- Using this property wrapper will help reduce data disrepancy between the source of data and components that use them
- */
+/// Property wrapper to reduce boiler plate code to remove duplicates from a collection of HashDiffable.
+///
+/// ```
+/// struct Element: Equatable, HashDiffable {}
+///
+/// struct ParentState: Equatable {
+///    @UniqueElements var arrayState: [Element]
+///    @UniqueElements var identifiedArrayState: IdentifiedArrayOf<Element>
+/// }
+/// ```
+///
+/// Everytime we set arrayState or identifiedArrayState, it will automatically remove all duplicates, making them having only unique elements.
+/// Using this property wrapper will help reduce data disrepancy between the source of data and components that use them
 
 @propertyWrapper
-public struct UniqueElements<State>: Equatable where State: Collection & Equatable, State.Element: HashDiffable {
+public struct UniqueElements<State>: Equatable
+where State: Collection & Equatable, State.Element: HashDiffable {
     public var wrappedValue: State {
         didSet {
             wrappedValue = Self.getUniqueState(wrappedValue)

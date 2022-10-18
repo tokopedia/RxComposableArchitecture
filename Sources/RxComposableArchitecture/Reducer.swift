@@ -82,9 +82,10 @@ public struct Reducer<State, Action, Environment> {
         action toLocalAction: ActionPath,
         environment toLocalEnvironment: @escaping (GlobalEnvironment) -> Environment
     ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment>
-        where
+    where
         StatePath: WritablePath, StatePath.Root == GlobalState, StatePath.Value == State,
-        ActionPath: WritablePath, ActionPath.Root == GlobalAction, ActionPath.Value == Action {
+        ActionPath: WritablePath, ActionPath.Root == GlobalAction, ActionPath.Value == Action
+    {
         return .init { globalState, globalAction, globalEnvironment in
             guard
                 var localState = toLocalState.extract(from: globalState),
@@ -92,12 +93,12 @@ public struct Reducer<State, Action, Environment> {
             else { return .none }
             let effect =
                 self
-                    .reducer(&localState, localAction, toLocalEnvironment(globalEnvironment))
-                    .map { localAction -> GlobalAction in
-                        var globalAction = globalAction
-                        toLocalAction.set(into: &globalAction, localAction)
-                        return globalAction
-                    }
+                .reducer(&localState, localAction, toLocalEnvironment(globalEnvironment))
+                .map { localAction -> GlobalAction in
+                    var globalAction = globalAction
+                    toLocalAction.set(into: &globalAction, localAction)
+                    return globalAction
+                }
             toLocalState.set(into: &globalState, localState)
             return effect
         }
@@ -301,7 +302,9 @@ public struct Reducer<State, Action, Environment> {
         _ line: UInt = #line
     ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment> {
         .init { globalState, globalAction, globalEnvironment in
-            guard let (key, localAction) = toLocalAction.extract(from: globalAction) else { return .none }
+            guard let (key, localAction) = toLocalAction.extract(from: globalAction) else {
+                return .none
+            }
             if globalState[keyPath: toLocalState][key] == nil {
                 #if DEBUG
                     if breakpointOnNil {
@@ -393,7 +396,9 @@ public struct Reducer<State, Action, Environment> {
         _ line: UInt = #line
     ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment> {
         .init { globalState, globalAction, globalEnvironment in
-            guard let (id, localAction) = toLocalAction.extract(from: globalAction) else { return .none }
+            guard let (id, localAction) = toLocalAction.extract(from: globalAction) else {
+                return .none
+            }
             if globalState[keyPath: toLocalState][id: id] == nil {
                 #if DEBUG
                     if breakpointOnNil {
@@ -433,12 +438,12 @@ public struct Reducer<State, Action, Environment> {
             }
             return
                 self
-                    .reducer(
-                        &globalState[keyPath: toLocalState][id: id]!,
-                        localAction,
-                        toLocalEnvironment(globalEnvironment)
-                    )
-                    .map { toLocalAction.embed((id, $0)) }
+                .reducer(
+                    &globalState[keyPath: toLocalState][id: id]!,
+                    localAction,
+                    toLocalEnvironment(globalEnvironment)
+                )
+                .map { toLocalAction.embed((id, $0)) }
         }
     }
 
@@ -460,7 +465,8 @@ public struct Reducer<State, Action, Environment> {
         _ environment: Environment
     ) -> Effect<Action> {
         #if DEBUG
-            reducer(&state, action, Bootstrap.get(environment: type(of: environment)) ?? environment)
+            reducer(
+                &state, action, Bootstrap.get(environment: type(of: environment)) ?? environment)
         #else
             reducer(&state, action, environment)
         #endif

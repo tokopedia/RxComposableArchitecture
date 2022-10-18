@@ -18,7 +18,7 @@ let storeScopeSuite = BenchmarkSuite(name: "Store scoping") { suite in
         viewStores.append(store)
     }
     let lastViewStore = viewStores.last!
-    
+
     suite.benchmark("Nested store") {
         lastViewStore.send(true)
     }
@@ -41,7 +41,7 @@ let newStoreScopeSuite = BenchmarkSuite(name: "[NEW] Store scoping, with rescope
         viewStores.append(store)
     }
     let lastViewStore = viewStores.last!
-    
+
     suite.benchmark("[NEW] Nested store, with rescope") {
         lastViewStore.send(true)
     }

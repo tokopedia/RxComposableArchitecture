@@ -11,9 +11,9 @@ public protocol HashDiffable {
     func isEqual(to source: Self) -> Bool
 }
 
-public extension HashDiffable where Self: Hashable {
+extension HashDiffable where Self: Hashable {
     /// The `self` value as an identifier for difference calculation.
-    var id: Self {
+    public var id: Self {
         return self
     }
 }

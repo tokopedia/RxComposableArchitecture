@@ -5,8 +5,8 @@
 //  Created by Wendy Liga on 28/05/20.
 //
 
-import os.signpost
 import RxSwift
+import os.signpost
 
 extension Reducer {
     /// Instruments the reducer with
@@ -57,8 +57,8 @@ extension Reducer {
                     os_signpost(.end, log: log, name: "Action")
                     return
                         effects
-                            .effectSignpost(prefix, log: log, actionOutput: actionOutput)
-                            .eraseToEffect()
+                        .effectSignpost(prefix, log: log, actionOutput: actionOutput)
+                        .eraseToEffect()
                 }
                 return effects
             }
@@ -70,21 +70,29 @@ extension Reducer {
 
 extension ObservableType {
     @available(iOS 12.0, *)
-    internal func effectSignpost(_ prefix: String, log: OSLog, actionOutput: String) -> Observable<Element> {
+    internal func effectSignpost(_ prefix: String, log: OSLog, actionOutput: String) -> Observable<
+        Element
+    > {
         let sid = OSSignpostID(log: log)
 
         return `do`(
             onNext: { _ in
-                os_signpost(.event, log: log, name: "Effect Output", "%sOutput from %s", prefix, actionOutput)
+                os_signpost(
+                    .event, log: log, name: "Effect Output", "%sOutput from %s", prefix,
+                    actionOutput)
             },
             onCompleted: {
                 os_signpost(.end, log: log, name: "Effect", signpostID: sid, "%sFinished", prefix)
             },
             onSubscribe: {
-                os_signpost(.begin, log: log, name: "Effect", signpostID: sid, "%sStarting from %s", prefix, actionOutput)
+                os_signpost(
+                    .begin, log: log, name: "Effect", signpostID: sid, "%sStarting from %s", prefix,
+                    actionOutput)
             },
             onSubscribed: {
-                os_signpost(.begin, log: log, name: "Effect", signpostID: sid, "%sStarted from %s", prefix, actionOutput)
+                os_signpost(
+                    .begin, log: log, name: "Effect", signpostID: sid, "%sStarted from %s", prefix,
+                    actionOutput)
             },
             onDispose: {
                 os_signpost(.end, log: log, name: "Effect", signpostID: sid, "%sDisposed", prefix)

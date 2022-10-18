@@ -128,7 +128,9 @@ public final class Effect<Output>: ObservableType {
     ///
     /// - Parameter attemptToFulfill: A closure encapsulating some work to execute in the real world.
     /// - Returns: An effect.
-    public static func result(_ attemptToFulfill: @escaping () -> Result<Output, Error>) -> Effect<Output> {
+    public static func result(_ attemptToFulfill: @escaping () -> Result<Output, Error>) -> Effect<
+        Output
+    > {
         Observable<Output>.create { observer in
             switch attemptToFulfill() {
             case let .success(output):
@@ -202,10 +204,10 @@ public final class Effect<Output>: ObservableType {
 
         return
             effects
-                .dropFirst()
-                .reduce(into: first) { effects, effect in
-                    effects = effects.concat(effect).eraseToEffect()
-                }
+            .dropFirst()
+            .reduce(into: first) { effects, effect in
+                effects = effects.concat(effect).eraseToEffect()
+            }
     }
 
     /// Merges a variadic list of effects together into a single effect, which runs the effects at the
