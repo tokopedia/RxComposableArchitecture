@@ -67,6 +67,5 @@ private struct AnimatedPublisher<Upstream: ObservableType>: ObservableType {
                 self.downstream.on(event)
             }
         }
-        
     }
 }

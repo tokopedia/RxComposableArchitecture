@@ -14,6 +14,10 @@ internal final class AnyDisposable: Disposable, Hashable {
     internal init(_ disposable: Disposable) {
         _dispose = disposable.dispose
     }
+    
+    internal init(_ cancel: @escaping () -> Void) {
+        _dispose = cancel
+    }
 
     internal func dispose() {
         _dispose()
