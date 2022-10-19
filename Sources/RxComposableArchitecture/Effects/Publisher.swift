@@ -218,6 +218,13 @@ extension Effect: ObservableType {
     }
 }
 
+extension ObservableType where Element == Never {
+    public func fireAndForget<T>() -> Observable<T> {
+        func absurd<A>(_: Never) -> A {}
+        return map(absurd)
+    }
+}
+
 extension ObservableType {
     /// Turns any publisher into an `Effect`.
     ///
