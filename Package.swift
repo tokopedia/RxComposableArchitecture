@@ -30,6 +30,7 @@ let package = Package(
         .target(
             name: "RxComposableArchitecture",
             dependencies: [
+                "Dependencies",
                 .product(name: "CasePaths", package: "swift-case-paths"),
                 .product(name: "RxSwift", package: "RxSwift"),
                 .product(name: "RxRelay", package: "RxSwift"),
