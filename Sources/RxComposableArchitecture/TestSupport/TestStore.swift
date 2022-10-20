@@ -1,6 +1,7 @@
 #if DEBUG
 import Foundation
 import RxSwift
+import XCTestDynamicOverlay
 
 /// A testable runtime for a reducer.
 ///

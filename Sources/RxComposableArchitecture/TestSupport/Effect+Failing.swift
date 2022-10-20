@@ -6,6 +6,7 @@
 //
 
 #if DEBUG
+import XCTestDynamicOverlay
 extension Effect {
     /// An effect that causes a test to fail if it runs.
     ///
@@ -79,7 +80,7 @@ extension Effect {
     /// - Parameter prefix: A string that identifies this scheduler and will prefix all failure
     ///   messages.
     /// - Returns: An effect that causes a test to fail if it runs.
-    public static func failing(_ prefix: String) -> Effect<Output> {
+    public static func failing(_ prefix: String) -> Effect<Action> {
         .fireAndForget {
             XCTFail("\(prefix.isEmpty ? "" : "\(prefix) - ")A failing effect ran.")
         }

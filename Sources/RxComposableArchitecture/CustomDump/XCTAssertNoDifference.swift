@@ -38,6 +38,8 @@
 ///   - line: The line number where the failure occurs. The default is the line number where you
 ///     call this function.
 #if DEBUG
+import XCTestDynamicOverlay
+
 public func XCTAssertNoDifference<T>(
   _ expression1: @autoclosure () throws -> T,
   _ expression2: @autoclosure () throws -> T,
