@@ -1,4 +1,3 @@
-import Dependencies
 import Foundation
 import RxSwift
 
@@ -473,6 +472,9 @@ extension Effect {
 
 // MARK: - Testing Effects
 
+#if DEBUG
+import XCTestDynamicOverlay
+
 extension Effect {
     /// An effect that causes a test to fail if it runs.
     ///
@@ -586,3 +588,4 @@ extension Effect {
         }
     }
 }
+#endif
