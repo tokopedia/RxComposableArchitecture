@@ -6,9 +6,8 @@
 //
 
 import RxSwift
+@_spi(Internals) import RxComposableArchitecture
 import XCTest
-
-@testable import RxComposableArchitecture
 
 internal final class BoostrapTests: XCTestCase {
     internal func testBootsrap() {
@@ -30,13 +29,13 @@ internal final class BoostrapTests: XCTestCase {
         })
         Bootstrap.mock(environment: mockEnv)
         
-        store.send(())
+        _ = store.send(())
 
         XCTAssertEqual(store.state, 100)
         
         // clearing the bootstrap
         Bootstrap.clear(environment: Env.self)
-        store.send(())
+        _ = store.send(())
         XCTAssertEqual(store.state, 0)
     }
 }

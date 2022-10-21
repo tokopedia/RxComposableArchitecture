@@ -5,7 +5,7 @@
 //  Created by jefferson.setiawan on 03/06/22.
 //
 
-import RxComposableArchitecture
+@_spi(Internals) import RxComposableArchitecture
 import RxSwift
 import XCTest
 

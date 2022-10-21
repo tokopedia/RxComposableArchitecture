@@ -1,5 +1,5 @@
 import Benchmark
-import RxComposableArchitecture
+@_spi(Internals) import RxComposableArchitecture
 
 let storeScopeSuite = BenchmarkSuite(name: "Store scoping") { suite in
     let counterReducer = Reducer<Int, Bool, Void> { state, action, _ in
@@ -20,7 +20,7 @@ let storeScopeSuite = BenchmarkSuite(name: "Store scoping") { suite in
     let lastViewStore = viewStores.last!
     
     suite.benchmark("Nested store") {
-        lastViewStore.send(true)
+        _ = lastViewStore.send(true)
     }
 }
 

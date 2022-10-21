@@ -1,5 +1,5 @@
 import Foundation
-import RxComposableArchitecture
+@_spi(Internals) import RxComposableArchitecture
 import RxSwift
 import XCTest
 
@@ -20,7 +20,7 @@ internal final class MemoryManagementTests: XCTestCase {
         store.subscribe { $0 }.subscribe(onNext: { count = $0 }).disposed(by: disposeBag)
 
         XCTAssertEqual(count, 0)
-        store.send(())
+        _ = store.send(())
         XCTAssertEqual(count, 1)
     }
 }
