@@ -361,7 +361,13 @@ extension Effect {
             return other
         case (.observable, .observable), (.run, .observable), (.observable, .run):
             return Self(
-                operation: .observable(Observable.merge(self.asObservable(), other.asObservable())))
+                operation: .observable(
+                    Observable.merge(
+                        self.asObservable(),
+                        other.asObservable()
+                    )
+                )
+            )
         case let (.run(lhsPriority, lhsOperation), .run(rhsPriority, rhsOperation)):
             return Self(
                 operation: .run { send in

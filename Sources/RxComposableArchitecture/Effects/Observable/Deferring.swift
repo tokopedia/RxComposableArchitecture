@@ -26,10 +26,18 @@ extension Effect {
     public func deferred(
         for dueTime: RxTimeInterval,
         scheduler: SchedulerType
-    ) -> Effect<Element> {
-        Observable.just(())
-            .delay(dueTime, scheduler: scheduler)
-            .flatMap { self.observeOn(scheduler) }
-            .eraseToEffect()
+    ) -> Self {
+        switch self.operation {
+        case .none:
+            return .none
+        case .observable, .run:
+            return Self(
+                operation: .observable(
+                    Observable.just(())
+                        .delay(dueTime, scheduler: scheduler)
+                        .flatMap { self.observeOn(scheduler)}
+                )
+            )
+        }
     }
 }

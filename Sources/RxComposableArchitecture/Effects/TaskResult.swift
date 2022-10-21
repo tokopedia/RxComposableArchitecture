@@ -247,22 +247,22 @@ extension TaskResult: Hashable where Success: Hashable {
                 hasher.combine(error)
                 hasher.combine(1)
             } else {
-                #if DEBUG
-                    if TaskResultDebugging.emitRuntimeWarnings {
-                        let errorType = typeName(type(of: error))
-                        runtimeWarn(
-                  """
-                  "\(errorType)" is not hashable. …
-                  
-                  To hash a value of this type, it must conform to the "Hashable" protocol. For example:
-                  
-                      extension \(errorType): Hashable {}
-                  
-                  See the documentation of "TaskResult" for more information.
-                  """
-                        )
-                    }
-                #endif
+#if DEBUG
+                if TaskResultDebugging.emitRuntimeWarnings {
+                    let errorType = typeName(type(of: error))
+                    runtimeWarn(
+              """
+              "\(errorType)" is not hashable. …
+              
+              To hash a value of this type, it must conform to the "Hashable" protocol. For example:
+              
+                  extension \(errorType): Hashable {}
+              
+              See the documentation of "TaskResult" for more information.
+              """
+                    )
+                }
+#endif
             }
         }
     }

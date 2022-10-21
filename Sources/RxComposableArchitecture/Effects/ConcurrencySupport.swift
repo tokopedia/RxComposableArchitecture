@@ -67,14 +67,14 @@ extension AsyncStream {
                 continuation.finish()
             }
             continuation.onTermination =
-                { _ in
-                    task.cancel()
-                }
-                // NB: This explicit cast is needed to work around a compiler bug in Swift 5.5.2
-                as @Sendable (Continuation.Termination) -> Void
+            { _ in
+                task.cancel()
+            }
+            // NB: This explicit cast is needed to work around a compiler bug in Swift 5.5.2
+            as @Sendable (Continuation.Termination) -> Void
         }
     }
-
+    
     /// Constructs and returns a stream along with its backing continuation.
     ///
     /// This is handy for immediately escaping the continuation from an async stream, which typically
@@ -129,12 +129,12 @@ extension AsyncStream {
         var continuation: Continuation!
         return (Self(elementType, bufferingPolicy: limit) { continuation = $0 }, continuation)
     }
-
+    
     /// An `AsyncStream` that never emits and never completes unless cancelled.
     public static var never: Self {
         Self { _ in }
     }
-
+    
     public static var finished: Self {
         Self { $0.finish() }
     }
@@ -164,14 +164,14 @@ extension AsyncThrowingStream where Failure == Error {
                 }
             }
             continuation.onTermination =
-                { _ in
-                    task.cancel()
-                }
-                // NB: This explicit cast is needed to work around a compiler bug in Swift 5.5.2
-                as @Sendable (Continuation.Termination) -> Void
+            { _ in
+                task.cancel()
+            }
+            // NB: This explicit cast is needed to work around a compiler bug in Swift 5.5.2
+            as @Sendable (Continuation.Termination) -> Void
         }
     }
-
+    
     /// Constructs and returns a stream along with its backing continuation.
     ///
     /// This is handy for immediately escaping the continuation from an async stream, which typically
@@ -226,12 +226,12 @@ extension AsyncThrowingStream where Failure == Error {
         var continuation: Continuation!
         return (Self(elementType, bufferingPolicy: limit) { continuation = $0 }, continuation)
     }
-
+    
     /// An `AsyncThrowingStream` that never emits and never completes unless cancelled.
     public static var never: Self {
         Self { _ in }
     }
-
+    
     public static var finished: Self {
         Self { $0.finish() }
     }
@@ -297,18 +297,18 @@ extension Task where Success == Never, Failure == Never {
 public final actor ActorIsolated<Value: Sendable> {
     /// The actor-isolated value.
     public var value: Value
-
+    
     /// Initializes actor-isolated state around a value.
     ///
     /// - Parameter value: A value to isolate in an actor.
     public init(_ value: Value) {
         self.value = value
     }
-
+    
     public subscript<Subject>(dynamicMember keyPath: KeyPath<Value, Subject>) -> Subject {
         self.value[keyPath: keyPath]
     }
-
+    
     /// Perform an operation with isolated access to the underlying value.
     ///
     /// Useful for inspecting an actor-isolated value for a test assertion:
@@ -331,7 +331,7 @@ public final actor ActorIsolated<Value: Sendable> {
         defer { self.value = value }
         return try await operation(&value)
     }
-
+    
     /// Overwrite the isolated value with a new value.
     ///
     /// Useful for setting an actor-isolated value when a tested dependency runs.
@@ -367,29 +367,29 @@ public final actor ActorIsolated<Value: Sendable> {
 public struct UncheckedSendable<Value>: @unchecked Sendable {
     /// The unchecked value.
     public var value: Value
-
+    
     public init(_ value: Value) {
         self.value = value
     }
-
+    
     public init(wrappedValue: Value) {
         self.value = wrappedValue
     }
-
+    
     public var wrappedValue: Value {
         _read { yield self.value }
         _modify { yield &self.value }
     }
-
+    
     public var projectedValue: Self {
         get { self }
         set { self = newValue }
     }
-
+    
     public subscript<Subject>(dynamicMember keyPath: KeyPath<Value, Subject>) -> Subject {
         self.value[keyPath: keyPath]
     }
-
+    
     public subscript<Subject>(dynamicMember keyPath: WritableKeyPath<Value, Subject>) -> Subject {
         _read { yield self.value[keyPath: keyPath] }
         _modify { yield &self.value[keyPath: keyPath] }

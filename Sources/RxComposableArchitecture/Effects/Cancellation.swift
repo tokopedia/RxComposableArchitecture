@@ -38,18 +38,18 @@ extension Effect {
                     Observable.deferred {
                         cancellablesLock.lock()
                         defer { cancellablesLock.unlock() }
-
+                        
                         let id = CancelToken(id: id)
                         if cancelInFlight {
                             cancellationCancellables[id]?.forEach { $0.dispose() }
                         }
-
+                        
                         /// Flag is used to prevent disposable to send event on disposed `cancellationSubject`
                         /// Thanks: https://github.com/dannyhertz/rxswift-composable-architecture/issues/5
                         var hasCompleted = false
-
+                        
                         let cancellationSubject = PublishSubject<Void>()
-
+                        
                         var cancellationCancellable: AnyDisposable!
                         cancellationCancellable = AnyDisposable(
                             Disposables.create {
@@ -65,7 +65,7 @@ extension Effect {
                                 }
                             }
                         )
-
+                        
                         return observable.takeUntil(cancellationSubject)
                             .do(
                                 onError: { _ in
@@ -87,22 +87,18 @@ extension Effect {
                     }
                 )
             )
-
+            
         case let .run(priority, operation):
             return Self(
-                operation: .run(
-                    priority,
-                    { send in
-                        await withTaskCancellation(
-                            id: id, cancelInFlight: cancelInFlight,
-                            operation: {
-                                await operation(send)
-                            })
+                operation: .run(priority, { send in
+                    await withTaskCancellation(id: id, cancelInFlight: cancelInFlight, operation: {
+                        await operation(send)
                     })
+                })
             )
         }
     }
-
+    
     /// Turns an effect into one that is capable of being canceled.
     ///
     /// A convenience for calling ``Effect/cancellable(id:cancelInFlight:)-17skv`` with a static type
@@ -116,7 +112,7 @@ extension Effect {
     public func cancellable(id: Any.Type, cancelInFlight: Bool = false) -> Self {
         self.cancellable(id: ObjectIdentifier(id), cancelInFlight: cancelInFlight)
     }
-
+    
     /// An effect that will cancel any currently in-flight effect with the given identifier.
     ///
     /// - Parameter id: An effect identifier.
@@ -129,7 +125,7 @@ extension Effect {
             }
         }
     }
-
+    
     /// An effect that will cancel any currently in-flight effect with the given identifier.
     ///
     /// A convenience for calling ``Effect/cancel(id:)-iun1`` with a static type as the effect's
@@ -141,7 +137,7 @@ extension Effect {
     public static func cancel(id: Any.Type) -> Self {
         .cancel(id: ObjectIdentifier(id))
     }
-
+    
     /// An effect that will cancel multiple currently in-flight effects with the given identifiers.
     ///
     /// - Parameter ids: An array of effect identifiers.
@@ -150,7 +146,7 @@ extension Effect {
     public static func cancel(ids: [AnyHashable]) -> Self {
         .merge(ids.map(Effect.cancel(id:)))
     }
-
+    
     /// An effect that will cancel multiple currently in-flight effects with the given identifiers.
     ///
     /// A convenience for calling ``Effect/cancel(ids:)-dmwy`` with a static type as the effect's
@@ -169,11 +165,9 @@ extension Task where Success == Never, Failure == Never {
     ///
     /// - Parameter id: An identifier.
     public static func cancel<ID: Hashable & Sendable>(id: ID) {
-        cancellablesLock.sync {
-            cancellationCancellables[CancelToken(id: id)]?.forEach { $0.dispose() }
-        }
+        cancellablesLock.sync { cancellationCancellables[CancelToken(id: id)]?.forEach { $0.dispose() } }
     }
-
+    
     /// Cancel any currently in-flight operation with the given identifier.
     ///
     /// A convenience for calling `Task.cancel(id:)` with a static type as the operation's unique
@@ -184,6 +178,7 @@ extension Task where Success == Never, Failure == Never {
         self.cancel(id: ObjectIdentifier(id))
     }
 }
+
 
 /// Execute an operation with a cancellation identifier.
 ///
@@ -281,7 +276,7 @@ public func withTaskCancellation<T: Sendable>(
 struct CancelToken: Hashable {
     let id: AnyHashable
     let discriminator: ObjectIdentifier
-
+    
     init(id: AnyHashable) {
         self.id = id
         self.discriminator = ObjectIdentifier(type(of: id.base))
@@ -302,7 +297,7 @@ extension _ErrorMechanism {
         _ = try _rethrowGet()
         fatalError()
     }
-
+    
     func _rethrowGet() rethrows -> Output {
         return try get()
     }

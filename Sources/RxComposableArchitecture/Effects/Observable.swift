@@ -2,12 +2,11 @@ import RxSwift
 
 extension Effect: ObservableType {
     public typealias Element = Action
-
-    public func subscribe<Observer>(_ observer: Observer) -> Disposable
-    where Observer: ObserverType, Action == Observer.Element {
+    
+    public func subscribe<Observer>(_ observer: Observer) -> Disposable where Observer : ObserverType, Action == Observer.Element {
         self.observable.subscribe(observer)
     }
-
+    
     public var observable: Observable<Action> {
         switch self.operation {
         case .none:
@@ -29,7 +28,7 @@ extension Effect: ObservableType {
             }
         }
     }
-
+    
     /// Initializes an effect that wraps a publisher.
     ///
     /// > Important: This Combine interface has been soft-deprecated in favor of Swift concurrency.
@@ -46,14 +45,11 @@ extension Effect: ObservableType {
     /// > ```
     ///
     /// - Parameter publisher: A publisher.
-    @available(
-        iOS, deprecated: 9999.0,
-        message: "Iterate over 'Observable.values' in an 'Effect.run', instead."
-    )
+    @available(iOS, deprecated: 9999.0, message: "Iterate over 'Observable.values' in an 'Effect.run', instead.")
     public init<O: ObservableType>(_ observable: O) where O.Element == Action {
         self.operation = .observable(observable.asObservable())
     }
-
+    
     /// Initializes an effect that immediately emits the value passed in.
     ///
     /// - Parameter value: The value that is immediately emitted by the effect.
@@ -61,18 +57,15 @@ extension Effect: ObservableType {
     public init(value: Action) {
         self.init(Observable.just(value))
     }
-
+    
     /// Initializes an effect that immediately fails with the error passed in.
     ///
     /// - Parameter error: The error that is immediately emitted by the effect.
-    @available(
-        iOS, deprecated: 9999.0,
-        message: "Throw and catch errors directly in 'Effect.task' and 'Effect.run', instead."
-    )
+    @available(iOS, deprecated: 9999.0, message: "Throw and catch errors directly in 'Effect.task' and 'Effect.run', instead.")
     public init(error: Error) {
         self.init(operation: .observable(Observable.error(error)))
     }
-
+    
     /// Creates an effect that can supply a single value asynchronously in the future.
     ///
     /// This can be helpful for converting APIs that are callback-based into ones that deal with
@@ -128,7 +121,7 @@ extension Effect: ObservableType {
         }
         .eraseToEffect()
     }
-
+    
     /// Initializes an effect that lazily executes some work in the real world and synchronously sends
     /// that data back into the store.
     ///
@@ -158,7 +151,7 @@ extension Effect: ObservableType {
     public static func result(_ attemptToFulfill: @escaping () -> Result<Action, Error>) -> Self {
         .future { $0(attemptToFulfill()) }
     }
-
+    
     /// Initializes an effect from a callback that can send as many values as it wants, and can send
     /// a completion.
     ///
@@ -205,7 +198,7 @@ extension Effect: ObservableType {
         }
         .eraseToEffect()
     }
-
+    
     /// Creates an effect that executes some work in the real world that doesn't need to feed data
     /// back into the store. If an error is thrown, the effect will complete and the error will be
     /// ignored.
@@ -247,7 +240,7 @@ extension ObservableType {
     public func eraseToEffect() -> Effect<Element> {
         Effect(asObservable())
     }
-
+    
     /// Turns any publisher into an ``Effect``.
     ///
     /// This is a convenience operator for writing ``Effect/eraseToEffect()`` followed by
@@ -263,17 +256,14 @@ extension ObservableType {
     /// - Parameters:
     ///   - transform: A mapping function that converts `Output` to another type.
     /// - Returns: An effect that wraps `self` after mapping `Output` values.
-    @available(
-        iOS, deprecated: 9999.0,
-        message: "Iterate over 'Publisher.values' in an 'Effect.run', instead."
-    )
+    @available(iOS, deprecated: 9999.0, message: "Iterate over 'Publisher.values' in an 'Effect.run', instead.")
     public func eraseToEffect<T>(
         _ transform: @escaping (Element) -> T
     ) -> Effect<T> {
         self.map(transform)
             .eraseToEffect()
     }
-
+    
     /// Turns any publisher into an ``Effect`` that cannot fail by wrapping its output and failure in
     /// a result.
     ///
@@ -288,14 +278,11 @@ extension ObservableType {
     /// ```
     ///
     /// - Returns: An effect that wraps `self`.
-    @available(
-        iOS, deprecated: 9999.0,
-        message: "Iterate over 'Publisher.values' in an 'Effect.run', instead."
-    )
+    @available(iOS, deprecated: 9999.0, message: "Iterate over 'Publisher.values' in an 'Effect.run', instead.")
     public func catchToEffect() -> Effect<Result<Element, Error>> {
         self.catchToEffect { $0 }
     }
-
+    
     /// Turns any publisher into an ``Effect`` that cannot fail by wrapping its output and failure
     /// into a result and then applying passed in function to it.
     ///
@@ -311,10 +298,7 @@ extension ObservableType {
     /// - Parameters:
     ///   - transform: A mapping function that converts `Result<Output,Failure>` to another type.
     /// - Returns: An effect that wraps `self`.
-    @available(
-        iOS, deprecated: 9999.0,
-        message: "Iterate over 'Publisher.values' in an 'Effect.run', instead."
-    )
+    @available(iOS, deprecated: 9999.0, message: "Iterate over 'Publisher.values' in an 'Effect.run', instead.")
     public func catchToEffect<T>(
         _ transform: @escaping (Result<Element, Error>) -> T
     ) -> Effect<T> {
@@ -328,7 +312,7 @@ extension ObservableType {
             .catchError { Observable.just(transform(.failure($0))) }
             .eraseToEffect()
     }
-
+    
     /// Turns any publisher into an `Effect` for any output and failure type by ignoring all output
     /// and any failure.
     ///
