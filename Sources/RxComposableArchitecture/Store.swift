@@ -256,7 +256,11 @@ public final class Store<State, Action> {
         while index < self.bufferedActions.endIndex {
             defer { index += 1 }
             let action = self.bufferedActions[index]
-            let effect = self.reducer.reduce(into: &currentState, action: action)
+            #if swift(>=5.7)
+                let effect = self.reducer.reduce(into: &currentState, action: action)
+            #else
+                let effect = self.reducer(&currentState, action)
+            #endif
             
             switch effect.operation {
             case .none:
@@ -276,11 +280,11 @@ public final class Store<State, Action> {
                         self?.threadCheck(status: .effectCompletion(action))
                         boxedTask.wrappedValue?.cancel()
                         didComplete = true
-                        if let disposeKey {
+                        if let disposeKey = disposeKey {
                             self?.effectDisposables.remove(for: disposeKey)
                         }
                     }, onDisposed: { [weak self] in
-                        if let disposeKey {
+                        if let disposeKey = disposeKey {
                             self?.effectDisposables.remove(for: disposeKey)
                         }
                     })
@@ -482,144 +486,142 @@ extension Store where State: Equatable {
 #if swift(<5.7)
 extension Store {
     /// Returns an "actionless" store by erasing action to `Never`.
-    public var actionless: Store<State, Never> {
-        func absurd<A>(_: Never) -> A {}
-        return scope(state: { $0 }, action: absurd)
-    }
+//    public var actionless: Store<State, Never> {
+//        func absurd<A>(_: Never) -> A {}
+//        return scope(state: { $0 }, action: absurd)
+//    }
     
     /// Returns a "stateless" store by erasing state to `Void`.
-    public var stateless: Store<Void, Action> {
-        scope(state: { _ in () })
-    }
+//    public var stateless: Store<Void, Action> {
+//        scope(state: { _ in () })
+//    }
     
-    public func scope<LocalState>(
-        state toLocalState: @escaping (State) -> LocalState
-    ) -> Store<LocalState, Action> {
-        scope(state: toLocalState, action: { $0 })
-    }
+//    public func scope<LocalState>(
+//        state toLocalState: @escaping (State) -> LocalState
+//    ) -> Store<LocalState, Action> {
+//        scope(state: toLocalState, action: { $0 })
+//    }
     
-    private func newSend(_ action: Action, originatingFrom originatingAction: Action? = nil) {
-        bufferedActions.append(action)
-        guard !isSending else { return }
-        
-        isSending = true
-        var currentState = state
-        defer {
-            self.isSending = false
-            self.state = currentState
-        }
-        while !bufferedActions.isEmpty {
-            let action = bufferedActions.removeFirst()
-            let effect = reducer(&currentState, action)
-            
-            var didComplete = false
-            var disposeKey: CompositeDisposable.DisposeKey?
-            
-            let effectDisposable = effect.subscribe(
-                onNext: { [weak self] effectAction in
-                    self?.send(effectAction, originatingFrom: action)
-                },
-                onError: { err in
-                    assertionFailure("Error during effect handling: \(err.localizedDescription)")
-                },
-                onCompleted: { [weak self] in
-                    self?.threadCheck(status: .effectCompletion(action))
-                    didComplete = true
-                    if let disposeKey = disposeKey {
-                        self?.effectDisposables.remove(for: disposeKey)
-                    }
-                }
-            )
-            
-            if !didComplete {
-                disposeKey = effectDisposables.insert(effectDisposable)
-            }
-        }
-    }
+//    private func newSend(_ action: Action, originatingFrom originatingAction: Action? = nil) {
+//        bufferedActions.append(action)
+//        guard !isSending else { return }
+//
+//        isSending = true
+//        var currentState = state
+//        defer {
+//            self.isSending = false
+//            self.state = currentState
+//        }
+//        while !bufferedActions.isEmpty {
+//            let action = bufferedActions.removeFirst()
+//            let effect = reducer(&currentState, action)
+//
+//            var didComplete = false
+//            var disposeKey: CompositeDisposable.DisposeKey?
+//
+//            let effectDisposable = effect.subscribe(
+//                onNext: { [weak self] effectAction in
+//                    self?.send(effectAction, originatingFrom: action)
+//                },
+//                onError: { err in
+//                    assertionFailure("Error during effect handling: \(err.localizedDescription)")
+//                },
+//                onCompleted: { [weak self] in
+//                    self?.threadCheck(status: .effectCompletion(action))
+//                    didComplete = true
+//                    if let disposeKey = disposeKey {
+//                        self?.effectDisposables.remove(for: disposeKey)
+//                    }
+//                }
+//            )
+//
+//            if !didComplete {
+//                disposeKey = effectDisposables.insert(effectDisposable)
+//            }
+//        }
+//    }
     
-    public func send(_ action: Action, originatingFrom originatingAction: Action? = nil) {
-        self.threadCheck(status: .send(action, originatingAction: originatingAction))
-        guard !useNewScope else {
-            newSend(action, originatingFrom: originatingAction)
-            return
-        }
-        if !isSending {
-            synchronousActionsToSend.append(action)
-        } else {
-            bufferedActions.append(action)
-            return
-        }
+//    public func send(_ action: Action, originatingFrom originatingAction: Action? = nil) {
+//        self.threadCheck(status: .send(action, originatingAction: originatingAction))
+//        guard !useNewScope else {
+//            newSend(action, originatingFrom: originatingAction)
+//            return
+//        }
+//        if !isSending {
+//            synchronousActionsToSend.append(action)
+//        } else {
+//            bufferedActions.append(action)
+//            return
+//        }
+//
+//        while !synchronousActionsToSend.isEmpty || !bufferedActions.isEmpty {
+//            let action = !synchronousActionsToSend.isEmpty
+//                ? synchronousActionsToSend.removeFirst()
+//                : bufferedActions.removeFirst()
+//
+//            isSending = true
+//            let effect = reducer(&state, action)
+//            isSending = false
+//
+//            var didComplete = false
+//            var isProcessingEffects = true
+//            var disposeKey: CompositeDisposable.DisposeKey?
+//
+//            let effectDisposable = effect.subscribe(
+//                onNext: { [weak self] effectAction in
+//                    if isProcessingEffects {
+//                        self?.synchronousActionsToSend.append(effectAction)
+//                    } else {
+//                        self?.send(effectAction, originatingFrom: action)
+//                    }
+//                },
+//                onError: { err in
+//                    assertionFailure("Error during effect handling: \(err.localizedDescription)")
+//                },
+//                onCompleted: { [weak self] in
+//                    didComplete = true
+//                    if let disposeKey = disposeKey {
+//                        self?.effectDisposables.remove(for: disposeKey)
+//                    }
+//                }
+//            )
+//
+//            isProcessingEffects = false
+//
+//            if !didComplete {
+//                disposeKey = effectDisposables.insert(effectDisposable)
+//            }
+//        }
+//    }
 
-        while !synchronousActionsToSend.isEmpty || !bufferedActions.isEmpty {
-            let action = !synchronousActionsToSend.isEmpty
-                ? synchronousActionsToSend.removeFirst()
-                : bufferedActions.removeFirst()
-
-            isSending = true
-            let effect = reducer(&state, action)
-            isSending = false
-
-            var didComplete = false
-            var isProcessingEffects = true
-            var disposeKey: CompositeDisposable.DisposeKey?
-
-            let effectDisposable = effect.subscribe(
-                onNext: { [weak self] effectAction in
-                    if isProcessingEffects {
-                        self?.synchronousActionsToSend.append(effectAction)
-                    } else {
-                        self?.send(effectAction, originatingFrom: action)
-                    }
-                },
-                onError: { err in
-                    assertionFailure("Error during effect handling: \(err.localizedDescription)")
-                },
-                onCompleted: { [weak self] in
-                    didComplete = true
-                    if let disposeKey = disposeKey {
-                        self?.effectDisposables.remove(for: disposeKey)
-                    }
-                }
-            )
-
-            isProcessingEffects = false
-
-            if !didComplete {
-                disposeKey = effectDisposables.insert(effectDisposable)
-            }
-        }
-    }
-
-    public func scope<LocalState, LocalAction>(
-        state toLocalState: @escaping (State) -> LocalState,
-        action fromLocalAction: @escaping (LocalAction) -> Action
-    ) -> Store<LocalState, LocalAction> {
-        self.threadCheck(status: .scope)
-        if useNewScope {
-            return (self.scope ?? Scope(root: self)).rescope(self, state: toLocalState, action: fromLocalAction)
-        } else {
-            let localStore = Store<LocalState, LocalAction>(
-                initialState: toLocalState(state),
-                reducer: Reducer { localState, localAction, _ in
-                    self.send(fromLocalAction(localAction))
-                    localState = toLocalState(self.state)
-                    return .none
-                },
-                environment: (),
-                useNewScope: useNewScope,
-                mainThreadChecksEnabled: isMainThreadChecksEnabled,
-                cancelsEffectsOnDeinit: cancelsEffectsOnDeinit
-            )
-
-            relay
-                .subscribe(onNext: { [weak localStore] newValue in
-                    localStore?.state = toLocalState(newValue)
-                })
-                .disposed(by: localStore.disposeBag)
-
-            return localStore
-        }
-    }
+//    public func scope<LocalState, LocalAction>(
+//        state toLocalState: @escaping (State) -> LocalState,
+//        action fromLocalAction: @escaping (LocalAction) -> Action
+//    ) -> Store<LocalState, LocalAction> {
+//        self.threadCheck(status: .scope)
+//        if useNewScope {
+//            return (self.scope ?? StoreScope(root: self)).rescope(self, state: toLocalState, action: fromLocalAction)
+//        } else {
+//            let localStore = Store<LocalState, LocalAction>(
+//                initialState: toLocalState(state),
+//                reducer: Reducer { localState, localAction, _ in
+//                    self.send(fromLocalAction(localAction))
+//                    localState = toLocalState(self.state)
+//                    return .none
+//                },
+//                environment: (),
+//                useNewScope: useNewScope
+//            )
+//
+//            relay
+//                .subscribe(onNext: { [weak localStore] newValue in
+//                    localStore?.state = toLocalState(newValue)
+//                })
+//                .disposed(by: localStore.disposeBag)
+//
+//            return localStore
+//        }
+//    }
 }
 
 extension Store where State: Collection, State.Element: HashDiffable, State: Equatable, State.Element: Equatable {
@@ -715,7 +717,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                     return .none
                 },
                 environment: (),
-                useNewScope: useNewScope,
+                useNewScope: useNewScope
             )
 
             // reflect changes on store parent to local store
@@ -780,9 +782,7 @@ private struct StoreScope<RootState, RootAction>: AnyStoreScope {
                 return .none
             },
             environment: (),
-            useNewScope: true,
-            mainThreadChecksEnabled: root.isMainThreadChecksEnabled,
-            cancelsEffectsOnDeinit: root.cancelsEffectsOnDeinit
+            useNewScope: true
         )
         
         scopedStore.relay
@@ -793,7 +793,7 @@ private struct StoreScope<RootState, RootAction>: AnyStoreScope {
             })
             .disposed(by: rescopedStore.disposeBag)
         
-        rescopedStore.scope = Scope<RootState, RootAction>(
+        rescopedStore.scope = StoreScope<RootState, RootAction>(
             root: self.root,
             fromScopedAction: { fromScopedAction(fromRescopedAction($0)) }
         )
