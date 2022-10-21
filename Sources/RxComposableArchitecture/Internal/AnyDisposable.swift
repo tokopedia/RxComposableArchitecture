@@ -8,26 +8,26 @@
 import Foundation
 import RxSwift
 
-internal final class AnyDisposable: Disposable, Hashable {
-    internal let _dispose: () -> Void
+public final class AnyDisposable: Disposable, Hashable {
+    private let _dispose: () -> Void
 
-    internal init(_ disposable: Disposable) {
+    public init(_ disposable: Disposable) {
         _dispose = disposable.dispose
     }
     
-    internal init(_ cancel: @escaping () -> Void) {
+    public init(_ cancel: @escaping () -> Void) {
         _dispose = cancel
     }
 
-    internal func dispose() {
+    public func dispose() {
         _dispose()
     }
 
-    internal static func == (lhs: AnyDisposable, rhs: AnyDisposable) -> Bool {
+    public static func == (lhs: AnyDisposable, rhs: AnyDisposable) -> Bool {
         return ObjectIdentifier(lhs) == ObjectIdentifier(rhs)
     }
 
-    internal func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(ObjectIdentifier(self))
     }
 }
