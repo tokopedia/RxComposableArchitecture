@@ -22,8 +22,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/ReactiveX/RxSwift", from: "5.1.1"),
         .package(url: "https://github.com/pointfreeco/swift-case-paths", from: "0.8.1"),
-        .package(
-            name: "Benchmark", url: "https://github.com/google/swift-benchmark", from: "0.1.0"),
+        .package(name: "Benchmark", url: "https://github.com/google/swift-benchmark", from: "0.1.0"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "0.3.2"),
     ],
     targets: [
@@ -59,6 +58,7 @@ let package = Package(
             dependencies: [
                 "RxComposableArchitecture",
                 .product(name: "Benchmark", package: "Benchmark"),
-            ]),
+            ]
+        ),
     ]
 )
