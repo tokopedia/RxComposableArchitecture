@@ -16,7 +16,7 @@ extension AnyReducer {
             build(environment).reduce(into: &state, action: action)
         }
     }
-
+    
     public init<R: ReducerProtocol>(_ reducer: R) where R.State == State, R.Action == Action {
         self.init { _ in reducer }
     }
@@ -32,11 +32,13 @@ extension Store {
     public convenience init<Environment>(
         initialState: State,
         reducer: AnyReducer<State, Action, Environment>,
-        environment: Environment
+        environment: Environment,
+        useNewScope: Bool = StoreConfig.default.useNewScope()
     ) {
         self.init(
             initialState: initialState,
-            reducer: Reduce(reducer, environment: environment)
+            reducer: Reduce(reducer, environment: environment),
+            useNewScope: useNewScope
         )
     }
 }
