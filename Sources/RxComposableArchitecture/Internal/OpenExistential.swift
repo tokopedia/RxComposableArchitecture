@@ -26,10 +26,6 @@
         return _openExistential(type(of: lhs), do: open)
     }
 
-    private protocol AnyEquatable {
-        static func isEqual(_ lhs: Any, _ rhs: Any) -> Bool
-    }
-
     extension Witness: AnyEquatable where T: Equatable {
         fileprivate static func isEqual(_ lhs: Any, _ rhs: Any) -> Bool {
             guard
