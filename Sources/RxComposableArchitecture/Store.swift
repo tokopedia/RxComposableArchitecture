@@ -225,7 +225,12 @@ public final class Store<State, Action> {
         self.scope(state: toChildState, action: { $0 })
     }
     
-    @_spi(Internals) public func send(
+    @discardableResult
+    public func send(_ action: Action, originatingFrom originatingAction: Action? = nil) -> Task<Void, Never>? {
+        self._send(action, originatingFrom: action)
+    }
+    
+    func _send(
         _ action: Action,
         originatingFrom originatingAction: Action? = nil
     ) -> Task<Void, Never>? {
