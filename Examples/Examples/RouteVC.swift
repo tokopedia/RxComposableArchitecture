@@ -32,22 +32,22 @@ class RouteVC: UITableViewController {
         let selectedRoute = routes[indexPath.row]
         switch selectedRoute {
         case .basic:
-            let viewController = BasicUsageVC(store: Store(
-                initialState: BasicState(number: 0),
-                reducer: basicUsageReducer,
-                environment: (),
-                useNewScope: true
-            ))
+            let viewController = BasicUsageVC(
+                store: StoreOf<Basic>(
+                    initialState: Basic.State(number: 0),
+                    reducer: Basic()
+                )
+            )
             navigationController?.pushViewController(viewController, animated: true)
         case .environment:
             navigationController?.pushViewController(EnvironmentRouteVC(), animated: true)
         case .scoping:
-            let viewController = ScopingVC(store: Store(
-                initialState: ScopingState(),
-                reducer: scopingReducer,
-                environment: (),
-                useNewScope: true
-            ))
+            let viewController = ScopingVC(
+                store: StoreOf<Scoping>(
+                    initialState: Scoping.State(),
+                    reducer: Scoping()
+                )
+            )
             navigationController?.pushViewController(viewController, animated: true)
         case .pullback:
             let viewController = PullbackVC(store: Store(

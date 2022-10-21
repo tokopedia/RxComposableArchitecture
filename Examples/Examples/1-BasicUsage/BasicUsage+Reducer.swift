@@ -7,29 +7,31 @@
 
 import RxComposableArchitecture
 
-struct BasicState: Equatable {
-    var number: Int
-    var errorMessage: String?
-}
-
-enum BasicAction: Equatable {
-    case didTapPlus
-    case didTapMinus
-}
-
-let basicUsageReducer = Reducer<BasicState, BasicAction, Void> { state, action, _ in
-    switch action {
-    case .didTapMinus:
-        guard state.number > 0 else {
-            state.errorMessage = "Can't below 0"
+struct Basic: ReducerProtocol {
+    struct State: Equatable {
+        var number: Int
+        var errorMessage: String?
+    }
+    
+    enum Action: Equatable {
+        case didTapPlus
+        case didTapMinus
+    }
+    
+    func reduce(into state: inout State, action: Action) -> Effect<Action> {
+        switch action {
+        case .didTapMinus:
+            guard state.number > 0 else {
+                state.errorMessage = "Can't below 0"
+                return .none
+            }
+            state.number -= 1
+            state.errorMessage = nil
+            return .none
+        case .didTapPlus:
+            state.number += 1
+            state.errorMessage = nil
             return .none
         }
-        state.number -= 1
-        state.errorMessage = nil
-        return .none
-    case .didTapPlus:
-        state.number += 1
-        state.errorMessage = nil
-        return .none
     }
 }

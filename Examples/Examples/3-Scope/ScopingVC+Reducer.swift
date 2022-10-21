@@ -8,26 +8,28 @@
 import CasePaths
 import RxComposableArchitecture
 
-internal struct ScopingState: Equatable {
-    internal var counter = CounterState()
-}
-
-internal enum ScopingAction: Equatable {
-    case didTapJump
-    case counter(CounterAction)
-}
-
-internal let scopingReducer = Reducer<ScopingState, ScopingAction, Void> { state, action, _ in
-    switch action {
-    case .didTapJump:
-        state.counter.number = 100
-        return .none
-    case .counter(.didTapMinus):
-        state.counter.number -= 1
-        return .none
-    case .counter(.didTapPlus):
-        state.counter.number += 1
-        return .none
+internal struct Scoping: ReducerProtocol {
+    internal struct State: Equatable {
+        internal var counter = CounterState()
+    }
+    
+    internal enum Action: Equatable {
+        case didTapJump
+        case counter(CounterAction)
+    }
+    
+    internal func reduce(into state: inout State, action: Action) -> Effect<Action> {
+        switch action {
+        case .didTapJump:
+            state.counter.number = 100
+            return .none
+        case .counter(.didTapMinus):
+            state.counter.number -= 1
+            return .none
+        case .counter(.didTapPlus):
+            state.counter.number += 1
+            return .none
+        }
     }
 }
 
