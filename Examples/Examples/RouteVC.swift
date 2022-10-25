@@ -66,12 +66,12 @@ class RouteVC: UITableViewController {
             )
             navigationController?.pushViewController(viewController, animated: true)
         case .neverEqual:
-            let viewController = NeverEqualVC(store: Store(
-                initialState: NeverEqualState(),
-                reducer: neverEqualDemoReducer,
-                environment: (),
-                useNewScope: true
-            ))
+            let viewController = NeverEqualVC(
+                store: Store(
+                    initialState: NeverEqualExample.State(),
+                    reducer: NeverEqualExample()
+                )
+            )
             navigationController?.pushViewController(viewController, animated: true)
         case .timer:
             let viewController = TimerVC(store: Store(
