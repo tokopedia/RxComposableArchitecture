@@ -74,12 +74,12 @@ class RouteVC: UITableViewController {
             )
             navigationController?.pushViewController(viewController, animated: true)
         case .timer:
-            let viewController = TimerVC(store: Store(
-                initialState: TimerState(),
-                reducer: timerDemoReducer,
-                environment: (),
-                useNewScope: true
-            ))
+            let viewController = TimerVC(
+                store: Store(
+                    initialState: TimerExample.State(),
+                    reducer: TimerExample()
+                )
+            )
             navigationController?.pushViewController(viewController, animated: true)
         }
     }
