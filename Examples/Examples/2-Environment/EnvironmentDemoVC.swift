@@ -44,9 +44,9 @@ class EnvironmentDemoVC: UIScrollVC {
     private let getDateButton = UIButton.template(title: "Get new Date")
     private let getUUIDButton = UIButton.template(title: "Get new UUID")
     
-    private let store: Store<EnvironmentState, EnvironmentAction>
+    private let store: StoreOf<Environment>
     
-    init(store: Store<EnvironmentState, EnvironmentAction>) {
+    init(store: StoreOf<Environment>) {
         self.store = store
         super.init()
     }

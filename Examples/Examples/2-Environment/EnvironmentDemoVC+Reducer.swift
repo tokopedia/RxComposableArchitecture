@@ -10,53 +10,32 @@ import Foundation
 import RxComposableArchitecture
 import RxSwift
 
-struct CustomError: Error, Equatable {
-    var message: String
-}
-
-struct EnvironmentState: Equatable {
-    var text: String = "First Load"
-    var isLoading = false
-    var alertMessage: String?
-    var uuidString: String = "NONE"
-    var currentDate: Date?
-}
-
-enum EnvironmentAction: Equatable {
-    case didLoad
-    case receiveData(Result<Int, CustomError>)
-    case refresh
-    case getCurrentDate
-    case generateUUID
-    case dismissAlert
-}
-
-struct AnalyticsEvent: Equatable {
-    var name: String
-    var category: String
-}
-
-class AnalyticManager {
-    private init() {}
-    static func track(_ event: AnalyticsEvent) {
-        print("<<< Track event of \(event)")
+struct Environment: ReducerProtocol {
+    struct State {
+        var text: String = "First Load"
+        var isLoading = false
+        var alertMessage: String?
+        var uuidString: String = "NONE"
+        var currentDate: Date?
     }
-}
-
-struct EnvironmentVCEnvironment {
-    var loadData: () -> Effect<Result<Int, CustomError>>
-    var trackEvent: (AnalyticsEvent) -> Void
-    var date: () -> Date
-    var uuid: () -> UUID
-}
-
-let environmentReducer: Reducer<EnvironmentState, EnvironmentAction, EnvironmentVCEnvironment> = {
-    Reducer<EnvironmentState, EnvironmentAction, EnvironmentVCEnvironment> { state, action, env in
+    
+    enum Action {
+        case didLoad
+        case receiveData(Result<Int, CustomError>)
+        case refresh
+        case getCurrentDate
+        case generateUUID
+        case dismissAlert
+    }
+    
+    @Dependency(\.envVCEnvironment) var env
+    
+    func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .didLoad:
             state.isLoading = true
             return env.loadData()
-                .map(EnvironmentAction.receiveData)
+                .map(Action.receiveData)
         case let .receiveData(response):
             state.isLoading = false
             switch response {
@@ -71,7 +50,7 @@ let environmentReducer: Reducer<EnvironmentState, EnvironmentAction, Environment
             state.isLoading = true
             return .merge(
                 env.loadData()
-                    .map(EnvironmentAction.receiveData)
+                    .map(Action.receiveData)
                     .eraseToEffect(),
                 .fireAndForget {
                     env.trackEvent(AnalyticsEvent(name: "refresh", category: "DUMMY"))
@@ -92,4 +71,49 @@ let environmentReducer: Reducer<EnvironmentState, EnvironmentAction, Environment
             return .none
         }
     }
-}()
+}
+
+struct AnalyticsEvent: Equatable {
+    var name: String
+    var category: String
+}
+
+struct CustomError: Error, Equatable {
+    var message: String
+}
+
+class AnalyticsManager {
+    private init() {}
+    static func track(_ event: AnalyticsEvent) {
+        print(">> Tracked: \(event)")
+    }
+}
+
+struct EnvironmentVCEnvironment {
+    var loadData: () -> Effect<Result<Int, CustomError>>
+    var trackEvent: (AnalyticsEvent) -> Void
+    var date: () -> Date
+    var uuid: () -> UUID
+}
+
+private enum EnvironmentVCKey: DependencyKey {
+    static var liveValue: EnvironmentVCEnvironment {
+        EnvironmentVCEnvironment(
+            loadData: {
+                Observable.just(Result.success(Int.random(in: 0 ... 10000)))
+                    .delay(.milliseconds(500), scheduler: MainScheduler.instance)
+                    .eraseToEffect()
+            },
+            trackEvent: AnalyticsManager.track(_:),
+            date: Date.init,
+            uuid: UUID.init
+        )
+    }
+}
+
+extension DependencyValues {
+    var envVCEnvironment: EnvironmentVCEnvironment {
+        get { self[EnvironmentVCKey.self] }
+        set { self[EnvironmentVCKey.self] = newValue }
+    }
+}

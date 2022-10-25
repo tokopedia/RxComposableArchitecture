@@ -15,7 +15,7 @@ extension EnvironmentVCEnvironment {
                 .delay(.milliseconds(500), scheduler: MainScheduler.instance)
                 .eraseToEffect()
         },
-        trackEvent: AnalyticManager.track,
+        trackEvent: AnalyticsManager.track,
         date: Date.init,
         uuid: UUID.init
     )
