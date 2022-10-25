@@ -50,12 +50,12 @@ class RouteVC: UITableViewController {
             )
             navigationController?.pushViewController(viewController, animated: true)
         case .pullback:
-            let viewController = PullbackVC(store: Store(
-                initialState: PullbackState(),
-                reducer: pullbackReducer,
-                environment: (),
-                useNewScope: true
-            ))
+            let viewController = PullbackVC(
+                store: Store(
+                    initialState: Pullback.State(),
+                    reducer: Pullback()
+                )
+            )
             navigationController?.pushViewController(viewController, animated: true)
         case .optionalIfLet:
             let viewController = OptionalIfLetVC(store: Store(
