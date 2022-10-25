@@ -77,10 +77,10 @@ class CounterView: UIStackView {
         return label
     }()
     
-    private let store: Store<CounterState, CounterAction>
+    private let store: StoreOf<Counter>
     private let disposeBag = DisposeBag()
     
-    init(store: Store<CounterState, CounterAction>) {
+    init(store: StoreOf<Counter>) {
         self.store = store
         super.init(frame: .zero)
         alignment = .center

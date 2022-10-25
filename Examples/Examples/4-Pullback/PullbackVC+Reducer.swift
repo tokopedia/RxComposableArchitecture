@@ -21,17 +21,17 @@ internal struct Pullback: ReducerProtocol {
     
     internal struct State: Equatable {
         internal var text: String = ""
-        internal var counter = Basic.State(number: 0)
+        internal var counter = Counter.State(number: 0)
     }
     
     internal enum Action: Equatable {
         case textDidChange(String)
-        case counter(Basic.Action)
+        case counter(Counter.Action)
     }
     
-    var body: any ReducerProtocol<Pullback.State, Pullback.Action> {
+    var body: some ReducerProtocol<Pullback.State, Pullback.Action> {
         Scope(state: \State.counter, action: /Action.counter) {
-            Basic()
+            Counter()
         }
         
         /// We can observe child action in parent reducer and do some work or additional logic here

@@ -58,12 +58,12 @@ class RouteVC: UITableViewController {
             )
             navigationController?.pushViewController(viewController, animated: true)
         case .optionalIfLet:
-            let viewController = OptionalIfLetVC(store: Store(
-                initialState: OptionalIfLetState(),
-                reducer: optionalIfLetReducer,
-                environment: (),
-                useNewScope: true
-            ))
+            let viewController = OptionalIfLetVC(
+                store: Store(
+                    initialState: OptionalIfLet.State(),
+                    reducer: OptionalIfLet()
+                )
+            )
             navigationController?.pushViewController(viewController, animated: true)
         case .neverEqual:
             let viewController = NeverEqualVC(store: Store(
