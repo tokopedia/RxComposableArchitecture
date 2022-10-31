@@ -931,7 +931,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
 
       guard !self.reducer.inFlightEffects.isEmpty
       else {
-        { self.receive(expectedAction, updateExpectingResult, file: file, line: line) }()
+        { self.receive(expectedAction, file: file, line: line, updateExpectingResult) }()
         return
       }
 
@@ -983,7 +983,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
       guard !Task.isCancelled
       else { return }
 
-      { self.receive(expectedAction, updateExpectingResult, file: file, line: line) }()
+      { self.receive(expectedAction, file: file, line: line, updateExpectingResult) }()
       await Task.megaYield()
     }
     
@@ -1009,7 +1009,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
             case let .send(action, update):
                 // self.send(action, file: step.file, line: step.line, update)
                 /// TODO: Need to fix & check later
-                return
+                fatalError("unimplemented logic, fix this")
             case let .receive(expectedAction, update):
                 self.receive(expectedAction, file: step.file, line: step.line, update)
             case let .environment(work):
