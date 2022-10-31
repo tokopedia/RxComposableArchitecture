@@ -46,8 +46,8 @@ extension Effect: ObservableType {
     ///
     /// - Parameter publisher: A publisher.
     @available(iOS, deprecated: 9999.0, message: "Iterate over 'Observable.values' in an 'Effect.run', instead.")
-    public init<O: ObservableType>(_ observable: O) where O.Element == Action {
-        self.operation = .observable(observable.asObservable())
+    public init<O: Observable<Action>>(_ observable: O) where O.Element == Action {
+        self.operation = .observable(observable)
     }
     
     /// Initializes an effect that immediately emits the value passed in.
