@@ -216,6 +216,21 @@ extension Effect: ObservableType {
         }
         .eraseToEffect()
     }
+    
+    public func flatMap<T: ObservableType>(_ transform: @escaping (Action) -> T) -> Effect<Action> where T.Element == Action {
+        switch self.operation {
+        case let .observable(observable):
+            let dependencies = DependencyValues._current
+            let transform = { action in
+                DependencyValues.$_current.withValue(dependencies) {
+                    transform(action)
+                }
+            }
+            return observable.flatMap(transform).eraseToEffect()
+        default:
+            return .none
+        }
+    }
 }
 
 extension ObservableType where Element == Never {
