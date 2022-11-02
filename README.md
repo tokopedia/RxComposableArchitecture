@@ -1,3 +1,9 @@
+# What is the differences between RxComposable and TCA
+- Use of `RxSwift` instead of `Combine` (to support iOS<13) as the Reactive backbone.
+- Use of `HashDiffable` instead of `Identifiable`
+- Effect only have 1 generic, doesn't have Error counterpart.
+- We are not using `ViewStore`, because on UIKit, we don't need the presence of `ViewStore` yet.
+
 # RxComposableArchitecture
 
 The Composable Architecture (TCA, for short) is a library for building applications in a consistent and understandable way, with composition, testing, and ergonomics in mind. This library is based on PointFree's Swift Composable Architecture.
@@ -298,12 +304,6 @@ Add this into your Podfile
 ```
 pod "RxComposableArchitecture", , :git => 'https://github.com/tokopedia/RxComposableArchitecture', :tag => '0.17'
 ```
-
-## What is the differences between RxComposable and TCA
-- Use of `RxSwift` instead of `Combine` (to support iOS<13) as the Reactive backbone.
-- Use of `HashDiffable` instead of `Identifiable`
-- Effect only have 1 generic, doesn't have Error counterpart.
-- We are not using `ViewStore`, because on UIKit, we don't need the presence of `ViewStore` yet.
 
 ## License
 
