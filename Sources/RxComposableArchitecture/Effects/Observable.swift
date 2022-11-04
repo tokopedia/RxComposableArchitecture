@@ -46,8 +46,8 @@ extension Effect: ObservableType {
     ///
     /// - Parameter publisher: A publisher.
     @available(iOS, deprecated: 9999.0, message: "Iterate over 'Observable.values' in an 'Effect.run', instead.")
-    public init<O: ObservableType>(_ observable: O) where O.Element == Action {
-        self.operation = .observable(observable.asObservable())
+    public init<O: Observable<Action>>(_ observable: O) where O.Element == Action {
+        self.operation = .observable(observable)
     }
     
     /// Initializes an effect that immediately emits the value passed in.
@@ -215,6 +215,21 @@ extension Effect: ObservableType {
             }
         }
         .eraseToEffect()
+    }
+    
+    public func flatMap<T: ObservableType>(_ transform: @escaping (Action) -> T) -> Effect<Action> where T.Element == Action {
+        switch self.operation {
+        case let .observable(observable):
+            let dependencies = DependencyValues._current
+            let transform = { action in
+                DependencyValues.$_current.withValue(dependencies) {
+                    transform(action)
+                }
+            }
+            return observable.flatMap(transform).eraseToEffect()
+        default:
+            return .none
+        }
     }
 }
 
