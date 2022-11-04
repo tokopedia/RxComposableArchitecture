@@ -274,30 +274,36 @@ public final class Store<State, Action> {
                 var didComplete = false
                 let boxedTask = TaskBox<Task<Void, Never>?>(wrappedValue: nil)
                 var disposeKey: CompositeDisposable.DisposeKey?
-                let effectDisposable = observable.subscribe(
-                    onNext: { [weak self] effectAction in
-                        if let task = self?.send(effectAction, originatingFrom: action) {
-                            tasks.wrappedValue.append(task)
-                        }
-                    }, onError: {
-                        assertionFailure("Error during effect handling: \($0.localizedDescription)")
-                    }, onCompleted: { [weak self] in
+                let effectDisposable = observable
+                    .do(onDispose: { [weak self] in
                         self?.threadCheck(status: .effectCompletion(action))
-                        boxedTask.wrappedValue?.cancel()
-                        didComplete = true
-                        if let disposeKey = disposeKey {
-                            self?.effectDisposables.remove(for: disposeKey)
-                        }
-                    }, onDisposed: { [weak self] in
                         if let disposeKey = disposeKey {
                             self?.effectDisposables.remove(for: disposeKey)
                         }
                     })
+                    .subscribe(
+                        onNext: { [weak self] effectAction in
+                            if let task = self?.send(effectAction, originatingFrom: action) {
+                                tasks.wrappedValue.append(task)
+                            }
+                        },
+                        onError: {
+                            assertionFailure("Error during effect handling: \($0.localizedDescription)")
+                        },
+                        onCompleted: { [weak self] in
+                            self?.threadCheck(status: .effectCompletion(action))
+                            boxedTask.wrappedValue?.cancel()
+                            didComplete = true
+                            if let disposeKey = disposeKey {
+                                self?.effectDisposables.remove(for: disposeKey)
+                            }
+                        }
+                    )
                 
                 if !didComplete {
                     let task = Task<Void, Never> { @MainActor in
                         for await _ in AsyncStream<Void>.never {}
-                        effectDisposables.dispose()
+                        effectDisposable.dispose()
                     }
                     boxedTask.wrappedValue = task
                     tasks.wrappedValue.append(task)
