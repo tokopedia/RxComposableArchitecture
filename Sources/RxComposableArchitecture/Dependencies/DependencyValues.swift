@@ -262,13 +262,13 @@ public struct DependencyValues: Sendable {
                                 Key.self == Key.Value.self
                                     ? """
                                       Dependency:
-                                        \(typeName(Key.Value.self))
+                                        \(dependencyTypeName(Key.Value.self))
                                     """
                                     : """
                                       Key:
-                                        \(typeName(Key.self))
+                                        \(dependencyTypeName(Key.self))
                                       Value:
-                                        \(typeName(Key.Value.self))
+                                        \(dependencyTypeName(Key.Value.self))
                                     """
                             )
 
@@ -282,10 +282,11 @@ public struct DependencyValues: Sendable {
                                 Every dependency registered with the library must conform to "DependencyKey", and \
                                 that conformance must be visible to the running application.
 
-                                To fix, make sure that "\(typeName(Key.self))" conforms to "DependencyKey" by \
+                                To fix, make sure that "\(dependencyTypeName(Key.self))" conforms to "DependencyKey" by \
                                 providing a live implementation of your dependency, and make sure that the \
                                 conformance is linked with this current application.
                                 """,
+                                category: "Dependencies",
                                 file: Self.currentDependency.file ?? file,
                                 line: Self.currentDependency.line ?? line
                             )

@@ -26,7 +26,6 @@ Pod::Spec.new do |s|
 
   s.source_files = [
     'Sources/RxComposableArchitecture/**/*',
-    'Sources/Dependencies/**/*'
   ]
   s.dependency 'RxSwift', '5.1.1'
   s.dependency 'RxCocoa', '5.1.1'
