@@ -234,6 +234,10 @@ public final class Store<State, Action> {
         _ action: Action,
         originatingFrom originatingAction: Action? = nil
     ) -> Task<Void, Never>? {
+        guard useNewScope else {
+            oldSend(action, originatingFrom: originatingAction)
+            return nil
+        }
         self.threadCheck(status: .send(action, originatingAction: originatingAction))
         
         self.bufferedActions.append(action)
@@ -464,6 +468,62 @@ public final class Store<State, Action> {
         _ toLocalState: @escaping (State) -> LocalState
     ) -> Effect<LocalState> {
         return relay.map(toLocalState).distinctUntilChanged().eraseToEffect()
+    }
+    
+    private func oldSend(_ action: Action, originatingFrom originatingAction: Action? = nil) {
+        self.threadCheck(status: .send(action, originatingAction: originatingAction))
+        if !isSending {
+            synchronousActionsToSend.append(action)
+        } else {
+            bufferedActions.append(action)
+            return
+        }
+
+        while !synchronousActionsToSend.isEmpty || !bufferedActions.isEmpty {
+            let action = !synchronousActionsToSend.isEmpty
+                ? synchronousActionsToSend.removeFirst()
+                : bufferedActions.removeFirst()
+
+            isSending = true
+            #if swift(>=5.7)
+                let effect = self.reducer.reduce(into: &state, action: action)
+            #else
+                let effect = self.reducer(&currentState, action)
+            #endif
+            isSending = false
+
+            var didComplete = false
+            var isProcessingEffects = true
+            var disposeKey: CompositeDisposable.DisposeKey?
+            
+            switch effect.operation {
+            case .none, .run: break
+            case let .observable(observable):
+                let effectDisposable = observable.subscribe(
+                    onNext: { [weak self] effectAction in
+                        if isProcessingEffects {
+                            self?.synchronousActionsToSend.append(effectAction)
+                        } else {
+                            self?.send(effectAction, originatingFrom: action)
+                        }
+                    },
+                    onError: { err in
+                        assertionFailure("Error during effect handling: \(err.localizedDescription)")
+                    },
+                    onCompleted: { [weak self] in
+                        didComplete = true
+                        if let disposeKey = disposeKey {
+                            self?.effectDisposables.remove(for: disposeKey)
+                        }
+                    }
+                )
+                isProcessingEffects = false
+
+                if !didComplete {
+                    disposeKey = effectDisposables.insert(effectDisposable)
+                }
+            }
+        }
     }
 }
 
