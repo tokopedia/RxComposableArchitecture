@@ -217,7 +217,7 @@ extension Effect: ObservableType {
         .eraseToEffect()
     }
     
-    public func flatMap<T: ObservableType>(_ transform: @escaping (Action) -> T) -> Effect<Action> where T.Element == Action {
+    public func flatMap<T: ObservableType>(_ transform: @escaping (Action) -> T) -> Effect<T.Element> {
         switch self.operation {
         case let .observable(observable):
             let dependencies = DependencyValues._current

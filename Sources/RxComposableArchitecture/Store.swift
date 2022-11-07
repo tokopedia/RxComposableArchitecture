@@ -488,7 +488,7 @@ public final class Store<State, Action> {
             #if swift(>=5.7)
                 let effect = self.reducer.reduce(into: &state, action: action)
             #else
-                let effect = self.reducer(&currentState, action)
+                let effect = self.reducer(&state, action)
             #endif
             isSending = false
 
@@ -915,3 +915,18 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
     }
 }
 #endif
+
+/// A convenience type alias for referring to a store of a given reducer's domain.
+///
+/// Instead of specifying two generics:
+///
+/// ```swift
+/// let store: Store<Feature.State, Feature.Action>
+/// ```
+///
+/// You can specify a single generic:
+///
+/// ```swift
+/// let store: StoreOf<Feature>
+/// ```
+public typealias StoreOf<R: ReducerProtocol> = Store<R.State, R.Action>
