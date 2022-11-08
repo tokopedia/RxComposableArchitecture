@@ -8,12 +8,12 @@ test-example:
 	mkdir -p derivedData && \
 	cd Examples && \
 	xcodebuild test \
-		-project Examples.xcodeproj \
-		-scheme Examples \
-		-destination "platform=iOS Simulator,name=iPhone 13 Pro Max"
-		-derivedDataPath ../derivedData \
-		| xcpretty \
-		&& cd .. && rm -rf derivedData
+	-project Examples.xcodeproj \
+	-scheme Examples \
+	-destination "platform=iOS Simulator,name=iPhone 13 Pro Max"
+	-derivedDataPath ../derivedData \
+	| xcpretty \
+	&& rm -rf ../derivedData
 
 benchmark:
 	swift run --configuration release \
