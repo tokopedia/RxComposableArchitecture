@@ -29,13 +29,13 @@ class ScopingVC: UIScrollVC {
     
     private let counterView: CounterView
     
-    private let store: Store<ScopingState, ScopingAction>
+    private let store: StoreOf<Scoping>
     
-    init(store: Store<ScopingState, ScopingAction>) {
+    init(store: StoreOf<Scoping>) {
         self.store = store
         counterView = CounterView(store: store.scope(
             state: \.counter,
-            action: ScopingAction.counter
+            action: Scoping.Action.counter
         ))
         super.init()
     }
@@ -77,10 +77,10 @@ class CounterView: UIStackView {
         return label
     }()
     
-    private let store: Store<CounterState, CounterAction>
+    private let store: StoreOf<Counter>
     private let disposeBag = DisposeBag()
     
-    init(store: Store<CounterState, CounterAction>) {
+    init(store: StoreOf<Counter>) {
         self.store = store
         super.init(frame: .zero)
         alignment = .center

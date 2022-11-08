@@ -7,25 +7,26 @@
 
 import RxComposableArchitecture
 
-struct NeverEqualState: Equatable {
-     @NeverEqual
-     var showAlert: String?
-     @NeverEqual
-     var scrollToTop: Stateless?
- }
-
- enum NeverEqualAction: Equatable {
-     case didTapShowAlert
-     case didTapScrollToTop
- }
-
- internal let neverEqualDemoReducer = Reducer<NeverEqualState, NeverEqualAction, Void> { state, action, _ in
-     switch action {
-     case .didTapShowAlert:
-         state.showAlert = "This is an alert"
-         return .none
-     case .didTapScrollToTop:
-         state.scrollToTop = Stateless()
-         return .none
-     }
- }
+struct NeverEqualExample: ReducerProtocol {
+    struct State: Equatable {
+        @NeverEqual var showAlert: String?
+        @NeverEqual var scrollToTop: Stateless?
+    }
+    
+    enum Action: Equatable {
+        case didTapShowAlert
+        case didTapScrollToTop
+    }
+    
+    func reduce(into state: inout State, action: Action) -> Effect<Action> {
+        switch action {
+        case .didTapShowAlert:
+            state.showAlert = "This is an alert"
+            return .none
+        case .didTapScrollToTop:
+            state.scrollToTop = Stateless()
+            return .none
+        }
+    }
+    
+}
