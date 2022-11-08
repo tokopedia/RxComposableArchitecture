@@ -8,6 +8,8 @@
 import XCTest
 import RxComposableArchitecture
 import RxSwift
+import XCTestDynamicOverlay
+
 @testable import Examples
 
 final class EnvironmentReducerTests: XCTestCase {
@@ -23,12 +25,12 @@ final class EnvironmentReducerTests: XCTestCase {
 
     func testSuccessLoadData() {
         let store = TestStore(
-            initialState: .init(),
-            reducer: environmentReducer,
-            environment: EnvironmentVCEnvironment.failing
+            initialState: Environment.State(),
+            reducer: Environment(),
+            failingWhenNothingChange: true,
+            useNewScope: true
         )
-        
-        store.environment.loadData = { Observable.just(.success(2)).eraseToEffect() }
+        store.dependencies.envVCEnvironment.loadData = { Observable.just(.success(2)).eraseToEffect() }
 
         store.send(.didLoad) {
             $0.isLoading = true
@@ -41,11 +43,13 @@ final class EnvironmentReducerTests: XCTestCase {
 
     func testFailedLoadData() {
         let store = TestStore(
-            initialState: .init(),
-            reducer: environmentReducer,
-            environment: EnvironmentVCEnvironment.failing
+            initialState: Environment.State(),
+            reducer: Environment(),
+            failingWhenNothingChange: true,
+            useNewScope: true
         )
-        store.environment.loadData = { Effect(value: .failure(CustomError(message: "ERROR!"))) }
+        store.dependencies.envVCEnvironment.loadData = { Effect(value: .failure(CustomError(message: "ERROR!"))) }
+        
         store.send(.didLoad) {
             $0.isLoading = true
         }
@@ -60,12 +64,13 @@ final class EnvironmentReducerTests: XCTestCase {
 
     func testRefresh() {
         let store = TestStore(
-            initialState: .init(),
-            reducer: environmentReducer,
-            environment: EnvironmentVCEnvironment.failing
+            initialState: Environment.State(),
+            reducer: Environment(),
+            failingWhenNothingChange: true,
+            useNewScope: true
         )
-        store.environment.loadData = { Effect(value: .success(2)) }
-        store.environment.trackEvent = trackEventHandler
+        store.dependencies.envVCEnvironment.loadData = { Effect(value: .success(2)) }
+        store.dependencies.envVCEnvironment.trackEvent = trackEventHandler
         store.send(.refresh) {
             $0.isLoading = true
         }
@@ -75,7 +80,7 @@ final class EnvironmentReducerTests: XCTestCase {
         }
 
         /// How you modify the environment value
-        store.environment.loadData = {
+        store.dependencies.envVCEnvironment.loadData = {
             Effect(value: .success(5))
         }
         store.send(.refresh) {
@@ -94,13 +99,13 @@ final class EnvironmentReducerTests: XCTestCase {
 
     func testGetCurrentDate() {
         let store = TestStore(
-            initialState: .init(),
-            reducer: environmentReducer,
-            environment: EnvironmentVCEnvironment.failing
+            initialState: Environment.State(),
+            reducer: Environment(),
+            failingWhenNothingChange: true,
+            useNewScope: true
         )
-        
-        store.environment.date = { Date(timeIntervalSince1970: 1_597_300_000) }
-        store.environment.trackEvent = trackEventHandler
+        store.dependencies.envVCEnvironment.date = { Date(timeIntervalSince1970: 1_597_300_000) }
+        store.dependencies.envVCEnvironment.trackEvent = trackEventHandler
         store.send(.getCurrentDate) {
             $0.currentDate = Date(timeIntervalSince1970: 1_597_300_000)
         }
@@ -109,13 +114,14 @@ final class EnvironmentReducerTests: XCTestCase {
 
     func testGenerateUUID() {
         let store = TestStore(
-            initialState: .init(),
-            reducer: environmentReducer,
-            environment: EnvironmentVCEnvironment.failing
+            initialState: Environment.State(),
+            reducer: Environment(),
+            failingWhenNothingChange: true,
+            useNewScope: true
         )
         
-        store.environment.uuid = UUID.incrementing
-        store.environment.trackEvent = trackEventHandler
+        store.dependencies.envVCEnvironment.uuid = UUID.incrementing
+        store.dependencies.envVCEnvironment.trackEvent = trackEventHandler
         store.send(.generateUUID) {
             $0.uuidString = "00000000-0000-0000-0000-000000000000"
         }
@@ -128,21 +134,4 @@ final class EnvironmentReducerTests: XCTestCase {
                            AnalyticsEvent(name: "generateUUID", category: "DUMMY")
                        ])
     }
-}
-
-extension EnvironmentVCEnvironment {
-    static var failing = Self(
-        loadData: {
-            Effect.failing("loadData should not called")
-        },
-        trackEvent: { _ in XCTFail("trackEvent Should not be called") },
-        date: {
-            XCTFail("date Should not be called")
-            return Date()
-        },
-        uuid: {
-            XCTFail("date Should not be called")
-            return UUID()
-        }
-    )
 }

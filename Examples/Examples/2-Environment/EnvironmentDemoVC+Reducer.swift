@@ -9,9 +9,10 @@ import CasePaths
 import Foundation
 import RxComposableArchitecture
 import RxSwift
+import XCTestDynamicOverlay
 
 struct Environment: ReducerProtocol {
-    struct State {
+    struct State: Equatable {
         var text: String = "First Load"
         var isLoading = false
         var alertMessage: String?
@@ -19,7 +20,7 @@ struct Environment: ReducerProtocol {
         var currentDate: Date?
     }
     
-    enum Action {
+    enum Action: Equatable {
         case didLoad
         case receiveData(Result<Int, CustomError>)
         case refresh
@@ -96,7 +97,7 @@ struct EnvironmentVCEnvironment {
     var uuid: () -> UUID
 }
 
-private enum EnvironmentVCKey: DependencyKey {
+extension EnvironmentVCEnvironment: DependencyKey {
     static var liveValue: EnvironmentVCEnvironment {
         EnvironmentVCEnvironment(
             loadData: {
@@ -109,11 +110,20 @@ private enum EnvironmentVCKey: DependencyKey {
             uuid: UUID.init
         )
     }
+    
+    static var testValue: EnvironmentVCEnvironment {
+        EnvironmentVCEnvironment(
+            loadData: unimplemented("\(Self.self).loadData", placeholder: .just(.failure(CustomError(message: "Error"))).eraseToEffect()),
+            trackEvent: unimplemented("\(Self.self).trackEvent"),
+            date: unimplemented("\(Self.self).date", placeholder: Date()),
+            uuid: unimplemented("\(Self.self).uuid", placeholder: UUID())
+        )
+    }
 }
 
 extension DependencyValues {
     var envVCEnvironment: EnvironmentVCEnvironment {
-        get { self[EnvironmentVCKey.self] }
-        set { self[EnvironmentVCKey.self] = newValue }
+        get { self[EnvironmentVCEnvironment.self] }
+        set { self[EnvironmentVCEnvironment.self] = newValue }
     }
 }
