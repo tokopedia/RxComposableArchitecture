@@ -1,8 +1,22 @@
-format:
-	swift-format \
-		--ignore-unparsable-files \
-		--in-place \
-		--recursive \
-		./Examples ./Sources/ ./Tests Package.swift
+build-library:
+	swift build 
 
-.PHONY: format
+test-library:
+	swift test --enable-code-coverage | xcpretty
+
+test-example:
+	mkdir -p derivedData && \
+	cd Examples && \
+	xcodebuild test \
+	-project Examples.xcodeproj \
+	-scheme Examples \
+	-destination "platform=iOS Simulator,name=iPhone 13 Pro Max"
+	-derivedDataPath ../derivedData \
+	| xcpretty \
+	&& rm -rf ../derivedData
+
+benchmark:
+	swift run --configuration release \
+		RxComposableArchitecture-Benchmark
+
+.PHONY: build-library test-library test-example benchmark
