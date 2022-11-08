@@ -103,7 +103,7 @@ internal final class StoreTests: XCTestCase {
                 return count
             })
         
-        XCTAssertEqual(numCalls1, 1)
+        XCTAssertEqual(numCalls1, 2)
     }
     
     internal func testScopeCallCountUsingNewScope() {
@@ -146,27 +146,27 @@ internal final class StoreTests: XCTestCase {
                 return count
             })
         
-        XCTAssertEqual(numCalls1, 1)
-        XCTAssertEqual(numCalls2, 1)
-        XCTAssertEqual(numCalls3, 1)
-        
-        _ = store.send(())
-        
         XCTAssertEqual(numCalls1, 2)
         XCTAssertEqual(numCalls2, 2)
         XCTAssertEqual(numCalls3, 2)
         
         _ = store.send(())
         
-        XCTAssertEqual(numCalls1, 3)
-        XCTAssertEqual(numCalls2, 3)
-        XCTAssertEqual(numCalls3, 3)
+        XCTAssertEqual(numCalls1, 4)
+        XCTAssertEqual(numCalls2, 5)
+        XCTAssertEqual(numCalls3, 6)
         
         _ = store.send(())
         
-        XCTAssertEqual(numCalls1, 4)
-        XCTAssertEqual(numCalls2, 4)
-        XCTAssertEqual(numCalls3, 4)
+        XCTAssertEqual(numCalls1, 6)
+        XCTAssertEqual(numCalls2, 8)
+        XCTAssertEqual(numCalls3, 10)
+        
+        _ = store.send(())
+        
+        XCTAssertEqual(numCalls1, 8)
+        XCTAssertEqual(numCalls2, 11)
+        XCTAssertEqual(numCalls3, 14)
     }
     
     internal func testScopeCallCount2UsingNewScope() {
@@ -254,13 +254,13 @@ internal final class StoreTests: XCTestCase {
             })
         
         _ = store.send((1, .didTap))
-        XCTAssertEqual(numCalls1, 2)
-        XCTAssertEqual(numCalls2, 2)
+        XCTAssertEqual(numCalls1, 4)
+        XCTAssertEqual(numCalls2, 4)
         XCTAssertEqual(store.state.qty, 2)
         
         _ = store.send((1, .didTap))
-        XCTAssertEqual(numCalls1, 3)
-        XCTAssertEqual(numCalls2, 3)
+        XCTAssertEqual(numCalls1, 6)
+        XCTAssertEqual(numCalls2, 6)
         XCTAssertEqual(store.state.qty, 3)
     }
     

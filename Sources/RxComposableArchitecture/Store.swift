@@ -204,6 +204,9 @@ public final class Store<State, Action> {
         action fromChildAction: @escaping (ChildAction) -> Action
     ) -> Store<ChildState, ChildAction> {
         self.threadCheck(status: .scope)
+        guard self.useNewScope else {
+            return oldScope(state: toChildState, action: fromChildAction)
+        }
         
         #if swift(>=5.7)
             return self.reducer.rescope(self, state: toChildState, action: fromChildAction)
@@ -223,6 +226,31 @@ public final class Store<State, Action> {
         state toChildState: @escaping (State) -> ChildState
     ) -> Store<ChildState, Action> {
         self.scope(state: toChildState, action: { $0 })
+    }
+    
+    @inline(__always)
+    private func oldScope<ChildState, ChildAction>(
+        state toChildState: @escaping (State) -> ChildState,
+        action fromChildAction: @escaping (ChildAction) -> Action
+    ) -> Store<ChildState, ChildAction> {
+        let localStore = Store<ChildState, ChildAction>(
+            initialState: toChildState(state),
+            reducer: Reducer { localState, localAction, _ in
+                self.send(fromChildAction(localAction))
+                localState = toChildState(self.state)
+                return .none
+            },
+            environment: (),
+            useNewScope: useNewScope
+        )
+        
+        relay
+            .subscribe(onNext: { [weak localStore] newValue in
+                localStore?.state = toChildState(newValue)
+            })
+            .disposed(by: localStore.disposeBag)
+        
+        return localStore
     }
     
     @discardableResult
@@ -470,6 +498,7 @@ public final class Store<State, Action> {
         return relay.map(toLocalState).distinctUntilChanged().eraseToEffect()
     }
     
+    @inline(__always)
     private func oldSend(_ action: Action, originatingFrom originatingAction: Action? = nil) {
         self.threadCheck(status: .send(action, originatingAction: originatingAction))
         if !isSending {
@@ -816,7 +845,8 @@ extension ScopedReducer: AnyScopedReducer {
         )
         let childStore = Store<RescopedState, RescopedAction>(
             initialState: toRescopedState(store.state),
-            reducer: reducer
+            reducer: reducer,
+            useNewScope: self.rootStore.useNewScope
         )
         store.relay
             .skip(1)
@@ -897,7 +927,8 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
                     localState = finalState
                     return .none
                 }
-            })
+            }),
+            useNewScope: useNewScope
         )
         
         relay
