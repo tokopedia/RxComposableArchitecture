@@ -1,7 +1,8 @@
 import Foundation
-@_spi(Internals) import RxComposableArchitecture
 import RxSwift
 import XCTest
+
+@testable import RxComposableArchitecture
 
 internal final class MemoryManagementTests: XCTestCase {
     internal func testOwnership_ScopeHoldsOntoParent() {

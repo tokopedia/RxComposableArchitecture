@@ -6,8 +6,9 @@
 //
 
 import RxSwift
-@_spi(Internals) import RxComposableArchitecture
 import XCTest
+
+@testable import RxComposableArchitecture
 
 internal final class BoostrapTests: XCTestCase {
     internal func testBootsrap() {

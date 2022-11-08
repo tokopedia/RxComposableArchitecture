@@ -160,13 +160,13 @@ extension DependencyKey {
             Self.self == Value.self
                 ? """
                   Dependency:
-                    \(typeName(Value.self))
+                    \(dependencyTypeName(Value.self))
                 """
                 : """
                   Key:
-                    \(typeName(Self.self))
+                    \(dependencyTypeName(Self.self))
                   Value:
-                    \(typeName(Value.self))
+                    \(dependencyTypeName(Value.self))
                 """
         )
         // TODO: Make this error message configurable to avoid TCA-specific language outside of TCA?

@@ -14,10 +14,6 @@ let package = Package(
             name: "RxComposableArchitecture",
             targets: ["RxComposableArchitecture"]
         ),
-        .library(
-            name: "Dependencies",
-            targets: ["Dependencies"]
-        ),
     ],
     dependencies: [
         .package(url: "https://github.com/ReactiveX/RxSwift", from: "5.1.1"),
@@ -29,7 +25,6 @@ let package = Package(
         .target(
             name: "RxComposableArchitecture",
             dependencies: [
-                "Dependencies",
                 .product(name: "CasePaths", package: "swift-case-paths"),
                 .product(name: "RxSwift", package: "RxSwift"),
                 .product(name: "RxRelay", package: "RxSwift"),
@@ -39,19 +34,6 @@ let package = Package(
         .testTarget(
             name: "RxComposableArchitectureTests",
             dependencies: ["RxComposableArchitecture"]
-        ),
-        .target(
-            name: "Dependencies",
-            dependencies: [
-                .product(name: "XCTestDynamicOverlay", package: "xctest-dynamic-overlay")
-            ]
-        ),
-        .testTarget(
-            name: "DependenciesTests",
-            dependencies: [
-                "RxComposableArchitecture",
-                "Dependencies",
-            ]
         ),
         .executableTarget(
             name: "RxComposableArchitecture-Benchmark",

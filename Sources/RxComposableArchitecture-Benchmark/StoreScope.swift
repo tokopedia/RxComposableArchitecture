@@ -1,5 +1,5 @@
 import Benchmark
-@_spi(Internals) import RxComposableArchitecture
+import RxComposableArchitecture
 
 let storeScopeSuite = BenchmarkSuite(name: "Store scoping") { suite in
     let counterReducer = Reducer<Int, Bool, Void> { state, action, _ in

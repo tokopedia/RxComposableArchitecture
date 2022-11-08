@@ -5,9 +5,10 @@
 //  Created by jefferson.setiawan on 03/06/22.
 //
 
-@_spi(Internals) import RxComposableArchitecture
 import RxSwift
 import XCTest
+
+@testable import RxComposableArchitecture
 
 internal final class NeverEqualTests: XCTestCase {
     private let disposeBag = DisposeBag()
