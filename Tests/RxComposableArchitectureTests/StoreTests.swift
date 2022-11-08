@@ -1,6 +1,7 @@
 import RxSwift
-@_spi(Internals) import RxComposableArchitecture
 import XCTest
+
+@testable import RxComposableArchitecture
 
 internal final class StoreTests: XCTestCase {
     private let disposeBag = DisposeBag()
@@ -90,10 +91,10 @@ internal final class StoreTests: XCTestCase {
     }
     
     internal func testScopeCallCount() {
-        let counterReducer = Reduce<Int, Void> { state, action in
+        let counterReducer = Reduce<Int, Void>({ state, action in
             state += 1
             return .none
-        }
+        })
         
         var numCalls1 = 0
         _ = Store(initialState: 0, reducer: counterReducer)
@@ -106,10 +107,10 @@ internal final class StoreTests: XCTestCase {
     }
     
     internal func testScopeCallCountUsingNewScope() {
-        let counterReducer = Reduce<Int, Void> { state, action in
+        let counterReducer = Reduce<Int, Void>({ state, action in
             state += 1
             return .none
-        }
+        })
         
         var numCalls1 = 0
         _ = Store(initialState: 0, reducer: counterReducer, useNewScope: true)
@@ -122,10 +123,10 @@ internal final class StoreTests: XCTestCase {
     }
     
     internal func testScopeCallCount2() {
-        let counterReducer = Reduce<Int, Void> { state, _ in
+        let counterReducer = Reduce<Int, Void>({ state, _ in
             state += 1
             return .none
-        }
+        })
         
         var numCalls1 = 0
         var numCalls2 = 0
@@ -169,10 +170,10 @@ internal final class StoreTests: XCTestCase {
     }
     
     internal func testScopeCallCount2UsingNewScope() {
-        let counterReducer = Reduce<Int, Void> { state, _ in
+        let counterReducer = Reduce<Int, Void>({ state, _ in
             state += 1
             return .none
-        }
+        })
         
         var numCalls1 = 0
         var numCalls2 = 0
@@ -226,13 +227,13 @@ internal final class StoreTests: XCTestCase {
         enum Action {
             case item(id: Int, action: ItemAction)
         }
-        let itemReducer = Reduce<IdentifiedArrayOf<Item>, Action> { state, action in
+        let itemReducer = Reduce<IdentifiedArrayOf<Item>, Action>({ state, action in
             switch action {
             case let .item(id, .didTap):
                 state[id: id]!.qty += 1
             }
             return .none
-        }
+        })
         
         var numCalls1 = 0
         var numCalls2 = 0
@@ -274,13 +275,13 @@ internal final class StoreTests: XCTestCase {
         enum Action {
             case item(id: Int, action: ItemAction)
         }
-        let itemReducer = Reduce<IdentifiedArrayOf<Item>, Action> { state, action in
+        let itemReducer = Reduce<IdentifiedArrayOf<Item>, Action>({ state, action in
             switch action {
             case let .item(id, .didTap):
                 state[id: id]!.qty += 1
             }
             return .none
-        }
+        })
         
         var numCalls1 = 0
         var numCalls2 = 0
@@ -348,7 +349,7 @@ internal final class StoreTests: XCTestCase {
     
     internal func testLotsOfSynchronousActions() {
         enum Action { case incr, noop }
-        let reducer = Reduce<Int, Action> { state, action in
+        let reducer = Reduce<Int, Action>({ state, action in
             switch action {
             case .incr:
                 state += 1
@@ -356,7 +357,7 @@ internal final class StoreTests: XCTestCase {
             case .noop:
                 return .none
             }
-        }
+        })
         
         let store = Store(initialState: 0, reducer: reducer)
         _ = store.send(.incr)
@@ -368,10 +369,10 @@ internal final class StoreTests: XCTestCase {
             var count: Int?
         }
         
-        let appReducer = Reduce<AppState, Int?> { state, action in
+        let appReducer = Reduce<AppState, Int?>({ state, action in
             state.count = action
             return .none
-        }
+        })
         
         let parentStore = Store(initialState: AppState(), reducer: appReducer)
         
@@ -416,7 +417,7 @@ internal final class StoreTests: XCTestCase {
     internal func testIfLetTwo() {
         let parentStore = Store(
             initialState: 0,
-            reducer: Reduce<Int?, Bool> { state, action in
+            reducer: Reduce<Int?, Bool>({ state, action in
                 if action {
                     state? += 1
                     return .none
@@ -425,7 +426,7 @@ internal final class StoreTests: XCTestCase {
                         .observeOn(MainScheduler.instance)
                         .eraseToEffect()
                 }
-            }
+            })
         )
         
         parentStore.ifLet { childStore in

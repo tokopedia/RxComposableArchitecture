@@ -181,7 +181,7 @@ import XCTestDynamicOverlay
 /// This test is proving that the debounced network requests are correctly canceled when we do not
 /// wait longer than the 0.5 seconds, because if it wasn't and it delivered an action when we did
 /// not expect it would cause a test failure.
-public final class TestStore<State, Action, ScopedState, ScopedAction, Environment> {
+public final class TestStore<State, ScopedState, Action, ScopedAction, Environment> {
     /// The current dependencies.
     ///
     /// The dependencies define the execution context that your feature runs in. They can be
@@ -1037,7 +1037,7 @@ extension TestStore {
     public func scope<S, A>(
         state toScopedState: @escaping (ScopedState) -> S,
         action fromScopedAction: @escaping (A) -> ScopedAction
-    ) -> TestStore<State, Action, S, A, Environment> {
+    ) -> TestStore<State, S, Action, A, Environment> {
         .init(
             _environment: self._environment,
             file: self.file,
@@ -1061,7 +1061,7 @@ extension TestStore {
     ///   view store state transformations.
     public func scope<S>(
         state toScopedState: @escaping (ScopedState) -> S
-    ) -> TestStore<State, Action, S, ScopedAction, Environment> {
+    ) -> TestStore<State, S, Action, ScopedAction, Environment> {
         self.scope(state: toScopedState, action: { $0 })
     }
     

@@ -20,10 +20,10 @@ public final class Store<State, Action> {
     #endif
     
     internal let disposeBag = DisposeBag()
-    @_spi(Internals) public var effectDisposables = CompositeDisposable()
+    internal var effectDisposables = CompositeDisposable()
     internal let relay: BehaviorRelay<State>
     
-    private let useNewScope: Bool
+    fileprivate let useNewScope: Bool
     fileprivate let cancelsEffectsOnDeinit: Bool
     
     #if DEBUG
@@ -713,7 +713,7 @@ private struct StoreScope<RootState, RootAction>: AnyStoreScope {
                 return .none
             },
             environment: (),
-            useNewScope: true
+            useNewScope: root.useNewScope
         )
         
         scopedStore.relay
@@ -746,9 +746,7 @@ extension ReducerProtocol {
     }
 }
 
-private final class ScopedReducer<
-    RootState, RootAction, ScopedState, ScopedAction
->: ReducerProtocol {
+private final class ScopedReducer<RootState, RootAction, ScopedState, ScopedAction>: ReducerProtocol {
     let rootStore: Store<RootState, RootAction>
     let toScopedState: (RootState) -> ScopedState
     private let parentStores: [Any]
