@@ -29,32 +29,40 @@ class EnvironmentRouteVC: UITableViewController {
         let selectedRoute = routes[indexPath.row]
         switch selectedRoute {
         case .live:
-            let viewController = EnvironmentDemoVC(store: Store(
-                initialState: EnvironmentState(),
-                reducer: environmentReducer,
-                environment: EnvironmentVCEnvironment.live
-            ))
+            let viewController = EnvironmentDemoVC(
+                store: Store(
+                    initialState: Environment.State(),
+                    reducer: Environment()
+                        .dependency(\.envVCEnvironment, .live)
+                )
+            )
             navigationController?.pushViewController(viewController, animated: true)
         case .mockSuccess:
-            let viewController = EnvironmentDemoVC(store: Store(
-                initialState: EnvironmentState(),
-                reducer: environmentReducer,
-                environment: EnvironmentVCEnvironment.mockSuccess
-            ))
+            let viewController = EnvironmentDemoVC(
+                store: Store(
+                    initialState: Environment.State(),
+                    reducer: Environment()
+                        .dependency(\.envVCEnvironment, .mockSuccess)
+                )
+            )
             navigationController?.pushViewController(viewController, animated: true)
         case .mockFailed:
-            let viewController = EnvironmentDemoVC(store: Store(
-                initialState: EnvironmentState(),
-                reducer: environmentReducer,
-                environment: EnvironmentVCEnvironment.mockFailed
-            ))
+            let viewController = EnvironmentDemoVC(
+                store: Store(
+                    initialState: Environment.State(),
+                    reducer: Environment()
+                        .dependency(\.envVCEnvironment, .mockFailed)
+                )
+            )
             navigationController?.pushViewController(viewController, animated: true)
         case .mockRandom:
-            let viewController = EnvironmentDemoVC(store: Store(
-                initialState: EnvironmentState(),
-                reducer: environmentReducer,
-                environment: EnvironmentVCEnvironment.mockRandom
-            ))
+            let viewController = EnvironmentDemoVC(
+                store: Store(
+                    initialState: Environment.State(),
+                    reducer: Environment()
+                        .dependency(\.envVCEnvironment, .mockRandom)
+                )
+            )
             navigationController?.pushViewController(viewController, animated: true)
         }
     }

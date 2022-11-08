@@ -37,15 +37,15 @@ class PullbackVC: UIScrollVC {
     
     private let counterView: CounterView
     
-    private let store: Store<PullbackState, PullbackAction>
+    private let store: StoreOf<Pullback>
     
     private var observation: NSKeyValueObservation?
     
-    init(store: Store<PullbackState, PullbackAction>) {
+    init(store: StoreOf<Pullback>) {
         self.store = store
         counterView = CounterView(store: store.scope(
             state: \.counter,
-            action: PullbackAction.counter
+            action: Pullback.Action.counter
         ))
         super.init()
     }

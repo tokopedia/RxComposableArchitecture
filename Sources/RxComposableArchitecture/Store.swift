@@ -580,6 +580,20 @@ extension Store where State: Equatable {
     }
 }
 
+/// A convenience type alias for referring to a store of a given reducer's domain.
+///
+/// Instead of specifying two generics:
+///
+/// ```swift
+/// let store: Store<Feature.State, Feature.Action>
+/// ```
+///
+/// You can specify a single generic:
+///
+/// ```swift
+/// let store: StoreOf<Feature>
+/// ```
+public typealias StoreOf<R: ReducerProtocol> = Store<R.State, R.Action>
 
 
 // MARK: - Old Store function pre reducer protocol
@@ -944,18 +958,3 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
     }
 }
 #endif
-
-/// A convenience type alias for referring to a store of a given reducer's domain.
-///
-/// Instead of specifying two generics:
-///
-/// ```swift
-/// let store: Store<Feature.State, Feature.Action>
-/// ```
-///
-/// You can specify a single generic:
-///
-/// ```swift
-/// let store: StoreOf<Feature>
-/// ```
-public typealias StoreOf<R: ReducerProtocol> = Store<R.State, R.Action>

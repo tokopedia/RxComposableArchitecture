@@ -32,9 +32,9 @@ class BasicUsageVC: UIScrollVC {
         return label
     }()
     
-    private let store: Store<BasicState, BasicAction>
+    private let store: StoreOf<Basic>
     
-    init(store: Store<BasicState, BasicAction>) {
+    init(store: StoreOf<Basic>) {
         self.store = store
         super.init()
         title = "Basic Usage of State, Action & Reducer"

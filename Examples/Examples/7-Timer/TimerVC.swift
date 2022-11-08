@@ -19,9 +19,9 @@ class TimerVC: UIScrollVC {
     
     private let tickCountLabel = UILabel()
        
-    private let store: Store<TimerState, TimerAction>
+    private let store: StoreOf<TimerExample>
     
-    init(store: Store<TimerState, TimerAction>) {
+    init(store: StoreOf<TimerExample>) {
         self.store = store
         super.init()
         title = "Timer Demo"

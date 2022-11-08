@@ -35,11 +35,11 @@ class OptionalIfLetVC: UIScrollVC {
     
     private var counterView: CounterView?
     
-    private let store: Store<OptionalIfLetState, OptionalIfLetAction>
+    private let store: StoreOf<OptionalIfLet>
     
     private let stackView: UIStackView
     
-    init(store: Store<OptionalIfLetState, OptionalIfLetAction>) {
+    init(store: StoreOf<OptionalIfLet>){
         self.store = store
         stackView = UIStackView.vertical(subviews: [
             explanationTextView,
@@ -69,7 +69,7 @@ class OptionalIfLetVC: UIScrollVC {
         
         store.scope(
             state: \.counter,
-            action: OptionalIfLetAction.counter
+            action: OptionalIfLet.Action.counter
         ).ifLet(then: { [weak self] wrappedStore in
             let counterView = CounterView(store: wrappedStore)
             self?.counterView = counterView
