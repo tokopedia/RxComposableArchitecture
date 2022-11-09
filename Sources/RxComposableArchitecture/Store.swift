@@ -539,7 +539,7 @@ public struct StoreConfig {
 
 extension StoreConfig {
     public static var `default`: StoreConfig = .init(
-        useNewScope: { false },
+        useNewScope: { true },
         mainThreadChecksEnabled: { true },
         cancelsEffectsOnDeinit: { true }
     )
