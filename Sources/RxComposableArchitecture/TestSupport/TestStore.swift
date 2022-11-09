@@ -330,7 +330,7 @@ extension TestStore where State == LocalState, Action == LocalAction {
         reducer: Reducer<State, Action, Environment>,
         environment: Environment,
         failingWhenNothingChange: Bool = true,
-        useNewScope: Bool = false,
+        useNewScope: Bool = StoreConfig.default.useNewScope(),
         file: StaticString = #file,
         line: UInt = #line
     ) {
