@@ -1311,19 +1311,19 @@ public struct TestStoreTask: Hashable, Sendable {
     }
 }
 
-class TestReducer<State, Action>: ReducerProtocol {
-    let base: Reduce<State, Action>
-    var dependencies = { () -> DependencyValues in
+internal class TestReducer<State, Action>: ReducerProtocol {
+    internal let base: Reduce<State, Action>
+    internal var dependencies = { () -> DependencyValues in
         var dependencies = DependencyValues()
         dependencies.context = .test
         return dependencies
     }()
-    let effectDidSubscribe = AsyncStream<Void>.streamWithContinuation()
-    var inFlightEffects: Set<LongLivingEffect> = []
-    var receivedActions: [(action: Action, state: State)] = []
-    var state: State
+    internal let effectDidSubscribe = AsyncStream<Void>.streamWithContinuation()
+    internal var inFlightEffects: Set<LongLivingEffect> = []
+    internal var receivedActions: [(action: Action, state: State)] = []
+    internal var state: State
     
-    init(
+    internal init(
         _ base: Reduce<State, Action>,
         initialState: State
     ) {
@@ -1331,7 +1331,7 @@ class TestReducer<State, Action>: ReducerProtocol {
         self.state = initialState
     }
     
-    func reduce(into state: inout State, action: TestAction) -> Effect<TestAction> {
+    internal func reduce(into state: inout State, action: TestAction) -> Effect<TestAction> {
         let reducer = self.base.dependency(\.self, self.dependencies)
         
         let effects: Effect<Action>
@@ -1363,7 +1363,7 @@ class TestReducer<State, Action>: ReducerProtocol {
         }
     }
     
-    struct LongLivingEffect: Hashable {
+    internal struct LongLivingEffect: Hashable {
         let id = UUID()
         let file: StaticString
         let line: UInt
@@ -1377,7 +1377,7 @@ class TestReducer<State, Action>: ReducerProtocol {
         }
     }
     
-    struct TestAction {
+    internal struct TestAction {
         let origin: Origin
         let file: StaticString
         let line: UInt
