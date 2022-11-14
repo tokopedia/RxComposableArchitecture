@@ -251,7 +251,7 @@ public final class TestStore<State, ScopedState, Action, ScopedAction, Environme
         reducer: Reducer,
         file: StaticString = #file,
         line: UInt = #line,
-        failingWhenNothingChange: Bool = false,
+        failingWhenNothingChange: Bool = true,
         useNewScope: Bool = false
     )
     where
@@ -325,7 +325,7 @@ public final class TestStore<State, ScopedState, Action, ScopedAction, Environme
         environment: Environment,
         file: StaticString = #file,
         line: UInt = #line,
-        failingWhenNothingChange: Bool = false,
+        failingWhenNothingChange: Bool = true,
         useNewScope: Bool = false
     )
     where State == ScopedState, Action == ScopedAction {
@@ -363,7 +363,7 @@ public final class TestStore<State, ScopedState, Action, ScopedAction, Environme
         store: Store<State, TestReducer<State, Action>.Action>,
         timeout: UInt64 = 100 * NSEC_PER_MSEC,
         toScopedState: @escaping (State) -> ScopedState,
-        failingWhenNothingChange: Bool = false,
+        failingWhenNothingChange: Bool = true,
         useNewScope: Bool = false
     ) {
         self._environment = _environment
