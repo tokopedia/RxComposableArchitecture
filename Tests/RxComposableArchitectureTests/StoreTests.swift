@@ -1,5 +1,6 @@
 import RxSwift
 import XCTest
+import Combine
 
 @testable import RxComposableArchitecture
 
@@ -38,7 +39,6 @@ internal final class StoreTests: XCTestCase {
         XCTAssertEqual(store.effectDisposables.count, 0)
         
         _ = store.send(.start)
-        print("<<< da-dbg: \(store.effectDisposables.count)")
         
         XCTAssertEqual(store.effectDisposables.count, 1)
         
@@ -48,12 +48,12 @@ internal final class StoreTests: XCTestCase {
     }
     
     internal func testScopedStoreReceivesUpdatesFromParent() {
-        let counterReducer = Reducer<Int, Void, Void> { state, _, _ in
+        let counterReducer = Reduce<Int, Void>({ state, _ in
             state += 1
             return .none
-        }
+        })
         
-        let parentStore = Store(initialState: 0, reducer: counterReducer, environment: ())
+        let parentStore = Store(initialState: 0, reducer: counterReducer)
         let childStore = parentStore.scope(state: String.init)
         
         var values: [String] = []
@@ -69,12 +69,12 @@ internal final class StoreTests: XCTestCase {
     }
     
     internal func testParentStoreReceivesUpdatesFromChild() {
-        let counterReducer = Reducer<Int, Void, Void> { state, _, _ in
+        let counterReducer = Reduce<Int, Void>({ state, _ in
             state += 1
             return .none
-        }
+        })
         
-        let parentStore = Store(initialState: 0, reducer: counterReducer, environment: ())
+        let parentStore = Store(initialState: 0, reducer: counterReducer)
         let childStore = parentStore.scope(state: String.init)
         
         var values: [Int] = []
@@ -457,7 +457,7 @@ internal final class StoreTests: XCTestCase {
         
         let store = TestStore(
             initialState: 0,
-            reducer: Reducer<Int, Action, Void> { state, action, _ in
+            reducer: Reduce<Int, Action>({ state, action in
                 switch action {
                 case .incrementTapped:
                     subject.onNext(())
@@ -470,8 +470,7 @@ internal final class StoreTests: XCTestCase {
                     state += 1
                     return .none
                 }
-            },
-            environment: (),
+            }),
             useNewScope: true
         )
         store.send(.initialize)
@@ -489,7 +488,7 @@ internal final class StoreTests: XCTestCase {
     internal func testCoalesceSynchronousActions() {
         let store = Store(
             initialState: 0,
-            reducer: Reducer<Int, Int, Void> { state, action, _ in
+            reducer: Reduce<Int, Int>({ state, action in
                 switch action {
                 case 0:
                     return .merge(
@@ -501,8 +500,7 @@ internal final class StoreTests: XCTestCase {
                     state = action
                     return .none
                 }
-            },
-            environment: ()
+            })
         )
         
         var emissions: [Int] = []
@@ -520,7 +518,7 @@ internal final class StoreTests: XCTestCase {
     internal func testCoalesceSynchronousActionsUsingNewScope() {
         let store = Store(
             initialState: 0,
-            reducer: Reducer<Int, Int, Void> { state, action, _ in
+            reducer: Reduce<Int, Int>({ state, action in
                 switch action {
                 case 0:
                     return .merge(
@@ -532,8 +530,7 @@ internal final class StoreTests: XCTestCase {
                     state = action
                     return .none
                 }
-            },
-            environment: (),
+            }),
             useNewScope: true
         )
         
@@ -591,5 +588,106 @@ internal final class StoreTests: XCTestCase {
         
         // State should be at 2 now
         XCTAssertEqual(parentStore.state, 2)
+    }
+    
+    internal func testBufferedActionProcessing() {
+        struct ChildState: Equatable {
+          var count: Int?
+        }
+
+        struct ParentState: Equatable {
+          var count: Int?
+          var child: ChildState?
+        }
+
+        enum ParentAction: Equatable {
+          case button
+          case child(Int?)
+        }
+
+        var handledActions: [ParentAction] = []
+        let parentReducer = Reduce<ParentState, ParentAction>({ state, action in
+          handledActions.append(action)
+
+          switch action {
+          case .button:
+            state.child = .init(count: nil)
+            return .none
+
+          case .child(let childCount):
+            state.count = childCount
+            return .none
+          }
+        })
+        .ifLet(\.child, action: /ParentAction.child) {
+          Reduce({ state, action in
+            state.count = action
+            return .none
+          })
+        }
+
+        let parentStore = Store(
+          initialState: ParentState(),
+          reducer: parentReducer
+        )
+
+        parentStore
+          .scope(
+            state: \.child,
+            action: ParentAction.child
+          )
+          .ifLet { childStore in
+              childStore.send(2)
+          }
+          .disposed(by: disposeBag)
+
+        XCTAssertEqual(handledActions, [])
+
+        _ = parentStore.send(.button)
+        
+        XCTAssertEqual(
+          handledActions,
+          [
+            .button,
+            .child(2),
+          ])
+      }
+    
+    /// TODO: Still on investigate, still failing on UT
+    @MainActor
+    internal func testCascadingTaskCancellation() async {
+        enum Action { case task, response, response1, response2 }
+        
+        let reducer = Reduce<Int, Action>({ state, action in
+            switch action {
+            case .task:
+                return .task { .response }
+            case .response:
+                return .merge(
+                    Observable<Action>.empty().eraseToEffect(),
+                    .task { .response1 }
+                )
+            case .response1:
+                return .merge(
+                    Observable<Action>.empty().eraseToEffect(),
+                    .task { .response2 }
+                )
+            case .response2:
+                return Observable<Action>.empty().eraseToEffect()
+            }
+        })
+        
+        let store = TestStore(
+            initialState: 0,
+            reducer: reducer,
+            failingWhenNothingChange: true,
+            useNewScope: true
+        )
+        
+        let task = await store.send(Action.task)
+        await store.receive(Action.response)
+        await store.receive(Action.response1)
+        await store.receive(Action.response2)
+        await task.cancel()
     }
 }
