@@ -679,8 +679,6 @@ internal final class StoreTests: XCTestCase {
         let store = TestStore(
             initialState: 0,
             reducer: reducer,
-            failingWhenNothingChange: true,
-            /// TODO: Need check when the value using false
             useNewScope: true
         )
 
@@ -703,10 +701,32 @@ internal final class StoreTests: XCTestCase {
                     return .fireAndForget { try await Task.never() }
                 }
             }),
-            /// TODO: Need check when the value using false
             useNewScope: true
         )
         
         await store.send(.task).cancel()
     }
+    
+    @MainActor
+    internal func testScopeCancellation() async throws {
+        let neverEndingTask = Task<Void, Error> { try await Task.never() }
+
+        let store = Store(
+          initialState: (),
+          reducer: Reduce<Void, Void>({ _, _ in
+            .fireAndForget {
+              try await neverEndingTask.value
+            }
+          }),
+          useNewScope: true
+        )
+        let scopedStore = store.scope(state: { $0 })
+
+        let sendTask = scopedStore.send(())
+        await Task.yield()
+        neverEndingTask.cancel()
+        try await XCTUnwrap(sendTask).value
+        XCTAssertEqual(store.effectDisposables.count, 0)
+        XCTAssertEqual(scopedStore.effectDisposables.count, 0)
+      }
 }
