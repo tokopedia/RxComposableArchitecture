@@ -1364,9 +1364,20 @@ internal class TestReducer<State, Action>: ReducerProtocol {
             let effect = LongLivingEffect(file: action.file, line: action.line)
             return effects
                 .do(
-                    onCompleted: { [weak self] in self?.inFlightEffects.remove(effect) },
-                    onSubscribe: { [weak self] in self?.inFlightEffects.insert(effect) },
-                    onDispose: { [weak self] in self?.inFlightEffects.remove(effect) }
+                    onCompleted: { [weak self] in
+                        self?.inFlightEffects.remove(effect)
+                    },
+                    onSubscribe: { [weak self] in
+                        self?.inFlightEffects.insert(effect)
+                        
+                        Task { [weak self] in
+                            await Task.megaYield()
+                            self?.effectDidSubscribe.continuation.yield()
+                        }
+                    },
+                    onDispose: { [weak self] in
+                        self?.inFlightEffects.remove(effect)
+                    }
                 )
                 .map { .init(origin: .receive($0), file: action.file, line: action.line) }
                 .eraseToEffect()
