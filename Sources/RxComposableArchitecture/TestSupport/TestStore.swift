@@ -267,11 +267,16 @@ public final class TestStore<State, ScopedState, Action, ScopedAction, Environme
         self.fromScopedAction = { $0 }
         self.line = line
         self.reducer = reducer
-        self.store = Store(initialState: initialState, reducer: reducer)
         self.timeout = 100 * NSEC_PER_MSEC
         self.toScopedState = { $0 }
         self.failingWhenNothingChange = failingWhenNothingChange
         self.useNewScope = useNewScope
+        
+        self.store = Store(
+            initialState: initialState,
+            reducer: reducer,
+            useNewScope: useNewScope
+        )
     }
     
     @available(
@@ -337,11 +342,16 @@ public final class TestStore<State, ScopedState, Action, ScopedAction, Environme
         self.fromScopedAction = { $0 }
         self.line = line
         self.reducer = reducer
-        self.store = Store(initialState: initialState, reducer: reducer)
         self.timeout = 100 * NSEC_PER_MSEC
         self.toScopedState = { $0 }
         self.failingWhenNothingChange = failingWhenNothingChange
         self.useNewScope = useNewScope
+        
+        self.store = Store(
+            initialState: initialState,
+            reducer: reducer,
+            useNewScope: useNewScope
+        )
     }
     
     internal init(
