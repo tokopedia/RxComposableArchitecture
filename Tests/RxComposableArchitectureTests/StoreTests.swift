@@ -653,41 +653,60 @@ internal final class StoreTests: XCTestCase {
           ])
       }
     
-    /// TODO: Still on investigate, still failing on UT
     @MainActor
     internal func testCascadingTaskCancellation() async {
         enum Action { case task, response, response1, response2 }
-        
+
         let reducer = Reduce<Int, Action>({ state, action in
             switch action {
             case .task:
                 return .task { .response }
             case .response:
                 return .merge(
-                    Observable<Action>.empty().eraseToEffect(),
+                    Observable<Action>.never().eraseToEffect(),
                     .task { .response1 }
                 )
             case .response1:
                 return .merge(
-                    Observable<Action>.empty().eraseToEffect(),
+                    Observable<Action>.never().eraseToEffect(),
                     .task { .response2 }
                 )
             case .response2:
-                return Observable<Action>.empty().eraseToEffect()
+                return Observable<Action>.never().eraseToEffect()
             }
         })
-        
+
         let store = TestStore(
             initialState: 0,
             reducer: reducer,
             failingWhenNothingChange: true,
+            /// TODO: Need check when the value using false
             useNewScope: true
         )
-        
+
         let task = await store.send(Action.task)
         await store.receive(Action.response)
         await store.receive(Action.response1)
         await store.receive(Action.response2)
         await task.cancel()
+    }
+    
+    @MainActor
+    internal func testTaskCancellationEmpty() async {
+        enum Action { case task }
+        
+        let store = TestStore(
+            initialState: 0,
+            reducer: Reduce<Int, Action>({ state, action in
+                switch action {
+                case .task:
+                    return .fireAndForget { try await Task.never() }
+                }
+            }),
+            /// TODO: Need check when the value using false
+            useNewScope: true
+        )
+        
+        await store.send(.task).cancel()
     }
 }
