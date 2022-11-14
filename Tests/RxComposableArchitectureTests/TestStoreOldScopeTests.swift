@@ -10,6 +10,8 @@ import XCTest
 
 @testable import RxComposableArchitecture
 
+/// All Test cases in here using `useNewScope: false` on both Store(...) and TestStore(...)
+///
 internal class TestStoreOldScopeTests: XCTestCase {
     private let disposeBag = DisposeBag()
     
@@ -56,8 +58,7 @@ internal class TestStoreOldScopeTests: XCTestCase {
         
         let store = TestStore(
             initialState: State(),
-            reducer: reducer,
-            useNewScope: false
+            reducer: reducer
         )
         
         _ = store.send(Action.a)
@@ -103,8 +104,7 @@ internal class TestStoreOldScopeTests: XCTestCase {
             
             let store = TestStore(
                 initialState: State(),
-                reducer: reducer,
-                useNewScope: false
+                reducer: reducer
             )
             
             store.send(.increment) {
@@ -149,8 +149,7 @@ internal class TestStoreOldScopeTests: XCTestCase {
             
             let store = TestStore(
                 initialState: State(),
-                reducer: reducer,
-                useNewScope: false
+                reducer: reducer
             )
             
             store.send(.noop)
@@ -184,8 +183,7 @@ internal class TestStoreOldScopeTests: XCTestCase {
                     count += 1
                     return .none
                 }
-            }),
-            useNewScope: false
+            })
         )
         
         store.send(.a) {

@@ -10,6 +10,8 @@ import XCTest
 
 @testable import RxComposableArchitecture
 
+/// All Test cases in here using `useNewScope: true` on both Store(...) and TestStore(...)
+///
 @MainActor
 internal class TestStoreTests: XCTestCase {
     private let disposeBag = DisposeBag()

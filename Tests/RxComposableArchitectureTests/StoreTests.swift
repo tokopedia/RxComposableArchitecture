@@ -3,6 +3,8 @@ import XCTest
 
 @testable import RxComposableArchitecture
 
+/// All Test cases in here using `useNewScope: true` on both Store(...) and TestStore(...)
+///
 @MainActor
 internal final class StoreTests: XCTestCase {
     private let disposeBag = DisposeBag()
@@ -10,8 +12,7 @@ internal final class StoreTests: XCTestCase {
     internal func testCancellableIsRemovedOnImmediatelyCompletingEffect() {
         let store = Store(
             initialState: (),
-            reducer: EmptyReducer<Void, Void>(),
-            useNewScope: true
+            reducer: EmptyReducer<Void, Void>()
         )
         
         XCTAssertEqual(store.effectDisposables.count, 0)
@@ -40,8 +41,7 @@ internal final class StoreTests: XCTestCase {
         
         let store = Store(
             initialState: (),
-            reducer: reducer,
-            useNewScope: true
+            reducer: reducer
         )
         
         XCTAssertEqual(store.effectDisposables.count, 0)
@@ -63,8 +63,7 @@ internal final class StoreTests: XCTestCase {
         
         let parentStore = Store(
             initialState: 0,
-            reducer: counterReducer,
-            useNewScope: true
+            reducer: counterReducer
         )
         let childStore = parentStore.scope(state: String.init)
         
@@ -88,8 +87,7 @@ internal final class StoreTests: XCTestCase {
         
         let parentStore = Store(
             initialState: 0,
-            reducer: counterReducer,
-            useNewScope: true
+            reducer: counterReducer
         )
         let childStore = parentStore.scope(state: String.init)
         
@@ -113,7 +111,7 @@ internal final class StoreTests: XCTestCase {
         })
         
         var numCalls1 = 0
-        _ = Store(initialState: 0, reducer: counterReducer, useNewScope: true)
+        _ = Store(initialState: 0, reducer: counterReducer)
             .scope(state: { (count: Int) -> Int in
                 numCalls1 += 1
                 return count
@@ -132,7 +130,7 @@ internal final class StoreTests: XCTestCase {
         var numCalls2 = 0
         var numCalls3 = 0
         
-        let store = Store(initialState: 0, reducer: counterReducer, useNewScope: true)
+        let store = Store(initialState: 0, reducer: counterReducer)
             .scope(state: { (count: Int) -> Int in
                 numCalls1 += 1
                 return count
@@ -195,7 +193,7 @@ internal final class StoreTests: XCTestCase {
             Item(id: $0, qty: 1)
         }
         
-        let store = Store(initialState: IdentifiedArrayOf(mock), reducer: itemReducer, useNewScope: true)
+        let store = Store(initialState: IdentifiedArrayOf(mock), reducer: itemReducer)
             .scope(state: { (item: IdentifiedArrayOf<Item>) -> IdentifiedArrayOf<Item> in
                 numCalls1 += 1
                 return item
@@ -247,8 +245,7 @@ internal final class StoreTests: XCTestCase {
         
         let store = Store(
             initialState: (),
-            reducer: counterReducer,
-            useNewScope: true
+            reducer: counterReducer
         )
         
         _ = store.send(.tap)
@@ -270,8 +267,7 @@ internal final class StoreTests: XCTestCase {
         
         let store = Store(
             initialState: 0,
-            reducer: reducer,
-            useNewScope: true
+            reducer: reducer
         )
         _ = store.send(.incr)
         XCTAssertEqual(store.state, 10000)
@@ -289,8 +285,7 @@ internal final class StoreTests: XCTestCase {
         
         let parentStore = Store(
             initialState: AppState(),
-            reducer: appReducer,
-            useNewScope: true
+            reducer: appReducer
         )
         
         // NB: This test needs to hold a strong reference to the emitted stores
@@ -343,8 +338,7 @@ internal final class StoreTests: XCTestCase {
                         .observeOn(MainScheduler.instance)
                         .eraseToEffect()
                 }
-            }),
-            useNewScope: true
+            })
         )
         
         parentStore.ifLet { childStore in
@@ -418,8 +412,7 @@ internal final class StoreTests: XCTestCase {
                     state = action
                     return .none
                 }
-            }),
-            useNewScope: true
+            })
         )
         
         var emissions: [Int] = []
@@ -440,8 +433,7 @@ internal final class StoreTests: XCTestCase {
         ///
         let parentStore = Store(
             initialState: CounterFeature.State(counter: 1),
-            reducer: CounterFeature(),
-            useNewScope: true
+            reducer: CounterFeature()
         )
         
         // subscribes to a long living publisher of actions
@@ -577,8 +569,7 @@ internal final class StoreTests: XCTestCase {
             .fireAndForget {
               try await neverEndingTask.value
             }
-          }),
-          useNewScope: true
+          })
         )
         let scopedStore = store.scope(state: { $0 })
 

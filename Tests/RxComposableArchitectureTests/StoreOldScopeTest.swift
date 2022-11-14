@@ -10,11 +10,17 @@ import XCTest
 
 @testable import RxComposableArchitecture
 
+/// All Test cases in here using `useNewScope: false` on both Store(...) and TestStore(...)
+///
 internal final class StoreOldScopeTest: XCTestCase {
     private let disposeBag = DisposeBag()
     
     internal func testCancellableIsRemovedOnImmediatelyCompletingEffect() {
-        let store = Store(initialState: (), reducer: EmptyReducer<Void, Void>())
+        let store = Store(
+            initialState: (),
+            reducer: EmptyReducer<Void, Void>(),
+            useNewScope: false
+        )
         
         XCTAssertEqual(store.effectDisposables.count, 0)
         
@@ -40,7 +46,11 @@ internal final class StoreOldScopeTest: XCTestCase {
             }
         })
         
-        let store = Store(initialState: (), reducer: reducer)
+        let store = Store(
+            initialState: (),
+            reducer: reducer,
+            useNewScope: false
+        )
         
         XCTAssertEqual(store.effectDisposables.count, 0)
         
@@ -59,7 +69,11 @@ internal final class StoreOldScopeTest: XCTestCase {
             return .none
         })
         
-        let parentStore = Store(initialState: 0, reducer: counterReducer)
+        let parentStore = Store(
+            initialState: 0,
+            reducer: counterReducer,
+            useNewScope: false
+        )
         let childStore = parentStore.scope(state: String.init)
         
         var values: [String] = []
@@ -80,7 +94,11 @@ internal final class StoreOldScopeTest: XCTestCase {
             return .none
         })
         
-        let parentStore = Store(initialState: 0, reducer: counterReducer)
+        let parentStore = Store(
+            initialState: 0,
+            reducer: counterReducer,
+            useNewScope: false
+        )
         let childStore = parentStore.scope(state: String.init)
         
         var values: [Int] = []
@@ -103,7 +121,7 @@ internal final class StoreOldScopeTest: XCTestCase {
         })
         
         var numCalls1 = 0
-        _ = Store(initialState: 0, reducer: counterReducer)
+        _ = Store(initialState: 0, reducer: counterReducer, useNewScope: false)
             .scope(state: { (count: Int) -> Int in
                 numCalls1 += 1
                 return count
@@ -122,7 +140,7 @@ internal final class StoreOldScopeTest: XCTestCase {
         var numCalls2 = 0
         var numCalls3 = 0
         
-        let store = Store(initialState: 0, reducer: counterReducer)
+        let store = Store(initialState: 0, reducer: counterReducer, useNewScope: false)
             .scope(state: { (count: Int) -> Int in
                 numCalls1 += 1
                 return count
@@ -185,16 +203,20 @@ internal final class StoreOldScopeTest: XCTestCase {
             Item(id: $0, qty: 1)
         }
         
-        let store = Store(initialState: IdentifiedArrayOf(mock), reducer: itemReducer)
-            .scope(state: { (item: IdentifiedArrayOf<Item>) -> IdentifiedArrayOf<Item> in
-                numCalls1 += 1
-                return item
-            })
-            .scope(at: 1, action: Action.item)!
-            .scope(state: { (item: Item) -> Item in
-                numCalls2 += 1
-                return item
-            })
+        let store = Store(
+            initialState: IdentifiedArrayOf(mock),
+            reducer: itemReducer,
+            useNewScope: false
+        )
+        .scope(state: { (item: IdentifiedArrayOf<Item>) -> IdentifiedArrayOf<Item> in
+            numCalls1 += 1
+            return item
+        })
+        .scope(at: 1, action: Action.item)!
+        .scope(state: { (item: Item) -> Item in
+            numCalls2 += 1
+            return item
+        })
         
         _ = store.send((1, .didTap))
         XCTAssertEqual(numCalls1, 4)
@@ -235,7 +257,7 @@ internal final class StoreOldScopeTest: XCTestCase {
             }
         })
         
-        let store = Store(initialState: (), reducer: counterReducer)
+        let store = Store(initialState: (), reducer: counterReducer, useNewScope: false)
         
         _ = store.send(.tap)
         
@@ -254,7 +276,7 @@ internal final class StoreOldScopeTest: XCTestCase {
             }
         })
         
-        let store = Store(initialState: 0, reducer: reducer)
+        let store = Store(initialState: 0, reducer: reducer, useNewScope: false)
         _ = store.send(.incr)
         XCTAssertEqual(store.state, 10000)
     }
@@ -269,7 +291,11 @@ internal final class StoreOldScopeTest: XCTestCase {
             return .none
         })
         
-        let parentStore = Store(initialState: AppState(), reducer: appReducer)
+        let parentStore = Store(
+            initialState: AppState(),
+            reducer: appReducer,
+            useNewScope: false
+        )
         
         // NB: This test needs to hold a strong reference to the emitted stores
         var outputs: [Int?] = []
@@ -321,7 +347,8 @@ internal final class StoreOldScopeTest: XCTestCase {
                         .observeOn(MainScheduler.instance)
                         .eraseToEffect()
                 }
-            })
+            }),
+            useNewScope: false
         )
         
         parentStore.ifLet { childStore in
@@ -394,7 +421,8 @@ internal final class StoreOldScopeTest: XCTestCase {
                     state = action
                     return .none
                 }
-            })
+            }),
+            useNewScope: false
         )
         
         var emissions: [Int] = []
@@ -442,7 +470,12 @@ internal final class StoreOldScopeTest: XCTestCase {
             }
             return .none
         }
-        let parentStore = Store(initialState: 1, reducer: counterReducer, environment: Environment())
+        let parentStore = Store(
+            initialState: 1,
+            reducer: counterReducer,
+            environment: Environment(),
+            useNewScope: false
+        )
         
         // subscribes to a long living publisher of actions
         _ = parentStore.send(.onAppear)
@@ -491,7 +524,8 @@ internal final class StoreOldScopeTest: XCTestCase {
 
         let parentStore = Store(
           initialState: ParentState(),
-          reducer: parentReducer
+          reducer: parentReducer,
+          useNewScope: false
         )
 
         parentStore
