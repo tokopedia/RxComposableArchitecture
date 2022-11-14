@@ -1,18 +1,20 @@
+//
+//  StoreOldScopeTest.swift
+//  
+//
+//  Created by andhika.setiadi on 14/11/22.
+//
+
 import RxSwift
 import XCTest
 
 @testable import RxComposableArchitecture
 
-@MainActor
-internal final class StoreTests: XCTestCase {
+internal final class StoreOldScopeTest: XCTestCase {
     private let disposeBag = DisposeBag()
     
     internal func testCancellableIsRemovedOnImmediatelyCompletingEffect() {
-        let store = Store(
-            initialState: (),
-            reducer: EmptyReducer<Void, Void>(),
-            useNewScope: true
-        )
+        let store = Store(initialState: (), reducer: EmptyReducer<Void, Void>())
         
         XCTAssertEqual(store.effectDisposables.count, 0)
         
@@ -38,11 +40,7 @@ internal final class StoreTests: XCTestCase {
             }
         })
         
-        let store = Store(
-            initialState: (),
-            reducer: reducer,
-            useNewScope: true
-        )
+        let store = Store(initialState: (), reducer: reducer)
         
         XCTAssertEqual(store.effectDisposables.count, 0)
         
@@ -61,11 +59,7 @@ internal final class StoreTests: XCTestCase {
             return .none
         })
         
-        let parentStore = Store(
-            initialState: 0,
-            reducer: counterReducer,
-            useNewScope: true
-        )
+        let parentStore = Store(initialState: 0, reducer: counterReducer)
         let childStore = parentStore.scope(state: String.init)
         
         var values: [String] = []
@@ -86,11 +80,7 @@ internal final class StoreTests: XCTestCase {
             return .none
         })
         
-        let parentStore = Store(
-            initialState: 0,
-            reducer: counterReducer,
-            useNewScope: true
-        )
+        let parentStore = Store(initialState: 0, reducer: counterReducer)
         let childStore = parentStore.scope(state: String.init)
         
         var values: [Int] = []
@@ -113,13 +103,13 @@ internal final class StoreTests: XCTestCase {
         })
         
         var numCalls1 = 0
-        _ = Store(initialState: 0, reducer: counterReducer, useNewScope: true)
+        _ = Store(initialState: 0, reducer: counterReducer)
             .scope(state: { (count: Int) -> Int in
                 numCalls1 += 1
                 return count
             })
         
-        XCTAssertEqual(numCalls1, 1)
+        XCTAssertEqual(numCalls1, 2)
     }
     
     internal func testScopeCallCount2() {
@@ -132,7 +122,7 @@ internal final class StoreTests: XCTestCase {
         var numCalls2 = 0
         var numCalls3 = 0
         
-        let store = Store(initialState: 0, reducer: counterReducer, useNewScope: true)
+        let store = Store(initialState: 0, reducer: counterReducer)
             .scope(state: { (count: Int) -> Int in
                 numCalls1 += 1
                 return count
@@ -146,30 +136,30 @@ internal final class StoreTests: XCTestCase {
                 return count
             })
         
-        XCTAssertEqual(numCalls1, 1)
-        XCTAssertEqual(numCalls2, 1)
-        XCTAssertEqual(numCalls3, 1)
-        
-        _ = store.send(())
-        
         XCTAssertEqual(numCalls1, 2)
         XCTAssertEqual(numCalls2, 2)
         XCTAssertEqual(numCalls3, 2)
         
         _ = store.send(())
         
-        XCTAssertEqual(numCalls1, 3)
-        XCTAssertEqual(numCalls2, 3)
-        XCTAssertEqual(numCalls3, 3)
+        XCTAssertEqual(numCalls1, 4)
+        XCTAssertEqual(numCalls2, 5)
+        XCTAssertEqual(numCalls3, 6)
         
         _ = store.send(())
         
-        XCTAssertEqual(numCalls1, 4)
-        XCTAssertEqual(numCalls2, 4)
-        XCTAssertEqual(numCalls3, 4)
+        XCTAssertEqual(numCalls1, 6)
+        XCTAssertEqual(numCalls2, 8)
+        XCTAssertEqual(numCalls3, 10)
+        
+        _ = store.send(())
+        
+        XCTAssertEqual(numCalls1, 8)
+        XCTAssertEqual(numCalls2, 11)
+        XCTAssertEqual(numCalls3, 14)
     }
     
-    internal func testScopeAtIndexCallCount2UseNewScope() {
+    internal func testScopeAtIndexCallCount2() {
         struct Item: HashDiffable, Equatable {
             var id: Int
             var qty: Int
@@ -195,7 +185,7 @@ internal final class StoreTests: XCTestCase {
             Item(id: $0, qty: 1)
         }
         
-        let store = Store(initialState: IdentifiedArrayOf(mock), reducer: itemReducer, useNewScope: true)
+        let store = Store(initialState: IdentifiedArrayOf(mock), reducer: itemReducer)
             .scope(state: { (item: IdentifiedArrayOf<Item>) -> IdentifiedArrayOf<Item> in
                 numCalls1 += 1
                 return item
@@ -207,13 +197,13 @@ internal final class StoreTests: XCTestCase {
             })
         
         _ = store.send((1, .didTap))
-        XCTAssertEqual(numCalls1, 2)
-        XCTAssertEqual(numCalls2, 2)
+        XCTAssertEqual(numCalls1, 4)
+        XCTAssertEqual(numCalls2, 4)
         XCTAssertEqual(store.state.qty, 2)
         
         _ = store.send((1, .didTap))
-        XCTAssertEqual(numCalls1, 3)
-        XCTAssertEqual(numCalls2, 3)
+        XCTAssertEqual(numCalls1, 6)
+        XCTAssertEqual(numCalls2, 6)
         XCTAssertEqual(store.state.qty, 3)
     }
     
@@ -245,11 +235,7 @@ internal final class StoreTests: XCTestCase {
             }
         })
         
-        let store = Store(
-            initialState: (),
-            reducer: counterReducer,
-            useNewScope: true
-        )
+        let store = Store(initialState: (), reducer: counterReducer)
         
         _ = store.send(.tap)
         
@@ -268,11 +254,7 @@ internal final class StoreTests: XCTestCase {
             }
         })
         
-        let store = Store(
-            initialState: 0,
-            reducer: reducer,
-            useNewScope: true
-        )
+        let store = Store(initialState: 0, reducer: reducer)
         _ = store.send(.incr)
         XCTAssertEqual(store.state, 10000)
     }
@@ -287,11 +269,7 @@ internal final class StoreTests: XCTestCase {
             return .none
         })
         
-        let parentStore = Store(
-            initialState: AppState(),
-            reducer: appReducer,
-            useNewScope: true
-        )
+        let parentStore = Store(initialState: AppState(), reducer: appReducer)
         
         // NB: This test needs to hold a strong reference to the emitted stores
         var outputs: [Int?] = []
@@ -343,8 +321,7 @@ internal final class StoreTests: XCTestCase {
                         .observeOn(MainScheduler.instance)
                         .eraseToEffect()
                 }
-            }),
-            useNewScope: true
+            })
         )
         
         parentStore.ifLet { childStore in
@@ -388,8 +365,7 @@ internal final class StoreTests: XCTestCase {
                     state += 1
                     return .none
                 }
-            }),
-            useNewScope: true
+            })
         )
         store.send(.initialize)
         store.send(.incrementTapped)
@@ -418,8 +394,7 @@ internal final class StoreTests: XCTestCase {
                     state = action
                     return .none
                 }
-            }),
-            useNewScope: true
+            })
         )
         
         var emissions: [Int] = []
@@ -431,18 +406,43 @@ internal final class StoreTests: XCTestCase {
         
         _ = store.send(0)
         
-        XCTAssertEqual(emissions, [0, 3])
+        XCTAssertEqual(emissions, [0, 1, 2, 3])
     }
     
     internal func testSyncEffectsFromEnvironment() {
-        /// Here we no need anymore to mock the environment
-        /// since we already provide on testValue
-        ///
-        let parentStore = Store(
-            initialState: CounterFeature.State(counter: 1),
-            reducer: CounterFeature(),
-            useNewScope: true
-        )
+        enum Action: Equatable {
+            // subscribes to a long living effect, potentially feeding data
+            // back into the store
+            case onAppear
+            
+            // Talks to the environment, eventually feeding data back into the store
+            case onUserAction
+            
+            // External event coming in from the environment, updating state
+            case externalAction
+        }
+        
+        struct Environment {
+            var externalEffects = PublishSubject<Action>()
+        }
+        
+        let counterReducer = Reducer<Int, Action, Environment> { state, action, env in
+            switch action {
+            case .onAppear:
+                return env.externalEffects.eraseToEffect()
+            case .onUserAction:
+                return .fireAndForget {
+                    // This would actually do something async in the environment
+                    // that feeds back eventually via the `externalEffectPublisher`
+                    // Here we send an action sync, which could e.g. happen for an error case, ..
+                    env.externalEffects.onNext(.externalAction)
+                }
+            case .externalAction:
+                state += 1
+            }
+            return .none
+        }
+        let parentStore = Store(initialState: 1, reducer: counterReducer, environment: Environment())
         
         // subscribes to a long living publisher of actions
         _ = parentStore.send(.onAppear)
@@ -450,7 +450,7 @@ internal final class StoreTests: XCTestCase {
         _ = parentStore.send(.onUserAction)
         
         // State should be at 2 now
-        XCTAssertEqual(parentStore.state.counter, 2)
+        XCTAssertEqual(parentStore.state, 2)
     }
     
     internal func testBufferedActionProcessing() {
@@ -515,137 +515,4 @@ internal final class StoreTests: XCTestCase {
             .child(2),
           ])
       }
-    
-    internal func testCascadingTaskCancellation() async {
-        enum Action { case task, response, response1, response2 }
-
-        let reducer = Reduce<Int, Action>({ state, action in
-            switch action {
-            case .task:
-                return .task { .response }
-            case .response:
-                return .merge(
-                    Observable<Action>.never().eraseToEffect(),
-                    .task { .response1 }
-                )
-            case .response1:
-                return .merge(
-                    Observable<Action>.never().eraseToEffect(),
-                    .task { .response2 }
-                )
-            case .response2:
-                return Observable<Action>.never().eraseToEffect()
-            }
-        })
-
-        let store = TestStore(
-            initialState: 0,
-            reducer: reducer,
-            useNewScope: true
-        )
-
-        let task = await store.send(Action.task)
-        await store.receive(Action.response)
-        await store.receive(Action.response1)
-        await store.receive(Action.response2)
-        await task.cancel()
-    }
-    
-    internal func testTaskCancellationEmpty() async {
-        enum Action { case task }
-        
-        let store = TestStore(
-            initialState: 0,
-            reducer: Reduce<Int, Action>({ state, action in
-                switch action {
-                case .task:
-                    return .fireAndForget { try await Task.never() }
-                }
-            }),
-            useNewScope: true
-        )
-        
-        await store.send(.task).cancel()
-    }
-    
-    internal func testScopeCancellation() async throws {
-        let neverEndingTask = Task<Void, Error> { try await Task.never() }
-
-        let store = Store(
-          initialState: (),
-          reducer: Reduce<Void, Void>({ _, _ in
-            .fireAndForget {
-              try await neverEndingTask.value
-            }
-          }),
-          useNewScope: true
-        )
-        let scopedStore = store.scope(state: { $0 })
-
-        let sendTask = scopedStore.send(())
-        await Task.yield()
-        neverEndingTask.cancel()
-        try await XCTUnwrap(sendTask).value
-        XCTAssertEqual(store.effectDisposables.count, 0)
-        XCTAssertEqual(scopedStore.effectDisposables.count, 0)
-      }
 }
-
-/// we use CounterFeature reducer on this file test scope only
-///
-fileprivate struct CounterFeature: ReducerProtocol {
-    fileprivate struct State: Equatable {
-        internal var counter: Int
-    }
-    
-    fileprivate enum Action: Equatable {
-        // subscribes to a long living effect, potentially feeding data
-        // back into the store
-        case onAppear
-        
-        // Talks to the environment, eventually feeding data back into the store
-        case onUserAction
-        
-        // External event coming in from the environment, updating state
-        case externalAction
-    }
-    
-    @Dependency(\.counterEnv) private var env
-    
-    fileprivate func reduce(into state: inout State, action: Action) -> Effect<Action> {
-        switch action {
-        case .onAppear:
-            return env.externalEffects.eraseToEffect()
-        case .onUserAction:
-            return .fireAndForget {
-                // This would actually do something async in the environment
-                // that feeds back eventually via the `externalEffectPublisher`
-                // Here we send an action sync, which could e.g. happen for an error case, ..
-                env.externalEffects.onNext(.externalAction)
-            }
-        case .externalAction:
-            state.counter += 1
-        }
-        return .none
-    }
-}
-
-fileprivate struct CounterEnvironment {
-    fileprivate var externalEffects: PublishSubject<CounterFeature.Action>
-}
-
-extension CounterEnvironment {
-    fileprivate static let mock = Self(externalEffects: PublishSubject<CounterFeature.Action>())
-}
-
-extension CounterEnvironment: TestDependencyKey {
-    fileprivate static var testValue: CounterEnvironment { .mock }
-}
-
-extension DependencyValues {
-    fileprivate var counterEnv: CounterEnvironment {
-        get { self[CounterEnvironment.self] }
-        set { self[CounterEnvironment.self] = newValue }
-    }
-}
-

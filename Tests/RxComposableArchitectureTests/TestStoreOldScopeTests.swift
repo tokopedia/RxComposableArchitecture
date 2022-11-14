@@ -1,8 +1,8 @@
 //
-//  File.swift
+//  TestStoreOldScopeTests.swift
 //  
 //
-//  Created by andhika.setiadi on 13/11/22.
+//  Created by andhika.setiadi on 14/11/22.
 //
 
 import RxSwift
@@ -10,11 +10,10 @@ import XCTest
 
 @testable import RxComposableArchitecture
 
-@MainActor
-internal class TestStoreTests: XCTestCase {
+internal class TestStoreOldScopeTests: XCTestCase {
     private let disposeBag = DisposeBag()
     
-    internal func testEffectConcatenation() async {
+    internal func testEffectConcatenation() {
         struct CancelID: Hashable {}
         struct State: Equatable {}
         
@@ -58,52 +57,26 @@ internal class TestStoreTests: XCTestCase {
         let store = TestStore(
             initialState: State(),
             reducer: reducer,
-            useNewScope: true
+            useNewScope: false
         )
         
-        _ = await store.send(Action.a)
+        _ = store.send(Action.a)
         
         mainQueue.advance(by: .seconds(1))
         
-        await store.receive(Action.b1)
-        await store.receive(Action.b2)
-        await store.receive(Action.b3)
+        store.receive(Action.b1)
+        store.receive(Action.b2)
+        store.receive(Action.b3)
         
-        await store.receive(Action.c1)
-        await store.receive(Action.c2)
-        await store.receive(Action.c3)
+        store.receive(Action.c1)
+        store.receive(Action.c2)
+        store.receive(Action.c3)
         
-        _ = await store.send(Action.d)
-    }
-    
-    internal func testAsync() async {
-        enum Action: Equatable {
-            case tap
-            case response(Int)
-        }
-        
-        let store = TestStore(
-            initialState: 0,
-            reducer: Reduce<Int, Action>({ state, action in
-                switch action {
-                case .tap:
-                    return .task { .response(42) }
-                case let .response(number):
-                    state = number
-                    return .none
-                }
-            }),
-            useNewScope: true
-        )
-        
-        _ = await store.send(.tap)
-        await store.receive(.response(42)) {
-            $0 = 42
-        }
+        _ = store.send(Action.d)
     }
     
     #if DEBUG
-        internal func testExpectedStateEquality() async {
+        internal func testExpectedStateEquality() {
             struct State: Equatable {
                 var count: Int = 0
                 var isChanging: Bool = false
@@ -131,14 +104,14 @@ internal class TestStoreTests: XCTestCase {
             let store = TestStore(
                 initialState: State(),
                 reducer: reducer,
-                useNewScope: true
+                useNewScope: false
             )
             
-            _ = await store.send(.increment) {
+            store.send(.increment) {
                 $0.isChanging = true
             }
             
-            await store.receive(.changed(from: 0, to: 1)) {
+            store.receive(.changed(from: 0, to: 1)) {
                 $0.isChanging = false
                 $0.count = 1
             }
@@ -156,7 +129,7 @@ internal class TestStoreTests: XCTestCase {
             }
         }
     
-        internal func testExpectedStateEqualityMustModify() async {
+        internal func testExpectedStateEqualityMustModify() {
             struct State: Equatable {
                 var count: Int = 0
             }
@@ -177,11 +150,11 @@ internal class TestStoreTests: XCTestCase {
             let store = TestStore(
                 initialState: State(),
                 reducer: reducer,
-                useNewScope: true
+                useNewScope: false
             )
             
-            _ = await store.send(.noop)
-            await store.receive(.finished)
+            store.send(.noop)
+            store.receive(.finished)
             
             XCTExpectFailure {
                 _ = store.send(.noop) {
@@ -197,7 +170,7 @@ internal class TestStoreTests: XCTestCase {
         }
     #endif
     
-    internal func testStateAccess() async {
+    internal func testStateAccess() {
         enum Action { case a, b, c, d }
         
         let store = TestStore(
@@ -212,28 +185,28 @@ internal class TestStoreTests: XCTestCase {
                     return .none
                 }
             }),
-            useNewScope: true
+            useNewScope: false
         )
         
-        _ = await store.send(.a) {
+        store.send(.a) {
             $0 = 1
             XCTAssertEqual(store.state, 0)
         }
         XCTAssertEqual(store.state, 1)
         
-        await store.receive(.b) {
+        store.receive(.b) {
             $0 = 2
             XCTAssertEqual(store.state, 1)
         }
         XCTAssertEqual(store.state, 2)
         
-        await store.receive(.c) {
+        store.receive(.c) {
             $0 = 3
             XCTAssertEqual(store.state, 2)
         }
         XCTAssertEqual(store.state, 3)
         
-        await store.receive(.d) {
+        store.receive(.d) {
             $0 = 4
             XCTAssertEqual(store.state, 3)
         }
@@ -241,3 +214,4 @@ internal class TestStoreTests: XCTestCase {
         XCTAssertEqual(store.state, 4)
     }
 }
+
