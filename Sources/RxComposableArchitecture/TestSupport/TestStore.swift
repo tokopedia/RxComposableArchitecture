@@ -251,7 +251,7 @@ public final class TestStore<State, ScopedState, Action, ScopedAction, Environme
         reducer: Reducer,
         file: StaticString = #file,
         line: UInt = #line,
-        failingWhenNothingChange: Bool = false,
+        failingWhenNothingChange: Bool = true,
         useNewScope: Bool = false
     )
     where
@@ -267,11 +267,16 @@ public final class TestStore<State, ScopedState, Action, ScopedAction, Environme
         self.fromScopedAction = { $0 }
         self.line = line
         self.reducer = reducer
-        self.store = Store(initialState: initialState, reducer: reducer)
         self.timeout = 100 * NSEC_PER_MSEC
         self.toScopedState = { $0 }
         self.failingWhenNothingChange = failingWhenNothingChange
         self.useNewScope = useNewScope
+        
+        self.store = Store(
+            initialState: initialState,
+            reducer: reducer,
+            useNewScope: useNewScope
+        )
     }
     
     @available(
@@ -320,7 +325,7 @@ public final class TestStore<State, ScopedState, Action, ScopedAction, Environme
         environment: Environment,
         file: StaticString = #file,
         line: UInt = #line,
-        failingWhenNothingChange: Bool = false,
+        failingWhenNothingChange: Bool = true,
         useNewScope: Bool = false
     )
     where State == ScopedState, Action == ScopedAction {
@@ -337,11 +342,16 @@ public final class TestStore<State, ScopedState, Action, ScopedAction, Environme
         self.fromScopedAction = { $0 }
         self.line = line
         self.reducer = reducer
-        self.store = Store(initialState: initialState, reducer: reducer)
         self.timeout = 100 * NSEC_PER_MSEC
         self.toScopedState = { $0 }
         self.failingWhenNothingChange = failingWhenNothingChange
         self.useNewScope = useNewScope
+        
+        self.store = Store(
+            initialState: initialState,
+            reducer: reducer,
+            useNewScope: useNewScope
+        )
     }
     
     internal init(
@@ -353,7 +363,7 @@ public final class TestStore<State, ScopedState, Action, ScopedAction, Environme
         store: Store<State, TestReducer<State, Action>.Action>,
         timeout: UInt64 = 100 * NSEC_PER_MSEC,
         toScopedState: @escaping (State) -> ScopedState,
-        failingWhenNothingChange: Bool = false,
+        failingWhenNothingChange: Bool = true,
         useNewScope: Bool = false
     ) {
         self._environment = _environment
@@ -1354,9 +1364,20 @@ internal class TestReducer<State, Action>: ReducerProtocol {
             let effect = LongLivingEffect(file: action.file, line: action.line)
             return effects
                 .do(
-                    onCompleted: { [weak self] in self?.inFlightEffects.remove(effect) },
-                    onSubscribe: { [weak self] in self?.inFlightEffects.insert(effect) },
-                    onDispose: { [weak self] in self?.inFlightEffects.remove(effect) }
+                    onCompleted: { [weak self] in
+                        self?.inFlightEffects.remove(effect)
+                    },
+                    onSubscribe: { [weak self] in
+                        self?.inFlightEffects.insert(effect)
+                        
+                        Task { [weak self] in
+                            await Task.megaYield()
+                            self?.effectDidSubscribe.continuation.yield()
+                        }
+                    },
+                    onDispose: { [weak self] in
+                        self?.inFlightEffects.remove(effect)
+                    }
                 )
                 .map { .init(origin: .receive($0), file: action.file, line: action.line) }
                 .eraseToEffect()
