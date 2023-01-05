@@ -3,6 +3,7 @@ import RxSwift
 import RxComposableArchitecture
 import XCTest
 
+@MainActor
 internal final class EffectDebounceTests: XCTestCase {
     private let disposeBag = DisposeBag()
 
@@ -10,7 +11,8 @@ internal final class EffectDebounceTests: XCTestCase {
         let scheduler = TestScheduler(initialClock: 0)
         var values: [Int] = []
 
-        func runDebouncedEffect(value: Int) {
+        // NB: Explicit @MainActor is needed for Swift 5.5.2
+        @MainActor func runDebouncedEffect(value: Int) {
             struct CancelToken: Hashable {}
             Observable.just(value)
                 .eraseToEffect()
@@ -57,7 +59,8 @@ internal final class EffectDebounceTests: XCTestCase {
         var values: [Int] = []
         var effectRuns = 0
 
-        func runDebouncedEffect(value: Int) {
+        // NB: Explicit @MainActor is needed for Swift 5.5.2
+        @MainActor func runDebouncedEffect(value: Int) {
             struct CancelToken: Hashable {}
 
             Observable.deferred { () -> Observable<Int> in

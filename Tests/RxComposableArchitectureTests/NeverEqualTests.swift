@@ -8,7 +8,7 @@
 import RxSwift
 import XCTest
 
-@testable import RxComposableArchitecture
+@_spi(Internals) import RxComposableArchitecture
 
 internal final class NeverEqualTests: XCTestCase {
     private let disposeBag = DisposeBag()
@@ -37,16 +37,17 @@ internal final class NeverEqualTests: XCTestCase {
             case tap
         }
         
+        let reducer = Reduce<MyState, MyAction> { state, action in
+            switch action {
+            case .tap:
+                state.run = Stateless()
+                return .none
+            }
+        }
+        
         let store = Store(
             initialState: MyState(),
-            reducer: AnyReducer<MyState, MyAction, Void> { state, action, _ in
-                switch action {
-                case .tap:
-                    state.run = Stateless()
-                    return .none
-                }
-            },
-            environment: ()
+            reducer: reducer
         )
         var called = 0
         store.subscribeNeverEqual(\.$run)

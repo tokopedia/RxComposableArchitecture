@@ -1,105 +1,63 @@
 import Foundation
 import RxComposableArchitecture
 import RxSwift
-//import TestSupport
 import XCTest
 
+@MainActor
 internal final class ReducerTests: XCTestCase {
     internal func testCallableAsFunction() {
-        let reducer = AnyReducer<Int, Void, Void> { state, _, _ in
+        let reducer = Reduce<Int, Void> { state, _ in
             state += 1
             return .none
         }
 
         var state = 0
-        _ = reducer.run(&state, (), ())
+        _ = reducer.reduce(into: &state, action: ())
         XCTAssertEqual(state, 1)
     }
 
-    internal func testCombine_EffectsAreMerged() {
-        typealias Scheduler = TestScheduler
+    func testCombine() async {
         enum Action: Equatable {
             case increment
         }
-
-        var fastValue: Int?
-        let fastReducer = AnyReducer<Int, Action, Scheduler> { state, _, scheduler in
-            state += 1
-            return Effect.fireAndForget { fastValue = 42 }
-                .delay(.seconds(1), scheduler: scheduler)
-                .eraseToEffect()
+        
+        struct One: ReducerProtocol {
+            typealias State = Int
+            let effect: @Sendable () async -> Void
+            func reduce(into state: inout State, action: Action) -> Effect<Action> {
+                state += 1
+                return .fireAndForget {
+                    await self.effect()
+                }
+            }
         }
-
-        var slowValue: Int?
-        let slowReducer = AnyReducer<Int, Action, Scheduler> { state, _, scheduler in
-            state += 1
-            return Effect.fireAndForget { slowValue = 1729 }
-                .delay(.seconds(2), scheduler: scheduler)
-                .eraseToEffect()
-        }
-
-        let scheduler = TestScheduler(initialClock: 0)
+        
+        var first = false
+        var second = false
+        
         let store = TestStore(
             initialState: 0,
-            reducer: .combine(fastReducer, slowReducer),
-            environment: scheduler,
-            useNewScope: true
+            reducer: CombineReducers {
+                One(effect: { @MainActor in first = true })
+                One(effect: { @MainActor in second = true })
+            }
         )
-
-        store.send(.increment) {
-            $0 = 2
-        }
-        // Waiting a second causes the fast effect to fire.
-        scheduler.advance(by: .seconds(1))
-        XCTAssertEqual(fastValue, 42)
-        // Waiting one more second causes the slow effect to fire. This proves that the effects
-        // are merged together, as opposed to concatenated.
-        scheduler.advance(by: .seconds(1))
-        XCTAssertEqual(fastValue, 42)
-        XCTAssertEqual(slowValue, 1729)
-    }
-
-    internal func testCombine() {
-        enum Action: Equatable {
-            case increment
-        }
-
-        var childEffectExecuted = false
-        let childReducer = AnyReducer<Int, Action, Void> { state, _, _ in
-            state += 1
-            return Effect.fireAndForget { childEffectExecuted = true }
-        }
-
-        var mainEffectExecuted = false
-        let mainReducer = AnyReducer<Int, Action, Void> { state, _, _ in
-            state += 1
-            return Effect.fireAndForget { mainEffectExecuted = true }
-        }
-        .combined(with: childReducer)
-
-        let store = TestStore(
-            initialState: 0,
-            reducer: mainReducer,
-            environment: (),
-            useNewScope: true
-        )
-
-        store.send(.increment) {
-            $0 = 2
-        }
-
-        XCTAssertTrue(childEffectExecuted)
-        XCTAssertTrue(mainEffectExecuted)
+        
+        await store
+            .send(.increment) { $0 = 2 }
+            .finish()
+        
+        XCTAssertTrue(first)
+        XCTAssertTrue(second)
     }
 
     internal func testDefaultSignpost() {
         let disposeBag = DisposeBag()
-
-        let reducer = AnyReducer<Int, Void, Void>.empty.signpost(log: .default)
+        
+        let reducer = EmptyReducer<Int, Void>().signpost(log: .default)
         var n = 0
-
         // swiftformat:disable:next redundantParens
-        let effect = reducer.run(&n, (), ())
+        let effect = reducer.reduce(into: &n, action: ())
         let expectation = self.expectation(description: "effect")
         effect
             .subscribe(onCompleted: { expectation.fulfill() })
@@ -110,11 +68,10 @@ internal final class ReducerTests: XCTestCase {
     internal func testDisabledSignpost() {
         let disposeBag = DisposeBag()
 
-        let reducer = AnyReducer<Int, Void, Void>.empty.signpost(log: .disabled)
+        let reducer = EmptyReducer<Int, Void>().signpost(log: .disabled)
         var n = 0
-
         // swiftformat:disable:next redundantParens
-        let effect = reducer.run(&n, (), ())
+        let effect = reducer.reduce(into: &n, action: ())
         let expectation = self.expectation(description: "effect")
         effect
             .subscribe(onCompleted: { expectation.fulfill() })

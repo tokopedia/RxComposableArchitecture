@@ -14,6 +14,60 @@ import XCTest
 internal final class EffectTests: XCTestCase {
     private var disposeBag = DisposeBag()
     private let scheduler = TestScheduler(initialClock: 0)
+    
+    func testCatchToEffect() {
+      struct MyError: Swift.Error, Equatable {}
+
+        Observable<Int>.just(42)
+            .catchToEffect()
+            .subscribe(onNext: {
+                guard case let .success(intValue) = $0 else {
+                    XCTFail("Value is not Success one")
+                    return
+                }
+                XCTAssertEqual(intValue, 42)
+            })
+            .disposed(by: disposeBag)
+
+        Observable<Int>.error(MyError())
+            .eraseToEffect()
+            .subscribe(onError: {
+                guard let err = $0 as? MyError else {
+                    XCTFail("Error is not MyError")
+                    return
+                }
+                XCTAssertEqual(err, MyError())
+            })
+            .disposed(by: disposeBag)
+        Observable<Int>.just(42)
+            .eraseToEffect()
+            .subscribe(onNext: { XCTAssertEqual($0, 42) })
+            .disposed(by: disposeBag)
+
+        Observable<Int>.just(42)
+            .catchToEffect{
+                switch $0 {
+                case let .success(val):
+                  return val
+                case .failure:
+                  return -1
+                }
+            }
+            .subscribe(onNext: { XCTAssertEqual($0, 42) })
+            .disposed(by: disposeBag)
+        
+        Observable<Int>.error(MyError())
+            .catchToEffect{
+                switch $0 {
+                case let .success(val):
+                  return val
+                case .failure:
+                  return -1
+                }
+            }
+            .subscribe(onNext: { XCTAssertEqual($0, -1) })
+            .disposed(by: disposeBag)
+    }
 
     internal func testConcatenate() {
         var values: [Int] = []
@@ -174,6 +228,28 @@ internal final class EffectTests: XCTestCase {
         
         XCTAssertEqual(result, 42)
     }
+    
+#if DEBUG
+    func testUnimplemented() {
+        let disposeBag = DisposeBag()
+        let effect = Effect<Never>.unimplemented("unimplemented")
+        XCTExpectFailure {
+            effect
+                .subscribe()
+                .disposed(by: disposeBag)
+        } issueMatcher: { issue in
+            issue.compactDescription == "unimplemented - An unimplemented effect ran."
+        }
+    }
+#endif
+    /// Can't test `.values`
+//    func testTask() async {
+//        guard #available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) else { return }
+//        let effect = EffectTask<Int>.task { 42 }
+//        for await result in effect.values {
+//            XCTAssertEqual(result, 42)
+//        }
+//    }
     
     func testCancellingTask_Infallible() {
         @Sendable func work() async -> Int {
