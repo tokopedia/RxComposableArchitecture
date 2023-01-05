@@ -454,7 +454,7 @@ internal final class StoreOldScopeTest: XCTestCase {
             var externalEffects = PublishSubject<Action>()
         }
         
-        let counterReducer = Reducer<Int, Action, Environment> { state, action, env in
+        let counterReducer = AnyReducer<Int, Action, Environment> { state, action, env in
             switch action {
             case .onAppear:
                 return env.externalEffects.eraseToEffect()

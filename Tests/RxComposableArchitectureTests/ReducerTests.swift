@@ -6,7 +6,7 @@ import XCTest
 
 internal final class ReducerTests: XCTestCase {
     internal func testCallableAsFunction() {
-        let reducer = Reducer<Int, Void, Void> { state, _, _ in
+        let reducer = AnyReducer<Int, Void, Void> { state, _, _ in
             state += 1
             return .none
         }
@@ -23,7 +23,7 @@ internal final class ReducerTests: XCTestCase {
         }
 
         var fastValue: Int?
-        let fastReducer = Reducer<Int, Action, Scheduler> { state, _, scheduler in
+        let fastReducer = AnyReducer<Int, Action, Scheduler> { state, _, scheduler in
             state += 1
             return Effect.fireAndForget { fastValue = 42 }
                 .delay(.seconds(1), scheduler: scheduler)
@@ -31,7 +31,7 @@ internal final class ReducerTests: XCTestCase {
         }
 
         var slowValue: Int?
-        let slowReducer = Reducer<Int, Action, Scheduler> { state, _, scheduler in
+        let slowReducer = AnyReducer<Int, Action, Scheduler> { state, _, scheduler in
             state += 1
             return Effect.fireAndForget { slowValue = 1729 }
                 .delay(.seconds(2), scheduler: scheduler)
@@ -65,13 +65,13 @@ internal final class ReducerTests: XCTestCase {
         }
 
         var childEffectExecuted = false
-        let childReducer = Reducer<Int, Action, Void> { state, _, _ in
+        let childReducer = AnyReducer<Int, Action, Void> { state, _, _ in
             state += 1
             return Effect.fireAndForget { childEffectExecuted = true }
         }
 
         var mainEffectExecuted = false
-        let mainReducer = Reducer<Int, Action, Void> { state, _, _ in
+        let mainReducer = AnyReducer<Int, Action, Void> { state, _, _ in
             state += 1
             return Effect.fireAndForget { mainEffectExecuted = true }
         }
@@ -95,7 +95,7 @@ internal final class ReducerTests: XCTestCase {
     internal func testDefaultSignpost() {
         let disposeBag = DisposeBag()
 
-        let reducer = Reducer<Int, Void, Void>.empty.signpost(log: .default)
+        let reducer = AnyReducer<Int, Void, Void>.empty.signpost(log: .default)
         var n = 0
 
         // swiftformat:disable:next redundantParens
@@ -110,7 +110,7 @@ internal final class ReducerTests: XCTestCase {
     internal func testDisabledSignpost() {
         let disposeBag = DisposeBag()
 
-        let reducer = Reducer<Int, Void, Void>.empty.signpost(log: .disabled)
+        let reducer = AnyReducer<Int, Void, Void>.empty.signpost(log: .disabled)
         var n = 0
 
         // swiftformat:disable:next redundantParens

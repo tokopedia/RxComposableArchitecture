@@ -8,7 +8,7 @@ internal final class MemoryManagementTests: XCTestCase {
     internal func testOwnership_ScopeHoldsOntoParent() {
         let disposeBag = DisposeBag()
 
-        let counterReducer = Reducer<Int, Void, Void> { state, _, _ in
+        let counterReducer = AnyReducer<Int, Void, Void> { state, _, _ in
             state += 1
             return .none
         }

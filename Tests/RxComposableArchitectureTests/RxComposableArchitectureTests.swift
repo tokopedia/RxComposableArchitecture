@@ -18,7 +18,7 @@ internal class RxComposableArchitectureTests: XCTestCase {
             case squareNow
         }
 
-        let counterReducer = Reducer<Int, CounterAction, SchedulerType> {
+        let counterReducer = AnyReducer<Int, CounterAction, SchedulerType> {
             state, action, scheduler in
             switch action {
             case .incrAndSquareLater:
@@ -73,7 +73,7 @@ internal class RxComposableArchitectureTests: XCTestCase {
 
         enum Action { case end, incr, start }
 
-        let reducer = Reducer<Int, Action, Environment> { state, action, environment in
+        let reducer = AnyReducer<Int, Action, Environment> { state, action, environment in
             switch action {
             case .end:
                 return environment.stopEffect.fireAndForget()
@@ -116,7 +116,7 @@ internal class RxComposableArchitectureTests: XCTestCase {
             let mainQueue: TestScheduler
         }
 
-        let reducer = Reducer<Int, Action, Environment> { state, action, environment in
+        let reducer = AnyReducer<Int, Action, Environment> { state, action, environment in
             enum CancelId {}
 
             switch action {

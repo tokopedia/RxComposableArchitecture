@@ -2,7 +2,7 @@ import Benchmark
 import RxComposableArchitecture
 
 let storeScopeSuite = BenchmarkSuite(name: "Store scoping") { suite in
-    let counterReducer = Reducer<Int, Bool, Void> { state, action, _ in
+    let counterReducer = AnyReducer<Int, Bool, Void> { state, action, _ in
         if action {
             state += 1
             return .none
@@ -25,7 +25,7 @@ let storeScopeSuite = BenchmarkSuite(name: "Store scoping") { suite in
 }
 
 let newStoreScopeSuite = BenchmarkSuite(name: "[NEW] Store scoping, with rescope") { suite in
-    let counterReducer = Reducer<Int, Bool, Void> { state, action, _ in
+    let counterReducer = AnyReducer<Int, Bool, Void> { state, action, _ in
         if action {
             state += 1
             return .none

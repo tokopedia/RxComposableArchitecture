@@ -16,7 +16,7 @@ internal final class BoostrapTests: XCTestCase {
             var getNumber: () -> Int
         }
         
-        let reducer = Reducer<Int, Void, Env> { state, action, env in
+        let reducer = AnyReducer<Int, Void, Env> { state, action, env in
             state = env.getNumber()
             return .none
         }

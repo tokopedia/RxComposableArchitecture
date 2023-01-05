@@ -39,7 +39,7 @@ internal final class NeverEqualTests: XCTestCase {
         
         let store = Store(
             initialState: MyState(),
-            reducer: Reducer<MyState, MyAction, Void> { state, action, _ in
+            reducer: AnyReducer<MyState, MyAction, Void> { state, action, _ in
                 switch action {
                 case .tap:
                     state.run = Stateless()
