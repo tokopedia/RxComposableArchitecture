@@ -784,9 +784,9 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
     @available(watchOS, deprecated: 9999.0, message: "Call the async-friendly 'receive' instead.")
     public func receive(
         _ expectedAction: Action,
+        _ updateExpectingResult: ((inout ScopedState) throws -> Void)? = nil,
         file: StaticString = #file,
-        line: UInt = #line,
-        _ updateExpectingResult: ((inout ScopedState) throws -> Void)? = nil
+        line: UInt = #line
     ) {
         guard !reducer.receivedActions.isEmpty else {
             XCTFail(
@@ -891,7 +891,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
         
         guard !self.reducer.inFlightEffects.isEmpty
         else {
-            { self.receive(expectedAction, file: file, line: line, updateExpectingResult) }()
+            { self.receive(expectedAction, updateExpectingResult, file: file, line: line) }()
             return
         }
         
@@ -943,7 +943,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
         guard !Task.isCancelled
         else { return }
         
-        { self.receive(expectedAction, file: file, line: line, updateExpectingResult) }()
+        { self.receive(expectedAction, updateExpectingResult, file: file, line: line) }()
         await Task.megaYield()
     }
     
@@ -975,7 +975,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
                 fatalError("unimplemented logic, fix this")
                 
             case let .receive(expectedAction, update):
-                self.receive(expectedAction, file: step.file, line: step.line, update)
+                self.receive(expectedAction, update, file: step.file, line: step.line)
             case let .environment(work):
                 if !self.reducer.receivedActions.isEmpty {
                     var actions = ""
