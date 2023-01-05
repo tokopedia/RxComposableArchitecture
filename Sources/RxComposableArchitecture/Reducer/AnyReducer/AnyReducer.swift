@@ -5,20 +5,6 @@ import RxSwift
 /// This API has been soft-deprecated in favor of ``ReducerProtocol``.
 /// Read <doc:MigratingToTheReducerProtocol> for more information.
 ///
-/// A type alias to ``AnyReducer`` for source compatibility. This alias will be removed.
-@available(
-    iOS,
-    deprecated: 9999.0,
-    renamed: "AnyReducer",
-    message: """
-    'Reducer' has been deprecated in favor of 'ReducerProtocol'.
-    """
-)
-public typealias Reducer = AnyReducer
-
-/// This API has been soft-deprecated in favor of ``ReducerProtocol``.
-/// Read <doc:MigratingToTheReducerProtocol> for more information.
-///
 /// A reducer describes how to evolve the current state of an application to the next state, given
 /// an action, and describes what ``Effect``s should be executed later by the store, if any.
 ///
@@ -260,7 +246,7 @@ public struct AnyReducer<State, Action, Environment> {
         state toLocalState: StatePath,
         action toLocalAction: ActionPath,
         environment toLocalEnvironment: @escaping (GlobalEnvironment) -> Environment
-    ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment>
+    ) -> AnyReducer<GlobalState, GlobalAction, GlobalEnvironment>
     where
         StatePath: WritablePath, StatePath.Root == GlobalState, StatePath.Value == State,
         ActionPath: WritablePath, ActionPath.Root == GlobalAction, ActionPath.Value == Action
@@ -548,7 +534,7 @@ public struct AnyReducer<State, Action, Environment> {
         breakpointOnNil: Bool = true,
         _ file: StaticString = #file,
         _ line: UInt = #line
-    ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment> {
+    ) -> AnyReducer<GlobalState, GlobalAction, GlobalEnvironment> {
         .init { globalState, globalAction, globalEnvironment in
             guard let (key, localAction) = toLocalAction.extract(from: globalAction) else {
                 return .none
@@ -642,7 +628,7 @@ public struct AnyReducer<State, Action, Environment> {
         breakpointOnNil: Bool = true,
         _ file: StaticString = #file,
         _ line: UInt = #line
-    ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment> {
+    ) -> AnyReducer<GlobalState, GlobalAction, GlobalEnvironment> {
         .init { globalState, globalAction, globalEnvironment in
             guard let (id, localAction) = toLocalAction.extract(from: globalAction) else {
                 return .none

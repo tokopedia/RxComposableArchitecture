@@ -19,7 +19,7 @@ internal struct OptionalIfLet: ReducerProtocol {
         case counter(Counter.Action)
     }
     
-    var body: some ReducerProtocol<OptionalIfLet.State, OptionalIfLet.Action> {
+    var body: some ReducerProtocolOf<OptionalIfLet> {
         Reduce { state, action in
             switch action {
             case .didToggle:

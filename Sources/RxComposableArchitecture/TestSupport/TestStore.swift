@@ -898,7 +898,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
         await Task.megaYield()
         let start = DispatchTime.now().uptimeNanoseconds
         while !Task.isCancelled {
-            await Task.detached(priority: .low) { await Task.yield() }.value
+            await Task.detached(priority: .background) { await Task.yield() }.value
             
             guard self.reducer.receivedActions.isEmpty
             else { break }
@@ -1241,7 +1241,26 @@ public struct TestStoreTask: Hashable, Sendable {
     fileprivate let rawValue: Task<Void, Never>?
     fileprivate let timeout: UInt64
     
+    @_spi(Canary) public init(rawValue: Task<Void, Never>?, timeout: UInt64) {
+      self.rawValue = rawValue
+      self.timeout = timeout
+    }
+    
     /// Cancels the underlying task and waits for it to finish.
+    ///
+    /// This can be handy when a feature needs to start a long-living effect when the feature appears,
+    /// but cancellation of that effect is handled by the parent when the feature disappears. Such a
+    /// feature is difficult to exhaustively test in isolation because there is no action in its
+    /// domain that cancels the effect:
+    ///
+    /// ```swift
+    /// let store = TestStore(/* ... */)
+    ///
+    /// let onAppearTask = await store.send(.onAppear)
+    /// // Assert what is happening in the feature
+    ///
+    /// await onAppearTask.cancel() // ✅ Cancel the task to simulate the feature disappearing.
+    /// ```
     public func cancel() async {
         self.rawValue?.cancel()
         await self.rawValue?.cancellableValue
@@ -1413,7 +1432,7 @@ internal class TestReducer<State, Action>: ReducerProtocol {
 extension Task where Success == Never, Failure == Never {
     @_spi(Internals) public static func megaYield(count: Int = 10) async {
         for _ in 1...count {
-            await Task<Void, Never>.detached(priority: .low) { await Task.yield() }.value
+            await Task<Void, Never>.detached(priority: .background) { await Task.yield() }.value
         }
     }
 }

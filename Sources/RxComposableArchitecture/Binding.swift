@@ -182,7 +182,7 @@ public struct BindingAction<Root>: Equatable {
     }
 }
 
-extension Reducer {
+extension AnyReducer {
     /// Returns a reducer that applies `BindingAction` mutations to `State` before running this
     /// reducer's logic.
     ///
