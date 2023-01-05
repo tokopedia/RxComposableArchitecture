@@ -104,100 +104,100 @@ internal class TestStoreTests: XCTestCase {
         }
     }
     
-    #if DEBUG
-        internal func testExpectedStateEquality() async {
-            struct State: Equatable {
-                var count: Int = 0
-                var isChanging: Bool = false
-            }
-            
-            enum Action: Equatable {
-                case increment
-                case changed(from: Int, to: Int)
-            }
-            
-            let reducer = Reduce<State, Action>({ state, action in
-                switch action {
-                case .increment:
-                    state.isChanging = true
-                    return Effect(value: .changed(from: state.count, to: state.count + 1))
-                case .changed(let from, let to):
-                    state.isChanging = false
-                    if state.count == from {
-                        state.count = to
-                    }
-                    return .none
+#if DEBUG
+    internal func testExpectedStateEquality() async {
+        struct State: Equatable {
+            var count: Int = 0
+            var isChanging: Bool = false
+        }
+        
+        enum Action: Equatable {
+            case increment
+            case changed(from: Int, to: Int)
+        }
+        
+        let reducer = Reduce<State, Action>({ state, action in
+            switch action {
+            case .increment:
+                state.isChanging = true
+                return Effect(value: .changed(from: state.count, to: state.count + 1))
+            case .changed(let from, let to):
+                state.isChanging = false
+                if state.count == from {
+                    state.count = to
                 }
-            })
-            
-            let store = TestStore(
-                initialState: State(),
-                reducer: reducer,
-                useNewScope: true
-            )
-            
-            _ = await store.send(.increment) {
-                $0.isChanging = true
+                return .none
             }
-            
-            await store.receive(.changed(from: 0, to: 1)) {
+        })
+        
+        let store = TestStore(
+            initialState: State(),
+            reducer: reducer,
+            useNewScope: true
+        )
+        
+        _ = await store.send(.increment) {
+            $0.isChanging = true
+        }
+        
+        await store.receive(.changed(from: 0, to: 1)) {
+            $0.isChanging = false
+            $0.count = 1
+        }
+        
+        XCTExpectFailure {
+            _ = store.send(.increment) {
                 $0.isChanging = false
-                $0.count = 1
-            }
-            
-            XCTExpectFailure {
-                _ = store.send(.increment) {
-                    $0.isChanging = false
-                }
-            }
-            XCTExpectFailure {
-                store.receive(.changed(from: 1, to: 2)) {
-                    $0.isChanging = true
-                    $0.count = 1100
-                }
             }
         }
+        XCTExpectFailure {
+            store.receive(.changed(from: 1, to: 2)) {
+                $0.isChanging = true
+                $0.count = 1100
+            }
+        }
+    }
     
-        internal func testExpectedStateEqualityMustModify() async {
-            struct State: Equatable {
-                var count: Int = 0
+    internal func testExpectedStateEqualityMustModify() async {
+        struct State: Equatable {
+            var count: Int = 0
+        }
+        
+        enum Action: Equatable {
+            case noop, finished
+        }
+        
+        let reducer = Reduce<State, Action>({ state, action in
+            switch action {
+            case .noop:
+                return Effect(value: .finished)
+            case .finished:
+                return .none
             }
-            
-            enum Action: Equatable {
-                case noop, finished
-            }
-            
-            let reducer = Reduce<State, Action>({ state, action in
-                switch action {
-                case .noop:
-                    return Effect(value: .finished)
-                case .finished:
-                    return .none
-                }
-            })
-            
-            let store = TestStore(
-                initialState: State(),
-                reducer: reducer,
-                useNewScope: true
-            )
-            
-            _ = await store.send(.noop)
-            await store.receive(.finished)
-            
-            XCTExpectFailure {
-                _ = store.send(.noop) {
-                    $0.count = 0
-                }
-            }
-            
-            XCTExpectFailure {
-                store.receive(.finished) {
-                    $0.count = 0
-                }
+        })
+        
+        let store = TestStore(
+            initialState: State(),
+            reducer: reducer,
+            useNewScope: true
+        )
+        
+        _ = await store.send(.noop)
+        await store.receive(.finished)
+        
+        XCTExpectFailure {
+            _ = store.send(.noop) {
+                $0.count = 0
             }
         }
-    #endif
+        
+        XCTExpectFailure {
+            store.receive(.finished) {
+                $0.count = 0
+            }
+        }
+    }
+#endif
     
     internal func testStateAccess() async {
         enum Action { case a, b, c, d }
@@ -241,5 +241,63 @@ internal class TestStoreTests: XCTestCase {
         }
         
         XCTAssertEqual(store.state, 4)
+    }
+    
+    func testOverrideDependenciesDirectlyOnReducer() {
+        struct Counter: ReducerProtocol {
+            @Dependency(\.calendar) var calendar
+            @Dependency(\.locale) var locale
+            @Dependency(\.timeZone) var timeZone
+            @Dependency(\.urlSession) var urlSession
+            
+            func reduce(into state: inout Int, action: Bool) -> Effect<Bool> {
+                _ = self.calendar
+                _ = self.locale
+                _ = self.timeZone
+                _ = self.urlSession
+                state += action ? 1 : -1
+                return .none
+            }
+        }
+        
+        let store = TestStore(
+            initialState: 0,
+            reducer: Counter()
+                .dependency(\.calendar, Calendar(identifier: .gregorian))
+                .dependency(\.locale, Locale(identifier: "en_US"))
+                .dependency(\.timeZone, TimeZone(secondsFromGMT: 0)!)
+                .dependency(\.urlSession, URLSession(configuration: .ephemeral))
+        )
+        
+        store.send(true) { $0 = 1 }
+    }
+    
+    func testOverrideDependenciesOnTestStore() {
+        struct Counter: ReducerProtocol {
+            @Dependency(\.calendar) var calendar
+            @Dependency(\.locale) var locale
+            @Dependency(\.timeZone) var timeZone
+            @Dependency(\.urlSession) var urlSession
+            
+            func reduce(into state: inout Int, action: Bool) -> Effect<Bool> {
+                _ = self.calendar
+                _ = self.locale
+                _ = self.timeZone
+                _ = self.urlSession
+                state += action ? 1 : -1
+                return .none
+            }
+        }
+        
+        let store = TestStore(
+            initialState: 0,
+            reducer: Counter()
+        )
+        store.dependencies.calendar = Calendar(identifier: .gregorian)
+        store.dependencies.locale = Locale(identifier: "en_US")
+        store.dependencies.timeZone = TimeZone(secondsFromGMT: 0)!
+        store.dependencies.urlSession = URLSession(configuration: .ephemeral)
+        
+        store.send(true) { $0 = 1 }
     }
 }

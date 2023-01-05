@@ -10,10 +10,7 @@ internal final class StoreTests: XCTestCase {
     private let disposeBag = DisposeBag()
     
     internal func testCancellableIsRemovedOnImmediatelyCompletingEffect() {
-        let store = Store(
-            initialState: (),
-            reducer: EmptyReducer<Void, Void>()
-        )
+        let store = Store(initialState: (), reducer: EmptyReducer<Void, Void>())
         
         XCTAssertEqual(store.effectDisposables.count, 0)
         
@@ -39,10 +36,7 @@ internal final class StoreTests: XCTestCase {
             }
         })
         
-        let store = Store(
-            initialState: (),
-            reducer: reducer
-        )
+        let store = Store(initialState: (), reducer: reducer)
         
         XCTAssertEqual(store.effectDisposables.count, 0)
         
@@ -61,10 +55,7 @@ internal final class StoreTests: XCTestCase {
             return .none
         })
         
-        let parentStore = Store(
-            initialState: 0,
-            reducer: counterReducer
-        )
+        let parentStore = Store(initialState: 0, reducer: counterReducer)
         let childStore = parentStore.scope(state: String.init)
         
         var values: [String] = []
@@ -85,14 +76,10 @@ internal final class StoreTests: XCTestCase {
             return .none
         })
         
-        let parentStore = Store(
-            initialState: 0,
-            reducer: counterReducer
-        )
+        let parentStore = Store(initialState: 0, reducer: counterReducer)
         let childStore = parentStore.scope(state: String.init)
         
         var values: [Int] = []
-        
         parentStore.subscribe { $0 }
             .subscribe(onNext: { values.append($0) })
             .disposed(by: disposeBag)
@@ -130,41 +117,51 @@ internal final class StoreTests: XCTestCase {
         var numCalls2 = 0
         var numCalls3 = 0
         
-        let store = Store(initialState: 0, reducer: counterReducer)
-            .scope(state: { (count: Int) -> Int in
-                numCalls1 += 1
-                return count
-            })
-            .scope(state: { (count: Int) -> Int in
-                numCalls2 += 1
-                return count
-            })
-            .scope(state: { (count: Int) -> Int in
-                numCalls3 += 1
-                return count
-            })
+        let store1 = Store(initialState: 0, reducer: counterReducer)
+        let store2 = store1.scope(state: { (count: Int) -> Int in
+            numCalls1 += 1
+            return count
+        })
+        let store3 = store2.scope(state: { (count: Int) -> Int in
+            numCalls2 += 1
+            return count
+        })
+        let store4 = store3.scope(state: { (count: Int) -> Int in
+            numCalls3 += 1
+            return count
+        })
         
         XCTAssertEqual(numCalls1, 1)
         XCTAssertEqual(numCalls2, 1)
         XCTAssertEqual(numCalls3, 1)
         
-        _ = store.send(())
+        _ = store4.send(())
         
         XCTAssertEqual(numCalls1, 2)
         XCTAssertEqual(numCalls2, 2)
         XCTAssertEqual(numCalls3, 2)
         
-        _ = store.send(())
+        _ = store4.send(())
         
         XCTAssertEqual(numCalls1, 3)
         XCTAssertEqual(numCalls2, 3)
         XCTAssertEqual(numCalls3, 3)
         
-        _ = store.send(())
+        _ = store4.send(())
         
         XCTAssertEqual(numCalls1, 4)
         XCTAssertEqual(numCalls2, 4)
         XCTAssertEqual(numCalls3, 4)
+        
+        _ = store4.send(())
+        
+        XCTAssertEqual(numCalls1, 5)
+        XCTAssertEqual(numCalls2, 5)
+        XCTAssertEqual(numCalls3, 5)
+        
+        _ = store1
+        _ = store2
+        _ = store3
     }
     
     internal func testScopeAtIndexCallCount2UseNewScope() {
@@ -193,26 +190,26 @@ internal final class StoreTests: XCTestCase {
             Item(id: $0, qty: 1)
         }
         
-        let store = Store(initialState: IdentifiedArrayOf(mock), reducer: itemReducer)
+        let store1 = Store(initialState: IdentifiedArrayOf(mock), reducer: itemReducer)
             .scope(state: { (item: IdentifiedArrayOf<Item>) -> IdentifiedArrayOf<Item> in
                 numCalls1 += 1
                 return item
             })
-            .scope(at: 1, action: Action.item)!
-            .scope(state: { (item: Item) -> Item in
+        let store2 = store1.scope(at: 1, action: Action.item)!
+        let store3 = store2.scope(state: { (item: Item) -> Item in
                 numCalls2 += 1
                 return item
             })
         
-        _ = store.send((1, .didTap))
+        _ = store3.send((1, .didTap))
         XCTAssertEqual(numCalls1, 2)
         XCTAssertEqual(numCalls2, 2)
-        XCTAssertEqual(store.state.qty, 2)
+        XCTAssertEqual(store3.state.qty, 2)
         
-        _ = store.send((1, .didTap))
+        _ = store3.send((1, .didTap))
         XCTAssertEqual(numCalls1, 3)
         XCTAssertEqual(numCalls2, 3)
-        XCTAssertEqual(store.state.qty, 3)
+        XCTAssertEqual(store3.state.qty, 3)
     }
     
     internal func testSynchronousEffectsSentAfterSinking() {
@@ -259,18 +256,15 @@ internal final class StoreTests: XCTestCase {
             switch action {
             case .incr:
                 state += 1
-                return state >= 10000 ? Effect(value: .noop) : Effect(value: .incr)
+                return state >= 100_000 ? Effect(value: .noop) : Effect(value: .incr)
             case .noop:
                 return .none
             }
         })
         
-        let store = Store(
-            initialState: 0,
-            reducer: reducer
-        )
+        let store = Store(initialState: 0, reducer: reducer)
         _ = store.send(.incr)
-        XCTAssertEqual(store.state, 10000)
+        XCTAssertEqual(store.state, 100_000)
     }
     
     internal func testIfLetAfterScope() {
@@ -283,10 +277,7 @@ internal final class StoreTests: XCTestCase {
             return .none
         })
         
-        let parentStore = Store(
-            initialState: AppState(),
-            reducer: appReducer
-        )
+        let parentStore = Store(initialState: AppState(), reducer: appReducer)
         
         // NB: This test needs to hold a strong reference to the emitted stores
         var outputs: [Int?] = []
@@ -580,6 +571,35 @@ internal final class StoreTests: XCTestCase {
         XCTAssertEqual(store.effectDisposables.count, 0)
         XCTAssertEqual(scopedStore.effectDisposables.count, 0)
       }
+    
+    func testOverrideDependenciesDirectlyOnReducer() {
+      struct Counter: ReducerProtocol {
+        @Dependency(\.calendar) var calendar
+        @Dependency(\.locale) var locale
+        @Dependency(\.timeZone) var timeZone
+        @Dependency(\.urlSession) var urlSession
+
+        func reduce(into state: inout Int, action: Bool) -> Effect<Bool> {
+          _ = self.calendar
+          _ = self.locale
+          _ = self.timeZone
+          _ = self.urlSession
+          state += action ? 1 : -1
+          return .none
+        }
+      }
+
+      let store = Store(
+        initialState: 0,
+        reducer: Counter()
+          .dependency(\.calendar, Calendar(identifier: .gregorian))
+          .dependency(\.locale, Locale(identifier: "en_US"))
+          .dependency(\.timeZone, TimeZone(secondsFromGMT: 0)!)
+          .dependency(\.urlSession, URLSession(configuration: .ephemeral))
+      )
+
+      store.send(true)
+    }
 }
 
 /// we use CounterFeature reducer on this file test scope only
