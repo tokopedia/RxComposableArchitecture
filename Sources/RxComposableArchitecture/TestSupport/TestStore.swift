@@ -906,7 +906,7 @@ extension TestStore where ScopedState: Equatable {
         file: StaticString = #file,
         line: UInt = #line
     ) async -> TestStoreTask {
-        if !reducer.receivedActions.isEmpty {
+        if !self.reducer.receivedActions.isEmpty {
             var actions = ""
             customDump(self.reducer.receivedActions.map(\.action), to: &actions)
             XCTFailHelper(
@@ -1193,30 +1193,18 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
     ) {
         self.receiveAction(
             matching: { expectedAction == $0 },
-            failureMessage: "Expected to receive an action \(expectedAction), but didn't get one.",
-            onReceive: { receivedAction in
-                if expectedAction != receivedAction {
-                    let difference = TaskResultDebugging.$emitRuntimeWarnings.withValue(false) {
-                        diff(expectedAction, receivedAction, format: .proportional)
-                            .map { "\($0.indent(by: 4))\n\n(Expected: −, Received: +)" }
-                        ?? """
+            failureMessage: #"Expected to receive an action "\#(expectedAction)", but didn't get one."#,
+            unexpectedActionDescription: { receivedAction in
+                TaskResultDebugging.$emitRuntimeWarnings.withValue(false) {
+                    diff(expectedAction, receivedAction, format: .proportional)
+                        .map { "\($0.indent(by: 4))\n\n(Expected: −, Received: +)" }
+                    ?? """
                   Expected:
                   \(String(describing: expectedAction).indent(by: 2))
                   
                   Received:
                   \(String(describing: receivedAction).indent(by: 2))
                   """
-                    }
-                    
-                    XCTFailHelper(
-                """
-                Received unexpected action: …
-                
-                \(difference)
-                """,
-                file: file,
-                line: line
-                    )
                 }
             },
             updateStateToExpectedResult,
@@ -1242,29 +1230,18 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
     @available(tvOS, deprecated: 9999, message: "Call the async-friendly 'receive' instead.")
     @available(watchOS, deprecated: 9999, message: "Call the async-friendly 'receive' instead.")
     public func receive(
-        _ matching: (Action) -> Bool,
+        _ isMatching: (Action) -> Bool,
         assert updateStateToExpectedResult: ((inout ScopedState) throws -> Void)? = nil,
         file: StaticString = #file,
         line: UInt = #line
     ) {
         self.receiveAction(
-            matching: matching,
-            failureMessage: "Expected to receive a matching action, but didn't get one.",
-            onReceive: { receivedAction in
+            matching: isMatching,
+            failureMessage: "Expected to receive a matching an action matching predicate, but didn't get one.",
+            unexpectedActionDescription: { receivedAction in
                 var action = ""
                 customDump(receivedAction, to: &action, indent: 2)
-                XCTFailHelper(
-            """
-            Received action without asserting on payload:
-            
-            \(action)
-            """,
-            overrideExhaustivity: self.exhaustivity == .on
-            ? .off(showSkippedAssertions: true)
-            : self.exhaustivity,
-            file: file,
-            line: line
-                )
+                return action
             },
             updateStateToExpectedResult,
             file: file,
@@ -1278,7 +1255,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
     /// method.
     ///
     /// - Parameters:
-    ///   - casePath: A case path identifying the case of an action to enum to receive
+    ///   - actionCase: A case path identifying the case of an action to enum to receive
     ///   - updateStateToExpectedResult: A closure that asserts state changed by sending the action to
     ///     the store. The mutable state sent to this closure must be modified to match the state of
     ///     the store after processing the given action. Do not provide a closure if no change is
@@ -1288,29 +1265,18 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
     @available(tvOS, deprecated: 9999, message: "Call the async-friendly 'receive' instead.")
     @available(watchOS, deprecated: 9999, message: "Call the async-friendly 'receive' instead.")
     public func receive<Value>(
-        _ casePath: CasePath<Action, Value>,
+        _ actionCase: CasePath<Action, Value>,
         assert updateStateToExpectedResult: ((inout ScopedState) throws -> Void)? = nil,
         file: StaticString = #file,
         line: UInt = #line
     ) {
         self.receiveAction(
-            matching: { casePath.extract(from: $0) != nil },
-            failureMessage: "Expected to receive a matching action, but didn't get one.",
-            onReceive: { receivedAction in
+            matching: { actionCase.extract(from: $0) != nil },
+            failureMessage: "Expected to receive an action matching case path, but didn't get one.",
+            unexpectedActionDescription: { receivedAction in
                 var action = ""
                 customDump(receivedAction, to: &action, indent: 2)
-                XCTFailHelper(
-            """
-            Received action without asserting on payload:
-            
-            \(action)
-            """,
-            overrideExhaustivity: self.exhaustivity == .on
-            ? .off(showSkippedAssertions: true)
-            : self.exhaustivity,
-            file: file,
-            line: line
-                )
+                return action
             },
             updateStateToExpectedResult,
             file: file,
@@ -1405,14 +1371,14 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
     @MainActor
     @_disfavoredOverload
     public func receive(
-        _ matching: (Action) -> Bool,
+        _ isMatching: (Action) -> Bool,
         timeout duration: Duration,
         assert updateStateToExpectedResult: ((inout ScopedState) throws -> Void)? = nil,
         file: StaticString = #file,
         line: UInt = #line
     ) async {
         await self.receive(
-            matching,
+            isMatching,
             timeout: duration.nanoseconds,
             assert: updateStateToExpectedResult,
             file: file,
@@ -1472,7 +1438,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
     @MainActor
     @_disfavoredOverload
     public func receive(
-        _ matching: (Action) -> Bool,
+        _ isMatching: (Action) -> Bool,
         timeout nanoseconds: UInt64? = nil,
         assert updateStateToExpectedResult: ((inout ScopedState) throws -> Void)? = nil,
         file: StaticString = #file,
@@ -1481,13 +1447,13 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
         guard !self.reducer.inFlightEffects.isEmpty
         else {
             _ = {
-                self.receive(matching, assert: updateStateToExpectedResult, file: file, line: line)
+                self.receive(isMatching, assert: updateStateToExpectedResult, file: file, line: line)
             }()
             return
         }
         await self.receiveAction(timeout: nanoseconds, file: file, line: line)
         _ = {
-            self.receive(matching, assert: updateStateToExpectedResult, file: file, line: line)
+            self.receive(isMatching, assert: updateStateToExpectedResult, file: file, line: line)
         }()
         await Task.megaYield()
     }
@@ -1507,7 +1473,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
     @MainActor
     @_disfavoredOverload
     public func receive<Value>(
-        _ casePath: CasePath<Action, Value>,
+        _ actionCase: CasePath<Action, Value>,
         timeout nanoseconds: UInt64? = nil,
         assert updateStateToExpectedResult: ((inout ScopedState) throws -> Void)? = nil,
         file: StaticString = #file,
@@ -1516,13 +1482,13 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
         guard !self.reducer.inFlightEffects.isEmpty
         else {
             _ = {
-                self.receive(casePath, assert: updateStateToExpectedResult, file: file, line: line)
+                self.receive(actionCase, assert: updateStateToExpectedResult, file: file, line: line)
             }()
             return
         }
         await self.receiveAction(timeout: nanoseconds, file: file, line: line)
         _ = {
-            self.receive(casePath, assert: updateStateToExpectedResult, file: file, line: line)
+            self.receive(actionCase, assert: updateStateToExpectedResult, file: file, line: line)
         }()
         await Task.megaYield()
     }
@@ -1553,7 +1519,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
     /// what data was in the effect that you chose not to assert on.
     ///
     /// - Parameters:
-    ///   - casePath: A case path identifying the case of an action to enum to receive
+    ///   - actionCase: A case path identifying the case of an action to enum to receive
     ///   - duration: The amount of time to wait for the expected action.
     ///   - updateStateToExpectedResult: A closure that asserts state changed by sending the action
     ///     to the store. The mutable state sent to this closure must be modified to match the state
@@ -1563,7 +1529,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
     @_disfavoredOverload
     @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
     public func receive<Value>(
-        _ casePath: CasePath<Action, Value>,
+        _ actionCase: CasePath<Action, Value>,
         timeout duration: Duration,
         assert updateStateToExpectedResult: ((inout ScopedState) throws -> Void)? = nil,
         file: StaticString = #file,
@@ -1572,13 +1538,13 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
         guard !self.reducer.inFlightEffects.isEmpty
         else {
             _ = {
-                self.receive(casePath, assert: updateStateToExpectedResult, file: file, line: line)
+                self.receive(actionCase, assert: updateStateToExpectedResult, file: file, line: line)
             }()
             return
         }
         await self.receiveAction(timeout: duration.nanoseconds, file: file, line: line)
         _ = {
-            self.receive(casePath, assert: updateStateToExpectedResult, file: file, line: line)
+            self.receive(actionCase, assert: updateStateToExpectedResult, file: file, line: line)
         }()
         await Task.megaYield()
     }
@@ -1587,18 +1553,16 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
     private func receiveAction(
         matching predicate: (Action) -> Bool,
         failureMessage: @autoclosure () -> String,
-        onReceive: (Action) -> Void,
+        unexpectedActionDescription: (Action) -> String,
         _ updateStateToExpectedResult: ((inout ScopedState) throws -> Void)?,
         file: StaticString,
         line: UInt
     ) {
         guard !self.reducer.receivedActions.isEmpty else {
             XCTFail(
-      """
-      Expected to receive an action, but received none.
-      """,
-      file: file,
-      line: line
+                failureMessage(),
+                file: file,
+                line: line
             )
             return
         }
@@ -1640,7 +1604,17 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
         }
         
         let (receivedAction, state) = self.reducer.receivedActions.removeFirst()
-        onReceive(receivedAction)
+        if !predicate(receivedAction) {
+            XCTFailHelper(
+                """
+                Received unexpected action: …
+                
+                \(unexpectedActionDescription(receivedAction))
+                """,
+                file: file,
+                line: line
+            )
+        }
         let expectedState = self.toScopedState(self.state)
         do {
             try self.expectedStateShouldMatch(
