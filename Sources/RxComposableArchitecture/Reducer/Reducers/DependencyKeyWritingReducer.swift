@@ -84,7 +84,7 @@ extension ReducerProtocol {
     /// value.
     ///
     /// For example, suppose you want to see when a particular endpoint of a dependency gets called
-    /// in your application. You can override that endpoint to insert a breakpoint or print statement,
+    /// in your application. You can override that endpoint to insert a breakpoint or print state,
     /// but still call out to the original endpoint:
     ///
     /// ```swift
