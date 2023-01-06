@@ -419,12 +419,10 @@ internal final class StoreTests: XCTestCase {
     }
     
     internal func testSyncEffectsFromEnvironment() {
-        /// Here we no need anymore to mock the environment
-        /// since we already provide on testValue
-        ///
         let parentStore = Store(
             initialState: CounterFeature.State(counter: 1),
             reducer: CounterFeature()
+                .dependency(\.context, .test)
         )
         
         // subscribes to a long living publisher of actions
