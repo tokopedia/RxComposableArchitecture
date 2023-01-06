@@ -34,7 +34,6 @@ final class NeverEqualReducerTests: XCTestCase {
             failingWhenNothingChange: true,
             useNewScope: true
         )
-        testStore.stateDiffMode = .full
         testStore.send(.didTapScrollToTop) {
             $0.scrollToTop = Stateless()
         }

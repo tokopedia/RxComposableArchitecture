@@ -6,4 +6,5 @@ Benchmark.main([
     effectSuite,
     storeScopeSuite,
     newStoreScopeSuite,
+    dependenciesSuite,
 ])
