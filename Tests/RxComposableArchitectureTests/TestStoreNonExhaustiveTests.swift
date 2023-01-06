@@ -107,7 +107,8 @@
         initialState: 0,
         reducer: Reduce<Int, Bool> { _, action in
           .run { _ in try await Task.sleep(nanoseconds: NSEC_PER_SEC / 4) }
-        }
+        },
+        useNewScope: true
       )
 
       let task = await store.send(true)
