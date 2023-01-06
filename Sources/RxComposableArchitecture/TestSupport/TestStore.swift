@@ -422,7 +422,7 @@ import XCTestDynamicOverlay
 /// [merowing.info]: https://www.merowing.info
 /// [exhaustive-testing-in-tca]: https://www.merowing.info/exhaustive-testing-in-tca/
 /// [Composable-Architecture-at-Scale]: https://vimeo.com/751173570
-open class TestStore<State, Action, ScopedState, ScopedAction, Environment> {
+public final class TestStore<State, Action, ScopedState, ScopedAction, Environment> {
     
     /// The current dependencies of the test store.
     ///
@@ -569,8 +569,9 @@ open class TestStore<State, Action, ScopedState, ScopedAction, Environment> {
     ///   - failingWhenNothingChange: Flag to make test failed if you provide trailing closure on ``send(_:_:file:line:)`` or ``receive(_:_:file:line:)`` but the state is the same
     ///   - useNewScope: Increase performance
     public init<Reducer: ReducerProtocol>(
-        initialState: State,
+        initialState: @autoclosure () -> State,
         reducer: Reducer,
+        prepareDependencies: (inout DependencyValues) -> Void = { _ in },
         file: StaticString = #file,
         line: UInt = #line,
         failingWhenNothingChange: Bool = true,
@@ -583,6 +584,12 @@ open class TestStore<State, Action, ScopedState, ScopedAction, Environment> {
     Action == ScopedAction,
     Environment == Void
     {
+        var dependencies = DependencyValues()
+        dependencies.context = .test
+        prepareDependencies(&dependencies)
+        
+        let initialState = DependencyValues.$_current.withValue(dependencies) { initialState() }
+        
         let reducer = TestReducer(Reduce(reducer), initialState: initialState)
         self._environment = .init(wrappedValue: ())
         self.file = file
@@ -593,12 +600,12 @@ open class TestStore<State, Action, ScopedState, ScopedAction, Environment> {
         self.toScopedState = { $0 }
         self.failingWhenNothingChange = failingWhenNothingChange
         self.useNewScope = useNewScope
-        
         self.store = Store(
             initialState: initialState,
             reducer: reducer,
             useNewScope: useNewScope
         )
+        self.dependencies = dependencies
     }
     
     @available(
@@ -1057,7 +1064,9 @@ extension TestStore where ScopedState: Equatable {
         case .on:
             var expectedWhenGivenPreviousState = expected
             if let updateStateToExpectedResult = updateStateToExpectedResult {
-                try updateStateToExpectedResult(&expectedWhenGivenPreviousState)
+                try DependencyValues.$_current.withValue(self.dependencies) {
+                    try updateStateToExpectedResult(&expectedWhenGivenPreviousState)
+                }
             }
             expected = expectedWhenGivenPreviousState
             
@@ -1070,7 +1079,9 @@ extension TestStore where ScopedState: Equatable {
         case .off:
             var expectedWhenGivenActualState = actual
             if let updateStateToExpectedResult = updateStateToExpectedResult {
-                try updateStateToExpectedResult(&expectedWhenGivenActualState)
+                try DependencyValues.$_current.withValue(self.dependencies) {
+                    try updateStateToExpectedResult(&expectedWhenGivenActualState)
+                }
             }
             expected = expectedWhenGivenActualState
             
@@ -1082,10 +1093,12 @@ extension TestStore where ScopedState: Equatable {
                         && expectedWhenGivenActualState == actual
             {
                 var expectedWhenGivenPreviousState = current
-                if let modify = updateStateToExpectedResult {
+                if let updateStateToExpectedResult = updateStateToExpectedResult {
                     _XCTExpectFailure(strict: false) {
                         do {
-                            try modify(&expectedWhenGivenPreviousState)
+                            try DependencyValues.$_current.withValue(self.dependencies) {
+                                try updateStateToExpectedResult(&expectedWhenGivenPreviousState)
+                            }
                         } catch {
                             XCTFail(
                   """
@@ -2222,11 +2235,7 @@ public struct TestStoreTask: Hashable, Sendable {
 
 internal class TestReducer<State, Action>: ReducerProtocol {
     internal let base: Reduce<State, Action>
-    internal var dependencies = { () -> DependencyValues in
-        var dependencies = DependencyValues()
-        dependencies.context = .test
-        return dependencies
-    }()
+    internal var dependencies = DependencyValues()
     internal let effectDidSubscribe = AsyncStream<Void>.streamWithContinuation()
     internal var inFlightEffects: Set<LongLivingEffect> = []
     internal var receivedActions: [(action: Action, state: State)] = []

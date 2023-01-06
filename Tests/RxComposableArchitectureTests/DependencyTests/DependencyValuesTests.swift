@@ -179,14 +179,21 @@ final class DependencyValuesTests: XCTestCase {
         }
     }
     
+    func testNestedDependencyIsOverridden() {
+        DependencyValues.withValue(\.nestedValue.value, 10) {
+            @Dependency(\.nestedValue) var nestedValue: NestedValue
+            @Dependency(\.nestedValue.value) var value: Int
+            XCTAssertEqual(nestedValue.value, 10)
+            XCTAssertEqual(value, 10)
+        }
+    }
 }
 
 private let someDate = Date(timeIntervalSince1970: 1_234_567_890)
 
-extension DependencyValues {
-    fileprivate var missingLiveDependency: Int {
-        self[TestKey.self]
-    }
+struct NestedValue: TestDependencyKey {
+  static var testValue: Self { .init() }
+  var value: Int = 0
 }
 
 private enum TestKey: TestDependencyKey {
@@ -217,6 +224,10 @@ struct ChildDependencyLateBinding: TestDependencyKey {
 }
 
 extension DependencyValues {
+    fileprivate var missingLiveDependency: Int {
+        self[TestKey.self]
+    }
+    
     var someDependency: SomeDependency {
         get { self[SomeDependency.self] }
         set { self[SomeDependency.self] = newValue }
@@ -236,7 +247,13 @@ extension DependencyValues {
         get { self[ReuseClient.self] }
         set { self[ReuseClient.self] = newValue }
     }
+    
+    var nestedValue: NestedValue {
+        get { self[NestedValue.self] }
+        set { self[NestedValue.self] = newValue }
+    }
 }
+
 struct ReuseClient: TestDependencyKey {
     var count: () -> Int
     var setCount: (Int) -> Void
