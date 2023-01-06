@@ -18,7 +18,7 @@ extension UnsafeMutablePointer where Pointee == os_unfair_lock_s {
 
 extension NSRecursiveLock {
     @inlinable @discardableResult
-    internal func sync<R>(work: () -> R) -> R {
+    @_spi(Internals) public func sync<R>(work: () -> R) -> R {
         lock()
         defer { self.unlock() }
         return work()

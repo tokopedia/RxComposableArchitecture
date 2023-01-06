@@ -493,46 +493,47 @@
       XCTAssertEqual(store.state, 86)
     }
 
-//    func testPartialExhaustivityPrefix() async {
-//      let testScheduler = DispatchQueue.test
-//      enum Action {
-//        case buttonTapped
-//        case response(Int)
-//      }
-//      let store = TestStore(
-//        initialState: 0,
-//        reducer: Reduce<Int, Action> { state, action in
-//          switch action {
-//          case .buttonTapped:
-//            state += 1
-//            return .run { send in
-//              await send(.response(42))
-//              try await testScheduler.sleep(for: .seconds(1))
-//              await send(.response(1729))
-//            }
-//          case let .response(number):
-//            state = number
-//            return .none
+      /// Commented because the `TestScheduler` doesn't support async await
+//      func testPartialExhaustivityPrefix() async {
+//          let testScheduler = TestScheduler(initialClock: 0)
+//          enum Action {
+//              case buttonTapped
+//              case response(Int)
 //          }
-//        }
-//      )
-//      store.exhaustivity = .off(showSkippedAssertions: true)
-//
-//      await store.send(.buttonTapped)
-//      // Ignored state mutation: state = 1
-//      // Ignored received action: .response(42)
-//      await testScheduler.advance(by: .milliseconds(500))
-//      await store.send(.buttonTapped) {
-//        $0 = 43
+//          let store = TestStore(
+//            initialState: 0,
+//            reducer: Reduce<Int, Action> { state, action in
+//                switch action {
+//                case .buttonTapped:
+//                    state += 1
+//                    return .run { send in
+//                        await send(.response(42))
+//                        try await testScheduler.sleep(for: .seconds(1))
+//                        await send(.response(1729))
+//                    }
+//                case let .response(number):
+//                    state = number
+//                    return .none
+//                }
+//            }
+//          )
+//          store.exhaustivity = .off(showSkippedAssertions: true)
+//          
+//          await store.send(.buttonTapped)
+//          // Ignored state mutation: state = 1
+//          // Ignored received action: .response(42)
+//          await testScheduler.advance(by: .milliseconds(500))
+//          await store.send(.buttonTapped) {
+//              $0 = 43
+//          }
+//          
+//          await testScheduler.advance(by: .milliseconds(500))
+//          await store.skipInFlightEffects()
+//          await store.skipReceivedActions()
+//          // Ignored received action: .response(42)
+//          // Ignored received action: .response(1729)
+//          // Ignore in-flight effect
 //      }
-//
-//      await testScheduler.advance(by: .milliseconds(500))
-//      await store.skipInFlightEffects()
-//      await store.skipReceivedActions()
-//      // Ignored received action: .response(42)
-//      // Ignored received action: .response(1729)
-//      // Ignore in-flight effect
-//    }
 
     func testCasePathReceive_PartialExhaustive() async {
       let store = TestStore(
@@ -668,23 +669,23 @@
 
     // This example comes from Krzysztof Zabłocki's blog post:
     // https://www.merowing.info/exhaustive-testing-in-tca/
-//    func testKrzysztofExample3() {
-//      let mainQueue = DispatchQueue.test
-//
-//      let store = TestStore(
-//        initialState: KrzysztofExample.State(),
-//        reducer: KrzysztofExample()
-//      )
-//      store.exhaustivity = .off
-//      store.dependencies.mainQueue = mainQueue.eraseToAnyScheduler()
-//
-//      store.send(.advanceAgeAndMoodAfterDelay)
-//      mainQueue.advance(by: 1)
-//      store.receive(.changeAge(34)) {
-//        $0.age = 34
-//      }
-//      XCTAssertEqual(store.state.age, 34)
-//    }
+      func testKrzysztofExample3() {
+          let mainQueue = TestScheduler(initialClock: 0)
+          
+          let store = TestStore(
+            initialState: KrzysztofExample.State(),
+            reducer: KrzysztofExample()
+          )
+          store.exhaustivity = .off
+          store.dependencies.mainQueue = mainQueue
+          
+          store.send(.advanceAgeAndMoodAfterDelay)
+          mainQueue.advance(by: .seconds(1))
+          store.receive(.changeAge(34)) {
+              $0.age = 34
+          }
+          XCTAssertEqual(store.state.age, 34)
+      }
   }
 
   struct Counter: ReducerProtocol {

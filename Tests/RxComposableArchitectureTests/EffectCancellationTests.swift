@@ -1,8 +1,7 @@
 import RxSwift
-//import TestSupport
 import XCTest
 
-@testable import RxComposableArchitecture
+@_spi(Internals) import RxComposableArchitecture
 
 internal final class EffectCancellationTests: XCTestCase {
     struct CancelID: Hashable {}
@@ -119,7 +118,7 @@ internal final class EffectCancellationTests: XCTestCase {
             .subscribe()
             .disposed(by: disposeBag)
 
-        XCTAssertNoDifference([:], cancellationCancellables)
+        XCTAssertNoDifference([:], _cancellationCancellables)
     }
 
     internal func testCancellablesCleanUp_OnCancel() {
@@ -138,7 +137,7 @@ internal final class EffectCancellationTests: XCTestCase {
             .subscribe()
             .disposed(by: disposeBag)
         
-        XCTAssertTrue(cancellationCancellables.isEmpty)
+        XCTAssertTrue(_cancellationCancellables.isEmpty)
     }
 
     internal func testDoubleCancellation() {
@@ -206,7 +205,7 @@ internal final class EffectCancellationTests: XCTestCase {
 
         disposeBag = DisposeBag()
 
-        XCTAssertNoDifference([:], cancellationCancellables)
+        XCTAssertNoDifference([:], _cancellationCancellables)
     }
 
     internal func testSharedId() {
