@@ -351,9 +351,9 @@ extension TestStore where State == LocalState, Action == LocalAction {
 extension TestStore where LocalState: Equatable {
     public func send(
         _ action: LocalAction,
+        _ updateExpectingResult: ((inout LocalState) throws -> Void)? = nil,
         file: StaticString = #file,
-        line: UInt = #line,
-        _ updateExpectingResult: ((inout LocalState) throws -> Void)? = nil
+        line: UInt = #line
     ) {
         if !receivedActions.isEmpty {
             var actions = ""
@@ -451,9 +451,9 @@ extension TestStore where LocalState: Equatable, Action: Equatable {
     ///     expected.
     public func receive(
         _ expectedAction: Action,
+        _ updateExpectingResult: ((inout LocalState) throws -> Void)? = nil,
         file: StaticString = #file,
-        line: UInt = #line,
-        _ updateExpectingResult: ((inout LocalState) throws -> Void)? = nil
+        line: UInt = #line
     ) {
         guard !receivedActions.isEmpty else {
             XCTFail(

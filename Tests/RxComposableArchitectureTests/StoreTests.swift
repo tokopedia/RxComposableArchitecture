@@ -95,7 +95,7 @@ internal final class StoreTests: XCTestCase {
         }
 
         var numCalls1 = 0
-        _ = Store(initialState: 0, reducer: counterReducer, environment: ())
+        _ = Store(initialState: 0, reducer: counterReducer, environment: (), useNewScope: false)
             .scope(state: { (count: Int) -> Int in
                 numCalls1 += 1
                 return count
@@ -129,7 +129,7 @@ internal final class StoreTests: XCTestCase {
         var numCalls2 = 0
         var numCalls3 = 0
 
-        let store = Store(initialState: 0, reducer: counterReducer, environment: ())
+        let store = Store(initialState: 0, reducer: counterReducer, environment: (), useNewScope: false)
             .scope(state: { (count: Int) -> Int in
                 numCalls1 += 1
                 return count
@@ -239,7 +239,7 @@ internal final class StoreTests: XCTestCase {
             Item(id: $0, qty: 1)
         }
 
-        let store = Store(initialState: IdentifiedArrayOf(mock), reducer: itemReducer, environment: ())
+        let store = Store(initialState: IdentifiedArrayOf(mock), reducer: itemReducer, environment: (), useNewScope: false)
             .scope(state: { (item: IdentifiedArrayOf<Item>) -> IdentifiedArrayOf<Item> in
                 numCalls1 += 1
                 return item
@@ -500,7 +500,8 @@ internal final class StoreTests: XCTestCase {
                     return .none
                 }
             },
-            environment: ()
+            environment: (),
+            useNewScope: false
         )
         
         var emissions: [Int] = []
