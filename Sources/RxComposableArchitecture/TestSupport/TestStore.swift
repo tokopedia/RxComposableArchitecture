@@ -157,7 +157,7 @@ import RxSwift
 /// wait longer than the 0.5 seconds, because if it wasn't and it delivered an action when we did
 /// not expect it would cause a test failure.
 ///
-public final class TestStore<State, LocalState, Action, LocalAction, Environment> {
+public final class TestStore<State, Action, LocalState, LocalAction, Environment> {
     
     /// The current environment.
     ///
@@ -521,7 +521,7 @@ extension TestStore {
     public func scope<S, A>(
         state toLocalState: @escaping (LocalState) -> S,
         action fromLocalAction: @escaping (A) -> LocalAction
-    ) -> TestStore<State, S, Action, A, Environment> {
+    ) -> TestStore<State, Action, S, A, Environment> {
         .init(
             environment: environment,
             file: file,
@@ -544,7 +544,7 @@ extension TestStore {
     ///   testing view store state transformations.
     public func scope<S>(
         state toLocalState: @escaping (LocalState) -> S
-    ) -> TestStore<State, S, Action, LocalAction, Environment> {
+    ) -> TestStore<State, Action, S, LocalAction, Environment> {
         scope(state: toLocalState, action: { $0 })
     }
 }
