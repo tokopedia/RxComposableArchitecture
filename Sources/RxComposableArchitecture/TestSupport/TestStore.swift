@@ -1714,7 +1714,8 @@ extension TestStore {
             reducer: self.reducer,
             store: self.store,
             timeout: self.timeout,
-            toScopedState: { toScopedState(self.toScopedState($0)) }
+            toScopedState: { toScopedState(self.toScopedState($0)) },
+            failingWhenNothingChange: self.failingWhenNothingChange
         )
     }
     
