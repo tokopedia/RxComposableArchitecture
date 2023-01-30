@@ -70,26 +70,31 @@ extension DependencyValues {
         set { self[MainQueueKey.self] = newValue }
     }
     
-    private enum MainQueueKey: DependencyKey {
+    fileprivate enum MainQueueKey: DependencyKey {
         static let liveValue: SchedulerType = MainScheduler.instance
-        static let testValue: SchedulerType = UnimplementedSchedulerType()
     }
 }
 
-public final class UnimplementedSchedulerType: SchedulerType {
-    public var now: RxSwift.RxTime
+#if DEBUG
+import XCTestDynamicOverlay
+extension DependencyValues.MainQueueKey: TestDependencyKey {
+    static let testValue: SchedulerType = UnimplementedSchedulerType()
+}
+
+internal final class UnimplementedSchedulerType: SchedulerType {
+    internal var now: RxSwift.RxTime
     
-    public init() {
+    internal init() {
+        XCTFail("mainQueue is unimplemented")
         self.now = Date()
     }
     
-    public func scheduleRelative<StateType>(_ state: StateType, dueTime: RxSwift.RxTimeInterval, action: @escaping (StateType) -> RxSwift.Disposable) -> RxSwift.Disposable {
-        return Disposables.create()
+    internal func scheduleRelative<StateType>(_ state: StateType, dueTime: RxSwift.RxTimeInterval, action: @escaping (StateType) -> RxSwift.Disposable) -> RxSwift.Disposable {
+        unimplemented("mainQueue is unimplemented", placeholder: Disposables.create())
     }
     
-    public func schedule<StateType>(_ state: StateType, action: @escaping (StateType) -> RxSwift.Disposable) -> RxSwift.Disposable {
-        return Disposables.create()
+    internal func schedule<StateType>(_ state: StateType, action: @escaping (StateType) -> RxSwift.Disposable) -> RxSwift.Disposable {
+        unimplemented("mainQueue is unimplemented", placeholder: Disposables.create())
     }
-    
-    
 }
+#endif

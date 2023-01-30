@@ -254,11 +254,7 @@ public final class Store<State, Action> {
     }
     
     @discardableResult
-    public func send(_ action: Action, originatingFrom originatingAction: Action? = nil) -> Task<Void, Never>? {
-        self._send(action, originatingFrom: action)
-    }
-    
-    func _send(
+    public func send(
         _ action: Action,
         originatingFrom originatingAction: Action? = nil
     ) -> Task<Void, Never>? {
