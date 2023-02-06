@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by jefferson.setiawan on 05/07/22.
 //
@@ -25,43 +25,46 @@ extension Effect {
         for interval: RxTimeInterval,
         scheduler: SchedulerType,
         latest: Bool
-    ) -> Effect<Output> {
-        self.observeOn(scheduler)
-            .flatMap { value -> Observable<Output> in
-                throttleLock.lock()
-                defer { throttleLock.unlock() }
-                
-                guard let throttleTime = throttleTimes[id] as! Date? else {
-                    throttleTimes[id] = scheduler.now
-                    throttleValues[id] = nil
+    ) -> Self {
+        switch self.operation {
+        case .none:
+            return .none
+        case .observable, .run:
+            return self.observeOn(scheduler)
+                .flatMap { value -> Observable<Action> in
+                    throttleLock.lock()
+                    defer { throttleLock.unlock() }
+                    
+                    guard let throttleTime = throttleTimes[id] as! Date? else {
+                        throttleTimes[id] = scheduler.now
+                        throttleValues[id] = nil
+                        return .just(value)
+                    }
+                    
+                    let value = latest ? value : (throttleValues[id] as! Action? ?? value)
+                    throttleValues[id] = value
+                    guard
+                        scheduler.now.timeIntervalSince1970 - throttleTime.timeIntervalSince1970
+                            < interval.convertToSecondsInterval
+                    else {
+                        throttleTimes[id] = scheduler.now
+                        throttleValues[id] = nil
+                        return .just(value)
+                    }
+                    let delayTimeInMs = Int((throttleTime.addingTimeInterval(interval.convertToSecondsInterval).timeIntervalSince1970
+                                             - scheduler.now.timeIntervalSince1970) * 1_000)
                     return .just(value)
+                        .delay(.milliseconds(delayTimeInMs), scheduler: scheduler)
+                        .do(onNext: { _ in
+                            throttleLock.sync {
+                                throttleTimes[id] = scheduler.now
+                                throttleValues[id] = nil
+                            }
+                        })
                 }
-                
-                let value = latest ? value : (throttleValues[id] as! Output? ?? value)
-                throttleValues[id] = value
-                guard
-                    scheduler.now.timeIntervalSince1970 - throttleTime.timeIntervalSince1970
-                        < interval.convertToSecondsInterval
-                else {
-                    throttleTimes[id] = scheduler.now
-                    throttleValues[id] = nil
-                    return .just(value)
-                }
-                let delayTimeInMs = Int((throttleTime.addingTimeInterval(interval.convertToSecondsInterval).timeIntervalSince1970
-                                         - scheduler.now.timeIntervalSince1970) * 1_000)
-                return .just(value)
-                    .delay(
-                        .milliseconds(delayTimeInMs),
-                        scheduler: scheduler
-                    ).do(onNext: { _ in
-                        throttleLock.sync {
-                            throttleTimes[id] = scheduler.now
-                            throttleValues[id] = nil
-                        }
-                    })
-            }
-            .eraseToEffect()
-            .cancellable(id: id, cancelInFlight: true)
+                .eraseToEffect()
+                .cancellable(id: id, cancelInFlight: true)
+        }
     }
     
     /// Throttles an effect so that it only publishes one output per given interval.
@@ -83,7 +86,7 @@ extension Effect {
         for interval: RxTimeInterval,
         scheduler: SchedulerType,
         latest: Bool
-    ) -> Effect<Output> {
+    ) -> Effect<Action> {
         self.throttle(id: ObjectIdentifier(id), for: interval, scheduler: scheduler, latest: latest)
     }
 }

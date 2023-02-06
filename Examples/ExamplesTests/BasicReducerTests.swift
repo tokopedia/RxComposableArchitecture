@@ -7,12 +7,18 @@
 
 import RxComposableArchitecture
 import XCTest
+
 @testable import Examples
 
 class BasicReducerTests: XCTestCase {
 
     func testTapPlus() {
-        let testStore = TestStore(initialState: BasicState(number: 0), reducer: basicUsageReducer, environment: (), useNewScope: true)
+        let testStore = TestStore(
+            initialState: Basic.State(number: 0),
+            reducer: Basic(),
+            failingWhenNothingChange: true,
+            useNewScope: true
+        )
         
         testStore.send(.didTapPlus) {
             $0.number = 1
@@ -20,7 +26,12 @@ class BasicReducerTests: XCTestCase {
     }
     
     func testTapMinus() {
-        let testStore = TestStore(initialState: BasicState(number: 5), reducer: basicUsageReducer, environment: (), useNewScope: true)
+        let testStore = TestStore(
+            initialState: Basic.State(number: 5),
+            reducer: Basic(),
+            failingWhenNothingChange: true,
+            useNewScope: true
+        )
         
         testStore.send(.didTapMinus) {
             $0.number = 4
@@ -28,7 +39,12 @@ class BasicReducerTests: XCTestCase {
     }
     
     func testTapMinusOnZero() {
-        let testStore = TestStore(initialState: BasicState(number: 0), reducer: basicUsageReducer, environment: (), useNewScope: true)
+        let testStore = TestStore(
+            initialState: Basic.State(number: 0),
+            reducer: Basic(),
+            failingWhenNothingChange: true,
+            useNewScope: true
+        )
         
         testStore.send(.didTapMinus) {
             $0.errorMessage = "Can't below 0"
@@ -36,7 +52,12 @@ class BasicReducerTests: XCTestCase {
     }
     
     func testShouldResetErrorWhenTappingPlus() {
-        let testStore = TestStore(initialState: BasicState(number: 0, errorMessage: "SomeError"), reducer: basicUsageReducer, environment: (), useNewScope: true)
+        let testStore = TestStore(
+            initialState: Basic.State(number: 0, errorMessage: "SomeError"),
+            reducer: Basic(),
+            failingWhenNothingChange: true,
+            useNewScope: true
+        )
         
         testStore.send(.didTapPlus) {
             $0.number = 1
@@ -45,7 +66,12 @@ class BasicReducerTests: XCTestCase {
     }
     
     func testShouldResetErrorWhenTappingMinusWithNumberGreaterThanZero() {
-        let testStore = TestStore(initialState: BasicState(number: 1, errorMessage: "SomeError"), reducer: basicUsageReducer, environment: (), useNewScope: true)
+        let testStore = TestStore(
+            initialState: Basic.State(number: 1, errorMessage: "SomeError"),
+            reducer: Basic(),
+            failingWhenNothingChange: true,
+            useNewScope: true
+        )
         
         testStore.send(.didTapMinus) {
             $0.number = 0

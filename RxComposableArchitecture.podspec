@@ -25,10 +25,11 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = '11.0'
 
   s.source_files = [
-    'Sources/RxComposableArchitecture/**/*'
+    'Sources/RxComposableArchitecture/**/*',
   ]
   s.dependency 'RxSwift', '5.1.1'
   s.dependency 'RxCocoa', '5.1.1'
   s.dependency 'CasePaths'
+  s.dependency 'XCTestDynamicOverlay'
   
 end

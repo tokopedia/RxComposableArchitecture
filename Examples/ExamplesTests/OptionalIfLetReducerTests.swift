@@ -12,14 +12,24 @@ import RxSwift
 
 class OptionalIfLetReducerTests: XCTestCase {
     func testDidSwitchToggle() {
-        let testStore = TestStore(initialState: OptionalIfLetState(), reducer: optionalIfLetReducer, environment: ())
+        let testStore = TestStore(
+            initialState: OptionalIfLet.State(),
+            reducer: OptionalIfLet(),
+            failingWhenNothingChange: true,
+            useNewScope: true
+        )
         testStore.send(.didToggle) {
-            $0.counter = CounterState()
+            $0.counter = Counter.State()
         }
     }
     
     func testChangeCounterThenToggle() {
-        let testStore = TestStore(initialState: OptionalIfLetState(number: 0, counter: CounterState(number: 10)), reducer: optionalIfLetReducer, environment: ())
+        let testStore = TestStore(
+            initialState: OptionalIfLet.State(number: 0, counter: Counter.State(number: 10)),
+            reducer: OptionalIfLet(),
+            failingWhenNothingChange: true,
+            useNewScope: true
+        )
         testStore.send(.counter(.didTapPlus)) {
             $0.counter!.number = 11
         }

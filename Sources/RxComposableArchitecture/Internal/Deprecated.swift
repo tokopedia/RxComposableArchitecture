@@ -7,7 +7,27 @@
 
 import Darwin
 
-extension Reducer {
+// MARK: - Deprecated after 0.42.0:
+
+/// This API has been soft-deprecated in favor of ``ReducerProtocol``.
+/// Read <doc:MigratingToTheReducerProtocol> for more information.
+///
+/// A type alias to ``AnyReducer`` for source compatibility. This alias will be removed.
+@available(
+    *,
+     deprecated,
+     renamed: "AnyReducer",
+     message:
+    """
+    'Reducer' has been deprecated in favor of 'ReducerProtocol'.
+    
+    See the migration guide for more information: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/reducerprotocol
+    """
+)
+public typealias Reducer = AnyReducer
+
+
+extension AnyReducer {
     @available(*, deprecated, renamed: "optional()")
     public var optional: Reducer<State?, Action, Environment> {
         self.optional()
@@ -75,7 +95,7 @@ extension Reducer {
     }
 }
 
-extension Reducer where State: HashDiffable {
+extension AnyReducer where State: HashDiffable {
     /// https://github.com/pointfreeco/swift-composable-architecture/pull/641
     @available(*, deprecated, message: "Use the 'IdentifiedArray'-based version, instead.")
     public func forEach<Identifier, GlobalState, GlobalAction, GlobalEnvironment>(

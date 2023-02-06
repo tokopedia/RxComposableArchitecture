@@ -36,6 +36,15 @@
           "revision": "ce9c0d897db8a840c39de64caaa9b60119cf4be8",
           "version": "0.8.1"
         }
+      },
+      {
+        "package": "xctest-dynamic-overlay",
+        "repositoryURL": "https://github.com/pointfreeco/xctest-dynamic-overlay",
+        "state": {
+          "branch": null,
+          "revision": "16e6409ee82e1b81390bdffbf217b9c08ab32784",
+          "version": "0.5.0"
+        }
       }
     ]
   },

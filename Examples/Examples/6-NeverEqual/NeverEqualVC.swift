@@ -34,9 +34,9 @@ class NeverEqualVC: UIScrollVC {
     
     private let scrollToTopButton = UIButton.template(title: "Scroll to Top")
     
-    private let store: Store<NeverEqualState, NeverEqualAction>
+    private let store: StoreOf<NeverEqualExample>
     
-    init(store: Store<NeverEqualState, NeverEqualAction>) {
+    init(store: StoreOf<NeverEqualExample>) {
         self.store = store
         super.init()
         title = "NeverEqual Demo"

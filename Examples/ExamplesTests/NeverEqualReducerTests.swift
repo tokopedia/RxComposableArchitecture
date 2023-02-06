@@ -13,9 +13,9 @@ import XCTest
 final class NeverEqualReducerTests: XCTestCase {
     internal func testTapToast() {
         let testStore = TestStore(
-            initialState: NeverEqualState(),
-            reducer: neverEqualDemoReducer,
-            environment: (),
+            initialState: NeverEqualExample.State(),
+            reducer: NeverEqualExample(),
+            failingWhenNothingChange: true,
             useNewScope: true
         )
         testStore.send(.didTapShowAlert) {
@@ -29,12 +29,11 @@ final class NeverEqualReducerTests: XCTestCase {
 
     internal func testTapScrollToTop() {
         let testStore = TestStore(
-            initialState: NeverEqualState(),
-            reducer: neverEqualDemoReducer,
-            environment: (),
+            initialState: NeverEqualExample.State(),
+            reducer: NeverEqualExample(),
+            failingWhenNothingChange: true,
             useNewScope: true
         )
-        testStore.stateDiffMode = .full
         testStore.send(.didTapScrollToTop) {
             $0.scrollToTop = Stateless()
         }

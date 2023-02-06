@@ -16,7 +16,7 @@ internal final class BoostrapTests: XCTestCase {
             var getNumber: () -> Int
         }
         
-        let reducer = Reducer<Int, Void, Env> { state, action, env in
+        let reducer = AnyReducer<Int, Void, Env> { state, action, env in
             state = env.getNumber()
             return .none
         }
@@ -30,13 +30,13 @@ internal final class BoostrapTests: XCTestCase {
         })
         Bootstrap.mock(environment: mockEnv)
         
-        store.send(())
+        _ = store.send(())
 
         XCTAssertEqual(store.state, 100)
         
         // clearing the bootstrap
         Bootstrap.clear(environment: Env.self)
-        store.send(())
+        _ = store.send(())
         XCTAssertEqual(store.state, 0)
     }
 }

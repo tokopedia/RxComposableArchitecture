@@ -7,7 +7,7 @@
 
 import RxSwift
 
-extension Effect where Output: RxAbstractInteger {
+extension Effect where Action: RxAbstractInteger {
     /// Returns an effect that repeatedly emits the current time of the given scheduler on the given
     /// interval.
     ///
@@ -26,65 +26,60 @@ extension Effect where Output: RxAbstractInteger {
     /// running your live app, but use a `TestScheduler` in tests.
     ///
     /// To start and stop a timer in your feature you can create the timer effect from an action
-    /// and then use the `.cancel(id:)` effect to stop the timer:
+    /// and then use the ``Effect/cancel(id:)-iun1`` effect to stop the timer:
     ///
-    ///     struct AppState {
-    ///       var count = 0
-    ///     }
+    /// ```swift
+    /// struct Feature: ReducerProtocol {
+    ///   struct State { var count = 0 }
+    ///   enum Action { case startButtonTapped, stopButtonTapped, timerTicked }
+    ///   @Dependency(\.mainQueue) var mainQueue
+    ///   struct TimerID: Hashable {}
     ///
-    ///     enum AppAction {
-    ///       case startButtonTapped, stopButtonTapped, timerTicked
-    ///     }
+    ///   func reduce(into state: inout State, action: Action) -> Effect<Action, Never> {
+    ///     switch action {
+    ///     case .startButtonTapped:
+    ///       return Effect.timer(id: TimerID(), every: 1, on: self.mainQueue)
+    ///         .map { _ in .timerTicked }
     ///
-    ///     struct AppEnvironment {
-    ///       var mainQueue: AnySchedulerOf<DispatchQueue>
-    ///     }
+    ///     case .stopButtonTapped:
+    ///       return .cancel(id: TimerID())
     ///
-    ///     let appReducer = Reducer<AppState, AppAction, AppEnvironment> { state, action, env in
-    ///       struct TimerId: Hashable {}
-    ///
-    ///       switch action {
-    ///       case .startButtonTapped:
-    ///         return Effect.timer(id: TimerId(), every: 1, on: env.mainQueue)
-    ///           .map { _ in .timerTicked }
-    ///
-    ///       case .stopButtonTapped:
-    ///         return .cancel(id: TimerId())
-    ///
-    ///       case let .timerTicked:
-    ///         state.count += 1
-    ///         return .none
-    ///     }
+    ///     case let .timerTicked:
+    ///       state.count += 1
+    ///       return .none
+    ///   }
+    /// }
+    /// ```
     ///
     /// Then to test the timer in this feature you can use a test scheduler to advance time:
     ///
-    ///   func testTimer() {
-    ///     let scheduler = DispatchQueue.testScheduler
+    /// ```swift
+    /// @MainActor
+    /// func testTimer() async {
+    ///   let mainQueue = DispatchQueue.test
     ///
-    ///     let store = TestStore(
-    ///       initialState: .init(),
-    ///       reducer: appReducer,
-    ///       envirnoment: .init(
-    ///         mainQueue: scheduler.eraseToAnyScheduler()
-    ///       )
-    ///     )
+    ///   let store = TestStore(
+    ///     initialState: Feature.State(),
+    ///     reducer: Feature()
+    ///   )
     ///
-    ///     store.assert(
-    ///       .send(.startButtonTapped),
+    ///   store.dependencies.mainQueue = mainQueue.eraseToAnyScheduler()
     ///
-    ///       .do { scheduler.advance(by: .seconds(1)) },
-    ///       .receive(.timerTicked) { $0.count = 1 },
+    ///   await store.send(.startButtonTapped)
     ///
-    ///       .do { scheduler.advance(by: .seconds(5)) },
-    ///       .receive(.timerTicked) { $0.count = 2 },
-    ///       .receive(.timerTicked) { $0.count = 3 },
-    ///       .receive(.timerTicked) { $0.count = 4 },
-    ///       .receive(.timerTicked) { $0.count = 5 },
-    ///       .receive(.timerTicked) { $0.count = 6 },
+    ///   await mainQueue.advance(by: .seconds(1))
+    ///   await store.receive(.timerTicked) { $0.count = 1 }
     ///
-    ///       .send(.stopButtonTapped)
-    ///     )
-    ///   }
+    ///   await mainQueue.advance(by: .seconds(5))
+    ///   await store.receive(.timerTicked) { $0.count = 2 }
+    ///   await store.receive(.timerTicked) { $0.count = 3 }
+    ///   await store.receive(.timerTicked) { $0.count = 4 }
+    ///   await store.receive(.timerTicked) { $0.count = 5 }
+    ///   await store.receive(.timerTicked) { $0.count = 6 }
+    ///
+    ///   await store.send(.stopButtonTapped)
+    /// }
+    /// ```
     ///
     /// - Note: This effect is only meant to be used with features built in the Composable
     ///   Architecture, and returned from a reducer. If you want a testable alternative to
@@ -97,6 +92,10 @@ extension Effect where Output: RxAbstractInteger {
     ///   - interval: The time interval on which to publish events. For example, a value of `0.5`
     ///     publishes an event approximately every half-second.
     ///   - scheduler: The scheduler on which the timer runs.
+    ///   - tolerance: The allowed timing variance when emitting events. Defaults to `nil`, which
+    ///     allows any variance.
+    ///   - options: Scheduler options passed to the timer. Defaults to `nil`.
+    @available(iOS, deprecated: 9999.0, message: "Use 'scheduler.timer' in 'Effect.run', instead.")
     public static func timer(
         id: AnyHashable,
         every interval: RxTimeInterval,
@@ -122,11 +121,12 @@ extension Effect where Output: RxAbstractInteger {
     ///   - tolerance: The allowed timing variance when emitting events. Defaults to `nil`, which
     ///     allows any variance.
     ///   - options: Scheduler options passed to the timer. Defaults to `nil`.
+    @available(iOS, deprecated: 9999.0, message: "Use 'scheduler.timer' in 'Effect.run', instead.")
     public static func timer(
         id: Any.Type,
         every interval: RxTimeInterval,
         on scheduler: SchedulerType
-    ) -> Effect {
+    ) -> Self {
         self.timer(
             id: ObjectIdentifier(id),
             every: interval,
