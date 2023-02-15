@@ -1,6 +1,6 @@
 import RxSwift
 
-extension Store {
+extension Store2 {
     /// Subscribes to updates when a store containing optional state goes from `nil` to non-`nil` or
     /// non-`nil` to `nil`.
     ///
@@ -40,7 +40,7 @@ extension Store {
     ///     `nil`.
     /// - Returns: A cancellable associated with the underlying subscription.
     public func ifLet<Wrapped>(
-        then unwrap: @escaping (Store<Wrapped, Action>) -> Void,
+        then unwrap: @escaping (Store2<Wrapped, Action>) -> Void,
         else: @escaping () -> Void
     ) -> Disposable where State == Wrapped? {
         observable
@@ -66,7 +66,7 @@ extension Store {
     ///   store's optional state goes from `nil` to non-`nil`.
     /// - Returns: A cancellable associated with the underlying subscription.
     public func ifLet<Wrapped>(
-        then unwrap: @escaping (Store<Wrapped, Action>) -> Void
+        then unwrap: @escaping (Store2<Wrapped, Action>) -> Void
     ) -> Disposable where State == Wrapped? {
         ifLet(then: unwrap, else: {})
     }

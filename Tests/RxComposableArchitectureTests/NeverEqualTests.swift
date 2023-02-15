@@ -45,7 +45,7 @@ internal final class NeverEqualTests: XCTestCase {
             }
         }
         
-        let store = Store(
+        let store = Store2(
             initialState: MyState(),
             reducer: reducer
         )

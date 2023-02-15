@@ -2,7 +2,7 @@ import Foundation
 import RxRelay
 import RxSwift
 
-public final class Store<State, Action> {
+public final class Store2<State, Action> {
     public private(set) var state: State {
         get { relay.value }
         set { relay.accept(newValue) }
@@ -202,7 +202,7 @@ public final class Store<State, Action> {
     public func scope<ChildState, ChildAction>(
         state toChildState: @escaping (State) -> ChildState,
         action fromChildAction: @escaping (ChildAction) -> Action
-    ) -> Store<ChildState, ChildAction> {
+    ) -> Store2<ChildState, ChildAction> {
         self.threadCheck(status: .scope)
         guard self.useNewScope else {
             return oldScope(state: toChildState, action: fromChildAction)
@@ -224,7 +224,7 @@ public final class Store<State, Action> {
     /// - Returns: A new store with its domain (state and action) transformed.
     public func scope<ChildState>(
         state toChildState: @escaping (State) -> ChildState
-    ) -> Store<ChildState, Action> {
+    ) -> Store2<ChildState, Action> {
         self.scope(state: toChildState, action: { $0 })
     }
     
@@ -232,8 +232,8 @@ public final class Store<State, Action> {
     private func oldScope<ChildState, ChildAction>(
         state toChildState: @escaping (State) -> ChildState,
         action fromChildAction: @escaping (ChildAction) -> Action
-    ) -> Store<ChildState, ChildAction> {
-        let localStore = Store<ChildState, ChildAction>(
+    ) -> Store2<ChildState, ChildAction> {
+        let localStore = Store2<ChildState, ChildAction>(
             initialState: toChildState(state),
             reducer: AnyReducer { localState, localAction, _ in
                 self.send(fromChildAction(localAction))
@@ -372,12 +372,12 @@ public final class Store<State, Action> {
     }
     
     /// Returns a "stateless" store by erasing state to `Void`.
-    public var stateless: Store<Void, Action> {
+    public var stateless: Store2<Void, Action> {
         self.scope(state: { _ in () })
     }
     
     /// Returns an "actionless" store by erasing action to `Never`.
-    public var actionless: Store<State, Never> {
+    public var actionless: Store2<State, Never> {
         func absurd<A>(_ never: Never) -> A {}
         return self.scope(state: { $0 }, action: absurd)
     }
@@ -540,7 +540,7 @@ public final class Store<State, Action> {
     }
 }
 
-extension Store {
+extension Store2 {
     public func subscribeNeverEqual<LocalState: Equatable>(
         _ toLocalState: @escaping (State) -> NeverEqual<LocalState>
     ) -> Effect<LocalState> {
@@ -558,7 +558,7 @@ extension Store {
     }
 }
 
-extension Store where State: Equatable {
+extension Store2 where State: Equatable {
     public func subscribe() -> Effect<State> {
         return relay.distinctUntilChanged().eraseToEffect()
     }
@@ -577,11 +577,11 @@ extension Store where State: Equatable {
 /// ```swift
 /// let store: StoreOf<Feature>
 /// ```
-public typealias StoreOf<R: ReducerProtocol> = Store<R.State, R.Action>
+public typealias StoreOf<R: ReducerProtocol> = Store2<R.State, R.Action>
 
 // MARK: - Old Store function pre reducer protocol
 #if swift(<5.7)
-extension Store where State: Collection, State.Element: HashDiffable, State: Equatable, State.Element: Equatable {
+extension Store2 where State: Collection, State.Element: HashDiffable, State: Equatable, State.Element: Equatable {
     /**
      A version of scope that scope an collection of sub store.
 
@@ -616,7 +616,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
     public func scope<LocalAction>(
         at identifier: State.Element.IdentifierType,
         action fromLocalAction: @escaping (LocalAction) -> Action
-    ) -> Store<State.Element, LocalAction>? {
+    ) -> Store2<State.Element, LocalAction>? {
         self.threadCheck(status: .scope)
         let toLocalState: (State.Element.IdentifierType, State) -> State.Element? = { identifier, state in
             /**
@@ -632,7 +632,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
             var isSending = false
             // skip if element on parent state wasn't found
             guard let element = toLocalState(identifier, state) else { return nil }
-            let localStore = Store<State.Element, LocalAction>(
+            let localStore = Store2<State.Element, LocalAction>(
                 initialState: element,
                 reducer: Reducer { localState, localAction, _ in
                     isSending = true
@@ -662,7 +662,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
             // skip if element on parent state wasn't found
             guard let element = toLocalState(identifier, state) else { return nil }
 
-            let localStore = Store<State.Element, LocalAction>(
+            let localStore = Store2<State.Element, LocalAction>(
                 initialState: element,
                 reducer: Reducer { localState, localAction, _ in
                     self.send(fromLocalAction(localAction))
@@ -699,22 +699,22 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
 
 private protocol AnyStoreScope {
     func rescope<ScopedState, ScopedAction, RescopedState, RescopedAction>(
-        _ store: Store<ScopedState, ScopedAction>,
+        _ store: Store2<ScopedState, ScopedAction>,
         state toRescopedState: @escaping (ScopedState) -> RescopedState,
         action fromRescopedAction: @escaping (RescopedAction) -> ScopedAction
-    ) -> Store<RescopedState, RescopedAction>
+    ) -> Store2<RescopedState, RescopedAction>
 }
 
 private struct StoreScope<RootState, RootAction>: AnyStoreScope {
-    let root: Store<RootState, RootAction>
+    let root: Store2<RootState, RootAction>
     let fromScopedAction: Any
     
-    init(root: Store<RootState, RootAction>) {
+    init(root: Store2<RootState, RootAction>) {
         self.init(root: root, fromScopedAction: { $0 })
     }
     
     private init<ScopedAction>(
-        root: Store<RootState, RootAction>,
+        root: Store2<RootState, RootAction>,
         fromScopedAction: @escaping (ScopedAction) -> RootAction
     ) {
         self.root = root
@@ -722,14 +722,14 @@ private struct StoreScope<RootState, RootAction>: AnyStoreScope {
     }
     
     func rescope<ScopedState, ScopedAction, RescopedState, RescopedAction>(
-        _ scopedStore: Store<ScopedState, ScopedAction>,
+        _ scopedStore: Store2<ScopedState, ScopedAction>,
         state toRescopedState: @escaping (ScopedState) -> RescopedState,
         action fromRescopedAction: @escaping (RescopedAction) -> ScopedAction
-    ) -> Store<RescopedState, RescopedAction> {
+    ) -> Store2<RescopedState, RescopedAction> {
         let fromScopedAction = self.fromScopedAction as! (ScopedAction) -> RootAction
         
         var isSending = false
-        let rescopedStore = Store<RescopedState, RescopedAction>(
+        let rescopedStore = Store2<RescopedState, RescopedAction>(
             initialState: toRescopedState(scopedStore.state),
             reducer: Reducer { rescopedState, rescopedAction, _ in
                 isSending = true
@@ -763,24 +763,24 @@ private struct StoreScope<RootState, RootAction>: AnyStoreScope {
 #if swift(>=5.7)
 extension ReducerProtocol {
     fileprivate func rescope<ChildState, ChildAction>(
-        _ store: Store<State, Action>,
+        _ store: Store2<State, Action>,
         state toChildState: @escaping (State) -> ChildState,
         action fromChildAction: @escaping (ChildAction) -> Action
-    ) -> Store<ChildState, ChildAction> {
+    ) -> Store2<ChildState, ChildAction> {
         (self as? any AnyScopedReducer ?? ScopedReducer(rootStore: store))
             .rescope(store, state: toChildState, action: fromChildAction)
     }
 }
 
 private final class ScopedReducer<RootState, RootAction, ScopedState, ScopedAction>: ReducerProtocol {
-    let rootStore: Store<RootState, RootAction>
+    let rootStore: Store2<RootState, RootAction>
     let toScopedState: (RootState) -> ScopedState
     private let parentStores: [Any]
     let fromScopedAction: (ScopedAction) -> RootAction
     private(set) var isSending = false
     
     @inlinable
-    init(rootStore: Store<RootState, RootAction>)
+    init(rootStore: Store2<RootState, RootAction>)
     where RootState == ScopedState, RootAction == ScopedAction {
         self.rootStore = rootStore
         self.toScopedState = { $0 }
@@ -790,7 +790,7 @@ private final class ScopedReducer<RootState, RootAction, ScopedState, ScopedActi
     
     @inlinable
     init(
-        rootStore: Store<RootState, RootAction>,
+        rootStore: Store2<RootState, RootAction>,
         state toScopedState: @escaping (RootState) -> ScopedState,
         action fromScopedAction: @escaping (ScopedAction) -> RootAction,
         parentStores: [Any]
@@ -820,19 +820,19 @@ private final class ScopedReducer<RootState, RootAction, ScopedState, ScopedActi
 
 protocol AnyScopedReducer {
     func rescope<ScopedState, ScopedAction, RescopedState, RescopedAction>(
-        _ store: Store<ScopedState, ScopedAction>,
+        _ store: Store2<ScopedState, ScopedAction>,
         state toRescopedState: @escaping (ScopedState) -> RescopedState,
         action fromRescopedAction: @escaping (RescopedAction) -> ScopedAction
-    ) -> Store<RescopedState, RescopedAction>
+    ) -> Store2<RescopedState, RescopedAction>
 }
 
 extension ScopedReducer: AnyScopedReducer {
     @inlinable
     func rescope<ScopedState, ScopedAction, RescopedState, RescopedAction>(
-        _ store: Store<ScopedState, ScopedAction>,
+        _ store: Store2<ScopedState, ScopedAction>,
         state toRescopedState: @escaping (ScopedState) -> RescopedState,
         action fromRescopedAction: @escaping (RescopedAction) -> ScopedAction
-    ) -> Store<RescopedState, RescopedAction> {
+    ) -> Store2<RescopedState, RescopedAction> {
         let fromScopedAction = self.fromScopedAction as! (ScopedAction) -> RootAction
         let reducer = ScopedReducer<RootState, RootAction, RescopedState, RescopedAction>(
             rootStore: self.rootStore,
@@ -840,7 +840,7 @@ extension ScopedReducer: AnyScopedReducer {
             action: { fromScopedAction(fromRescopedAction($0)) },
             parentStores: self.parentStores + [store]
         )
-        let childStore = Store<RescopedState, RescopedAction>(
+        let childStore = Store2<RescopedState, RescopedAction>(
             initialState: toRescopedState(store.state),
             reducer: reducer,
             useNewScope: self.rootStore.useNewScope
@@ -856,7 +856,7 @@ extension ScopedReducer: AnyScopedReducer {
     }
 }
 
-extension Store where State: Collection, State.Element: HashDiffable, State: Equatable, State.Element: Equatable {
+extension Store2 where State: Collection, State.Element: HashDiffable, State: Equatable, State.Element: Equatable {
     /**
      A version of scope that scope an collection of sub store.
 
@@ -891,7 +891,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
     public func scope<LocalAction>(
         at identifier: State.Element.IdentifierType,
         action fromLocalAction: @escaping (LocalAction) -> Action
-    ) -> Store<State.Element, LocalAction>? {
+    ) -> Store2<State.Element, LocalAction>? {
         self.threadCheck(status: .scope)
         let toLocalState: (State.Element.IdentifierType, State) -> State.Element? = { identifier, state in
             /**
@@ -908,7 +908,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
         // skip if element on parent state wasn't found
         guard let element = toLocalState(identifier, state) else { return nil }
         
-        let localStore = Store<State.Element, LocalAction>.init(
+        let localStore = Store2<State.Element, LocalAction>.init(
             initialState: element,
             reducer: Reduce(internal: { localState, localAction in
                 isSending = true

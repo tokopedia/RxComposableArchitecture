@@ -22,7 +22,7 @@ extension AnyReducer {
     }
 }
 
-extension Store {
+extension Store2 {
     /// Initializes a store from an initial state, a reducer, and an environment.
     ///
     /// - Parameters:

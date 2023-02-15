@@ -15,7 +15,7 @@ final class RuntimeWarningTests: XCTestCase {
         }
         
         Task {
-            _ = Store<Int, Void>(initialState: 0, reducer: EmptyReducer())
+            _ = Store2<Int, Void>(initialState: 0, reducer: EmptyReducer())
         }
         _ = XCTWaiter.wait(for: [.init()], timeout: 0.5)
     }
@@ -37,7 +37,7 @@ final class RuntimeWarningTests: XCTestCase {
         }
         
         enum Action { case tap, response }
-        let store = Store(
+        let store = Store2(
             initialState: 0,
             reducer: Reduce<Int, Action> { state, action in
                 switch action {
@@ -73,7 +73,7 @@ final class RuntimeWarningTests: XCTestCase {
             ].contains($0.compactDescription)
         }
         
-        let store = Store<Int, Void>(initialState: 0, reducer: EmptyReducer())
+        let store = Store2<Int, Void>(initialState: 0, reducer: EmptyReducer())
         Task {
             _ = store.scope(state: { $0 })
         }

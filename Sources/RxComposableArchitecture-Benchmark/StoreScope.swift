@@ -11,8 +11,8 @@ let storeScopeSuite = BenchmarkSuite(name: "Store scoping") { suite in
             return .none
         }
     }
-    var store = Store(initialState: 0, reducer: counterReducer, environment: ())
-    var viewStores: [Store<Int, Bool>] = [store]
+    var store = Store2(initialState: 0, reducer: counterReducer, environment: ())
+    var viewStores: [Store2<Int, Bool>] = [store]
     for _ in 1...5 {
         store = store.scope(state: { $0 })
         viewStores.append(store)
@@ -34,8 +34,8 @@ let newStoreScopeSuite = BenchmarkSuite(name: "[NEW] Store scoping, with rescope
             return .none
         }
     }
-    var store = Store(initialState: 0, reducer: counterReducer, environment: (), useNewScope: true)
-    var viewStores: [Store<Int, Bool>] = [store]
+    var store = Store2(initialState: 0, reducer: counterReducer, environment: (), useNewScope: true)
+    var viewStores: [Store2<Int, Bool>] = [store]
     for _ in 1...5 {
         store = store.scope(state: { $0 })
         viewStores.append(store)

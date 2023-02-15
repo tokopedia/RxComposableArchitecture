@@ -552,7 +552,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
     private let fromScopedAction: (ScopedAction) -> Action
     private var line: UInt
     internal let reducer: TestReducer<State, Action>
-    private let store: Store<State, TestReducer<State, Action>.TestAction>
+    private let store: Store2<State, TestReducer<State, Action>.TestAction>
     private let toScopedState: (State) -> ScopedState
     
     private let failingWhenNothingChange: Bool
@@ -600,7 +600,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         self.toScopedState = { $0 }
         self.failingWhenNothingChange = failingWhenNothingChange
         self.useNewScope = useNewScope
-        self.store = Store(
+        self.store = Store2(
             initialState: initialState,
             reducer: reducer,
             useNewScope: useNewScope
@@ -676,7 +676,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         self.failingWhenNothingChange = failingWhenNothingChange
         self.useNewScope = useNewScope
         
-        self.store = Store(
+        self.store = Store2(
             initialState: initialState,
             reducer: reducer,
             useNewScope: useNewScope
@@ -689,7 +689,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         fromScopedAction: @escaping (ScopedAction) -> Action,
         line: UInt,
         reducer: TestReducer<State, Action>,
-        store: Store<State, TestReducer<State, Action>.Action>,
+        store: Store2<State, TestReducer<State, Action>.Action>,
         timeout: UInt64 = 100 * NSEC_PER_MSEC,
         toScopedState: @escaping (State) -> ScopedState,
         failingWhenNothingChange: Bool = true,

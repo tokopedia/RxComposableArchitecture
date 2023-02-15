@@ -10,13 +10,13 @@ import XCTest
 
 @testable import RxComposableArchitecture
 
-/// All Test cases in here using `useNewScope: false` on both Store(...) and TestStore(...)
+/// All Test cases in here using `useNewScope: false` on both Store2(...) and TestStore2(...)
 ///
 internal final class StoreOldScopeTest: XCTestCase {
     private let disposeBag = DisposeBag()
     
     internal func testCancellableIsRemovedOnImmediatelyCompletingEffect() {
-        let store = Store(
+        let store = Store2(
             initialState: (),
             reducer: EmptyReducer<Void, Void>(),
             useNewScope: false
@@ -46,7 +46,7 @@ internal final class StoreOldScopeTest: XCTestCase {
             }
         })
         
-        let store = Store(
+        let store = Store2(
             initialState: (),
             reducer: reducer,
             useNewScope: false
@@ -69,7 +69,7 @@ internal final class StoreOldScopeTest: XCTestCase {
             return .none
         })
         
-        let parentStore = Store(
+        let parentStore = Store2(
             initialState: 0,
             reducer: counterReducer,
             useNewScope: false
@@ -94,7 +94,7 @@ internal final class StoreOldScopeTest: XCTestCase {
             return .none
         })
         
-        let parentStore = Store(
+        let parentStore = Store2(
             initialState: 0,
             reducer: counterReducer,
             useNewScope: false
@@ -121,7 +121,7 @@ internal final class StoreOldScopeTest: XCTestCase {
         })
         
         var numCalls1 = 0
-        _ = Store(initialState: 0, reducer: counterReducer, useNewScope: false)
+        _ = Store2(initialState: 0, reducer: counterReducer, useNewScope: false)
             .scope(state: { (count: Int) -> Int in
                 numCalls1 += 1
                 return count
@@ -140,7 +140,7 @@ internal final class StoreOldScopeTest: XCTestCase {
         var numCalls2 = 0
         var numCalls3 = 0
         
-        let store = Store(initialState: 0, reducer: counterReducer, useNewScope: false)
+        let store = Store2(initialState: 0, reducer: counterReducer, useNewScope: false)
             .scope(state: { (count: Int) -> Int in
                 numCalls1 += 1
                 return count
@@ -203,7 +203,7 @@ internal final class StoreOldScopeTest: XCTestCase {
             Item(id: $0, qty: 1)
         }
         
-        let store = Store(
+        let store = Store2(
             initialState: IdentifiedArrayOf(mock),
             reducer: itemReducer,
             useNewScope: false
@@ -257,7 +257,7 @@ internal final class StoreOldScopeTest: XCTestCase {
             }
         })
         
-        let store = Store(initialState: (), reducer: counterReducer, useNewScope: false)
+        let store = Store2(initialState: (), reducer: counterReducer, useNewScope: false)
         
         _ = store.send(.tap)
         
@@ -276,7 +276,7 @@ internal final class StoreOldScopeTest: XCTestCase {
             }
         })
         
-        let store = Store(initialState: 0, reducer: reducer, useNewScope: false)
+        let store = Store2(initialState: 0, reducer: reducer, useNewScope: false)
         _ = store.send(.incr)
         XCTAssertEqual(store.state, 10000)
     }
@@ -291,7 +291,7 @@ internal final class StoreOldScopeTest: XCTestCase {
             return .none
         })
         
-        let parentStore = Store(
+        let parentStore = Store2(
             initialState: AppState(),
             reducer: appReducer,
             useNewScope: false
@@ -336,7 +336,7 @@ internal final class StoreOldScopeTest: XCTestCase {
     }
     
     internal func testIfLetTwo() {
-        let parentStore = Store(
+        let parentStore = Store2(
             initialState: 0,
             reducer: Reduce<Int?, Bool>({ state, action in
                 if action {
@@ -407,7 +407,7 @@ internal final class StoreOldScopeTest: XCTestCase {
     }
     
     internal func testCoalesceSynchronousActions() {
-        let store = Store(
+        let store = Store2(
             initialState: 0,
             reducer: Reduce<Int, Int>({ state, action in
                 switch action {
@@ -470,7 +470,7 @@ internal final class StoreOldScopeTest: XCTestCase {
             }
             return .none
         }
-        let parentStore = Store(
+        let parentStore = Store2(
             initialState: 1,
             reducer: counterReducer,
             environment: Environment(),
@@ -522,7 +522,7 @@ internal final class StoreOldScopeTest: XCTestCase {
           })
         }
 
-        let parentStore = Store(
+        let parentStore = Store2(
           initialState: ParentState(),
           reducer: parentReducer,
           useNewScope: false

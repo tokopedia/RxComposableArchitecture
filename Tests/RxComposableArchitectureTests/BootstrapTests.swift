@@ -23,7 +23,7 @@ internal final class BoostrapTests: XCTestCase {
         let env = Env(getNumber: {
             return 0
         })
-        let store = Store(initialState: -1, reducer: reducer, environment: env)
+        let store = Store2(initialState: -1, reducer: reducer, environment: env)
         
         let mockEnv = Env(getNumber: {
             return 100

@@ -12,7 +12,7 @@ internal final class MemoryManagementTests: XCTestCase {
             state += 1
             return .none
         }
-        let store = Store(initialState: 0, reducer: counterReducer)
+        let store = Store2(initialState: 0, reducer: counterReducer)
             .scope(state: { "\($0)" })
             .scope(state: { Int($0)! })
 
@@ -31,7 +31,7 @@ internal final class MemoryManagementTests: XCTestCase {
             state += 1
             return .none
         }
-        let store = Store(initialState: 0, reducer: counterReducer)
+        let store = Store2(initialState: 0, reducer: counterReducer)
         
         var count = 0
         store.subscribe { $0 }.subscribe(onNext: { count = $0 }).disposed(by: disposeBag)
@@ -46,7 +46,7 @@ internal final class MemoryManagementTests: XCTestCase {
         let expectation = self.expectation(description: "")
         
         enum Action { case tap, response }
-        let store = Store(
+        let store = Store2(
             initialState: false,
             reducer: Reduce<Bool, Action> { state, action in
                 switch action {
