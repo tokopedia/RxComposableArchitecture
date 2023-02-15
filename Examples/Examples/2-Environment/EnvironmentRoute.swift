@@ -30,7 +30,7 @@ class EnvironmentRouteVC: UITableViewController {
         switch selectedRoute {
         case .live:
             let viewController = EnvironmentDemoVC(
-                store: Store(
+                store: Store2(
                     initialState: Environment.State(),
                     reducer: Environment()
                         .dependency(\.envVCEnvironment, .live)
@@ -39,7 +39,7 @@ class EnvironmentRouteVC: UITableViewController {
             navigationController?.pushViewController(viewController, animated: true)
         case .mockSuccess:
             let viewController = EnvironmentDemoVC(
-                store: Store(
+                store: Store2(
                     initialState: Environment.State(),
                     reducer: Environment()
                         .dependency(\.envVCEnvironment, .mockSuccess)
@@ -48,7 +48,7 @@ class EnvironmentRouteVC: UITableViewController {
             navigationController?.pushViewController(viewController, animated: true)
         case .mockFailed:
             let viewController = EnvironmentDemoVC(
-                store: Store(
+                store: Store2(
                     initialState: Environment.State(),
                     reducer: Environment()
                         .dependency(\.envVCEnvironment, .mockFailed)
@@ -57,7 +57,7 @@ class EnvironmentRouteVC: UITableViewController {
             navigationController?.pushViewController(viewController, animated: true)
         case .mockRandom:
             let viewController = EnvironmentDemoVC(
-                store: Store(
+                store: Store2(
                     initialState: Environment.State(),
                     reducer: Environment()
                         .dependency(\.envVCEnvironment, .mockRandom)

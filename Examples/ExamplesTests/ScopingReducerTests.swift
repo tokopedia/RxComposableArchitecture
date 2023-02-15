@@ -12,11 +12,9 @@ import RxSwift
 
 class ScopingReducerTests: XCTestCase {
     func testTapPlus() {
-        let testStore = TestStore(
+        let testStore = TestStore2(
             initialState: Scoping.State(),
-            reducer: Scoping(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Scoping()
         )
         
         testStore.send(.counter(.didTapPlus)) {
@@ -25,11 +23,9 @@ class ScopingReducerTests: XCTestCase {
     }
     
     func testTapMinus() {
-        let testStore = TestStore(
+        let testStore = TestStore2(
             initialState: Scoping.State(),
-            reducer: Scoping(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Scoping()
         )
         
         testStore.send(.counter(.didTapMinus)) {
@@ -38,11 +34,9 @@ class ScopingReducerTests: XCTestCase {
     }
     
     func testTapJumpButton() {
-        let testStore = TestStore(
+        let testStore = TestStore2(
             initialState: Scoping.State(),
-            reducer: Scoping(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Scoping()
         )
         
         testStore.send(.didTapJump) {

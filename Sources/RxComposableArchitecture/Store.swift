@@ -535,72 +535,33 @@ extension Store2 where State: Collection, State.Element: HashDiffable, State: Eq
                 return state.first(where: { $0.id == identifier })
             }
         }
-        if useNewScope {
-            var isSending = false
-            // skip if element on parent state wasn't found
-            guard let element = toLocalState(identifier, state) else { return nil }
-            let localStore = Store2<State.Element, LocalAction>(
-                initialState: element,
-                reducer: Reducer { localState, localAction, _ in
-                    isSending = true
-                    defer { isSending = false }
-                    self.send(fromLocalAction(localAction))
-                    guard let finalState = toLocalState(identifier, self.state) else {
-                        return .none
-                    }
-                    localState = finalState
+        var isSending = false
+        // skip if element on parent state wasn't found
+        guard let element = toLocalState(identifier, state) else { return nil }
+        let localStore = Store2<State.Element, LocalAction>(
+            initialState: element,
+            reducer: Reducer { localState, localAction, _ in
+                isSending = true
+                defer { isSending = false }
+                self.send(fromLocalAction(localAction))
+                guard let finalState = toLocalState(identifier, self.state) else {
                     return .none
-                },
-                environment: (),
-                useNewScope: useNewScope
-            )
-            
-            relay
-                .skip(1)
-                .subscribe(onNext: { [weak localStore] newValue in
-                    guard !isSending else { return }
-                    guard let element = toLocalState(identifier, newValue) else { return }
-                    localStore?.state = element
-                })
-                .disposed(by: localStore.disposeBag)
-            
-            return localStore
-        } else {
-            // skip if element on parent state wasn't found
-            guard let element = toLocalState(identifier, state) else { return nil }
-
-            let localStore = Store2<State.Element, LocalAction>(
-                initialState: element,
-                reducer: Reducer { localState, localAction, _ in
-                    self.send(fromLocalAction(localAction))
-                    guard let finalState = toLocalState(identifier, self.state) else {
-                        return .none
-                    }
-
-                    localState = finalState
-                    return .none
-                },
-                environment: (),
-                useNewScope: useNewScope
-            )
-
-            // reflect changes on store parent to local store
-            relay
-                .distinctUntilChanged()
-                .flatMapLatest { newValue -> Observable<State.Element> in
-                    guard let newElement = toLocalState(identifier, newValue) else {
-                        return .empty()
-                    }
-
-                    return .just(newElement)
                 }
-                .subscribe(onNext: { [weak localStore] newValue in
-                    localStore?.state = newValue
-                })
-                .disposed(by: localStore.disposeBag)
-
-            return localStore
-        }
+                localState = finalState
+                return .none
+            }
+        )
+        
+        relay
+            .skip(1)
+            .subscribe(onNext: { [weak localStore] newValue in
+                guard !isSending else { return }
+                guard let element = toLocalState(identifier, newValue) else { return }
+                localStore?.state = element
+            })
+            .disposed(by: localStore.disposeBag)
+        
+        return localStore
     }
 }
 
@@ -644,9 +605,7 @@ private struct StoreScope<RootState, RootAction>: AnyStoreScope {
                 self.root.send(fromScopedAction(fromRescopedAction(rescopedAction)))
                 rescopedState = toRescopedState(scopedStore.state)
                 return .none
-            },
-            environment: (),
-            useNewScope: root.useNewScope
+            }
         )
         
         scopedStore.relay

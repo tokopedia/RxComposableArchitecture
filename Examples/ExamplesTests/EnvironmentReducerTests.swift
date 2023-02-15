@@ -24,11 +24,9 @@ final class EnvironmentReducerTests: XCTestCase {
     }
 
     func testSuccessLoadData() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Environment.State(),
-            reducer: Environment(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Environment()
         )
         store.dependencies.envVCEnvironment.loadData = { Observable.just(.success(2)).eraseToEffect() }
 
@@ -42,11 +40,9 @@ final class EnvironmentReducerTests: XCTestCase {
     }
 
     func testFailedLoadData() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Environment.State(),
-            reducer: Environment(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Environment()
         )
         store.dependencies.envVCEnvironment.loadData = { Effect(value: .failure(CustomError(message: "ERROR!"))) }
         
@@ -63,11 +59,9 @@ final class EnvironmentReducerTests: XCTestCase {
     }
 
     func testRefresh() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Environment.State(),
-            reducer: Environment(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Environment()
         )
         store.dependencies.envVCEnvironment.loadData = { Effect(value: .success(2)) }
         store.dependencies.envVCEnvironment.trackEvent = trackEventHandler
@@ -98,11 +92,9 @@ final class EnvironmentReducerTests: XCTestCase {
     }
 
     func testGetCurrentDate() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Environment.State(),
-            reducer: Environment(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Environment()
         )
         store.dependencies.envVCEnvironment.date = { Date(timeIntervalSince1970: 1_597_300_000) }
         store.dependencies.envVCEnvironment.trackEvent = trackEventHandler
@@ -113,11 +105,9 @@ final class EnvironmentReducerTests: XCTestCase {
     }
 
     func testGenerateUUID() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Environment.State(),
-            reducer: Environment(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Environment()
         )
         
         store.dependencies.envVCEnvironment.uuid = UUID.incrementing

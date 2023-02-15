@@ -12,11 +12,9 @@ import RxSwift
 
 class PullbackReducerTests: XCTestCase {
     func testDidChangeText() {
-        let testStore = TestStore(
+        let testStore = TestStore2(
             initialState: Pullback.State(),
-            reducer: Pullback(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Pullback()
         )
         testStore.send(.textDidChange("Hello")) {
             $0.text = "You write: Hello"
@@ -24,11 +22,9 @@ class PullbackReducerTests: XCTestCase {
     }
     
     func testSmallerReducer() {
-        let testStore = TestStore(
+        let testStore = TestStore2(
             initialState: Counter.State(),
-            reducer: Counter(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Counter()
         )
         testStore.send(.didTapMinus) {
             $0.number = -1

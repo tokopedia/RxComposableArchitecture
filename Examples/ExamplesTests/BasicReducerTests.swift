@@ -13,11 +13,9 @@ import XCTest
 class BasicReducerTests: XCTestCase {
 
     func testTapPlus() {
-        let testStore = TestStore(
+        let testStore = TestStore2(
             initialState: Basic.State(number: 0),
-            reducer: Basic(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Basic()
         )
         
         testStore.send(.didTapPlus) {
@@ -26,11 +24,9 @@ class BasicReducerTests: XCTestCase {
     }
     
     func testTapMinus() {
-        let testStore = TestStore(
+        let testStore = TestStore2(
             initialState: Basic.State(number: 5),
-            reducer: Basic(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Basic()
         )
         
         testStore.send(.didTapMinus) {
@@ -39,11 +35,9 @@ class BasicReducerTests: XCTestCase {
     }
     
     func testTapMinusOnZero() {
-        let testStore = TestStore(
+        let testStore = TestStore2(
             initialState: Basic.State(number: 0),
-            reducer: Basic(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Basic()
         )
         
         testStore.send(.didTapMinus) {
@@ -52,11 +46,9 @@ class BasicReducerTests: XCTestCase {
     }
     
     func testShouldResetErrorWhenTappingPlus() {
-        let testStore = TestStore(
+        let testStore = TestStore2(
             initialState: Basic.State(number: 0, errorMessage: "SomeError"),
-            reducer: Basic(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Basic()
         )
         
         testStore.send(.didTapPlus) {
@@ -66,11 +58,9 @@ class BasicReducerTests: XCTestCase {
     }
     
     func testShouldResetErrorWhenTappingMinusWithNumberGreaterThanZero() {
-        let testStore = TestStore(
+        let testStore = TestStore2(
             initialState: Basic.State(number: 1, errorMessage: "SomeError"),
-            reducer: Basic(),
-            failingWhenNothingChange: true,
-            useNewScope: true
+            reducer: Basic()
         )
         
         testStore.send(.didTapMinus) {

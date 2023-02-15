@@ -51,7 +51,7 @@ class RouteVC: UITableViewController {
             navigationController?.pushViewController(viewController, animated: true)
         case .pullback:
             let viewController = PullbackVC(
-                store: Store(
+                store: Store2(
                     initialState: Pullback.State(),
                     reducer: Pullback()
                 )
@@ -59,7 +59,7 @@ class RouteVC: UITableViewController {
             navigationController?.pushViewController(viewController, animated: true)
         case .optionalIfLet:
             let viewController = OptionalIfLetVC(
-                store: Store(
+                store: Store2(
                     initialState: OptionalIfLet.State(),
                     reducer: OptionalIfLet()
                 )
@@ -67,7 +67,7 @@ class RouteVC: UITableViewController {
             navigationController?.pushViewController(viewController, animated: true)
         case .neverEqual:
             let viewController = NeverEqualVC(
-                store: Store(
+                store: Store2(
                     initialState: NeverEqualExample.State(),
                     reducer: NeverEqualExample()
                 )
@@ -75,7 +75,7 @@ class RouteVC: UITableViewController {
             navigationController?.pushViewController(viewController, animated: true)
         case .timer:
             let viewController = TimerVC(
-                store: Store(
+                store: Store2(
                     initialState: TimerExample.State(),
                     reducer: TimerExample()
                 )
