@@ -183,9 +183,6 @@ public final class TestStore<State, Action, LocalState, LocalAction, Environment
     
     private let failingWhenNothingChange: Bool
     private let useNewScope: Bool
-
-    public var stateDiffMode: DiffMode = .distinct
-    public var actionDiffMode: DiffMode = .distinct
     
     private init(
         environment: Environment,
