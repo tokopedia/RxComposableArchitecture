@@ -254,14 +254,74 @@ public final class Store<State, Action> {
     }
     
     @discardableResult
-    public func send(
+    public func send(_ action: Action, originatingFrom originatingAction: Action? = nil) -> Task<Void, Never>? {
+        if useNewScope  {
+            return newSend(action, originatingFrom: originatingAction)
+        }
+        self.threadCheck(status: .send(action, originatingAction: originatingAction))
+        if !isSending {
+            synchronousActionsToSend.append(action)
+        } else {
+            bufferedActions.append(action)
+            return nil
+        }
+
+        while !synchronousActionsToSend.isEmpty || !bufferedActions.isEmpty {
+            let action = !synchronousActionsToSend.isEmpty
+                ? synchronousActionsToSend.removeFirst()
+                : bufferedActions.removeFirst()
+
+            isSending = true
+            #if swift(>=5.7)
+                let effect = self.reducer.reduce(into: &state, action: action)
+            #else
+                let effect = self.reducer(&state, action)
+            #endif
+            isSending = false
+
+            var didComplete = false
+            var isProcessingEffects = true
+            var disposeKey: CompositeDisposable.DisposeKey?
+            
+            switch effect.operation {
+            case .none: break
+            case .run:
+                assertionFailure("old style reducer cannot use `run`")
+            case let .observable(observable):
+                let effectDisposable = observable.subscribe(
+                    onNext: { [weak self] effectAction in
+                        if isProcessingEffects {
+                            self?.synchronousActionsToSend.append(effectAction)
+                        } else {
+                            self?.send(effectAction, originatingFrom: action)
+                        }
+                    },
+                    onError: { err in
+                        assertionFailure("Error during effect handling: \(err.localizedDescription)")
+                    },
+                    onCompleted: { [weak self] in
+                        didComplete = true
+                        if let disposeKey = disposeKey {
+                            self?.effectDisposables.remove(for: disposeKey)
+                        }
+                    }
+                )
+                isProcessingEffects = false
+
+                if !didComplete {
+                    disposeKey = effectDisposables.insert(effectDisposable)
+                }
+            }
+        }
+        return nil
+    }
+    
+    @inline(__always)
+    @discardableResult
+    public func newSend(
         _ action: Action,
         originatingFrom originatingAction: Action? = nil
     ) -> Task<Void, Never>? {
-        guard useNewScope else {
-            oldSend(action, originatingFrom: originatingAction)
-            return nil
-        }
         self.threadCheck(status: .send(action, originatingAction: originatingAction))
         
         self.bufferedActions.append(action)
@@ -481,63 +541,6 @@ public final class Store<State, Action> {
     ) -> Effect<LocalState> {
         return relay.map(toLocalState).distinctUntilChanged().eraseToEffect()
     }
-    
-    @inline(__always)
-    private func oldSend(_ action: Action, originatingFrom originatingAction: Action? = nil) {
-        self.threadCheck(status: .send(action, originatingAction: originatingAction))
-        if !isSending {
-            synchronousActionsToSend.append(action)
-        } else {
-            bufferedActions.append(action)
-            return
-        }
-
-        while !synchronousActionsToSend.isEmpty || !bufferedActions.isEmpty {
-            let action = !synchronousActionsToSend.isEmpty
-                ? synchronousActionsToSend.removeFirst()
-                : bufferedActions.removeFirst()
-
-            isSending = true
-            #if swift(>=5.7)
-                let effect = self.reducer.reduce(into: &state, action: action)
-            #else
-                let effect = self.reducer(&state, action)
-            #endif
-            isSending = false
-
-            var didComplete = false
-            var isProcessingEffects = true
-            var disposeKey: CompositeDisposable.DisposeKey?
-            
-            switch effect.operation {
-            case .none, .run: break
-            case let .observable(observable):
-                let effectDisposable = observable.subscribe(
-                    onNext: { [weak self] effectAction in
-                        if isProcessingEffects {
-                            self?.synchronousActionsToSend.append(effectAction)
-                        } else {
-                            self?.send(effectAction, originatingFrom: action)
-                        }
-                    },
-                    onError: { err in
-                        assertionFailure("Error during effect handling: \(err.localizedDescription)")
-                    },
-                    onCompleted: { [weak self] in
-                        didComplete = true
-                        if let disposeKey = disposeKey {
-                            self?.effectDisposables.remove(for: disposeKey)
-                        }
-                    }
-                )
-                isProcessingEffects = false
-
-                if !didComplete {
-                    disposeKey = effectDisposables.insert(effectDisposable)
-                }
-            }
-        }
-    }
 }
 
 extension Store {
@@ -632,7 +635,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
             guard let element = toLocalState(identifier, state) else { return nil }
             let localStore = Store<State.Element, LocalAction>(
                 initialState: element,
-                reducer: Reducer { localState, localAction, _ in
+                reducer: AnyReducer { localState, localAction, _ in
                     isSending = true
                     defer { isSending = false }
                     self.send(fromLocalAction(localAction))
@@ -662,7 +665,7 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
 
             let localStore = Store<State.Element, LocalAction>(
                 initialState: element,
-                reducer: Reducer { localState, localAction, _ in
+                reducer: AnyReducer { localState, localAction, _ in
                     self.send(fromLocalAction(localAction))
                     guard let finalState = toLocalState(identifier, self.state) else {
                         return .none

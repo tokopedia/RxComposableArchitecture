@@ -13,17 +13,6 @@ import Darwin
 /// Read <doc:MigratingToTheReducerProtocol> for more information.
 ///
 /// A type alias to ``AnyReducer`` for source compatibility. This alias will be removed.
-@available(
-    *,
-     deprecated,
-     renamed: "AnyReducer",
-     message:
-    """
-    'Reducer' has been deprecated in favor of 'ReducerProtocol'.
-    
-    See the migration guide for more information: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/reducerprotocol
-    """
-)
 public typealias Reducer = AnyReducer
 
 
