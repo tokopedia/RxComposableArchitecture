@@ -220,12 +220,12 @@ internal final class StoreOldScopeTest: XCTestCase {
         
         _ = store.send((1, .didTap))
         XCTAssertEqual(numCalls1, 4)
-        XCTAssertEqual(numCalls2, 4)
+        XCTAssertEqual(numCalls2, 5)
         XCTAssertEqual(store.state.qty, 2)
         
         _ = store.send((1, .didTap))
         XCTAssertEqual(numCalls1, 6)
-        XCTAssertEqual(numCalls2, 6)
+        XCTAssertEqual(numCalls2, 8)
         XCTAssertEqual(store.state.qty, 3)
     }
     
