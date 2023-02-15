@@ -579,8 +579,6 @@ extension Store where State: Equatable {
 /// ```
 public typealias StoreOf<R: ReducerProtocol> = Store<R.State, R.Action>
 
-// MARK: - Old Store function pre reducer protocol
-#if swift(<5.7)
 extension Store where State: Collection, State.Element: HashDiffable, State: Equatable, State.Element: Equatable {
     /**
      A version of scope that scope an collection of sub store.
@@ -697,6 +695,10 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
     }
 }
 
+
+
+// MARK: - Old Store function pre reducer protocol
+#if swift(<5.7)
 private protocol AnyStoreScope {
     func rescope<ScopedState, ScopedAction, RescopedState, RescopedAction>(
         _ store: Store<ScopedState, ScopedAction>,
@@ -853,91 +855,6 @@ extension ScopedReducer: AnyScopedReducer {
             })
             .disposed(by: store.disposeBag)
         return childStore
-    }
-}
-
-extension Store where State: Collection, State.Element: HashDiffable, State: Equatable, State.Element: Equatable {
-    /**
-     A version of scope that scope an collection of sub store.
-
-     This is kinda a version of `ForEachStoreNode`, not composing `WithViewStore` but creates the sub store.
-
-     ## Example
-     ```
-     struct AppState { var todos: [Todo] }
-     struct AppAction { case todo(index: Int, action: TodoAction }
-
-     store.subscribe(\.todos)
-        .drive(onNext: { todos in
-            self.todoNodes = zip(todos.indices, todos).map { (offset, _) in
-                TodoNode(with: store.scope(
-                    identifier: identifier,
-                    action: Action.todo(index:action:)
-                )
-            }
-        })
-        .disposed(by: disposeBag)
-     ```
-
-     But with example above, you created the entire node again and again and it's not the efficient way.
-     You can do some diffing and only creating spesific index, and rest is handle by diffing.
-
-     - Parameters:
-        - identifier: the identifier from `IdentifierType` make sure index is in bounds of the collection
-        - action: A function to transform `LocalAction` to `Action`. `LocalAction` should have `(CollectionIndex, LocalAction)` signature.
-
-     - Returns: A new store with its domain (state and domain) transformed based on the index you set
-     */
-    public func scope<LocalAction>(
-        at identifier: State.Element.IdentifierType,
-        action fromLocalAction: @escaping (LocalAction) -> Action
-    ) -> Store<State.Element, LocalAction>? {
-        self.threadCheck(status: .scope)
-        let toLocalState: (State.Element.IdentifierType, State) -> State.Element? = { identifier, state in
-            /**
-             if current state is IdentifiedArray, use pre exist subscript by identifier, to improve performance
-             */
-            if let identifiedArray = state as? IdentifiedArrayOf<State.Element> {
-                return identifiedArray[id: identifier]
-            } else {
-                return state.first(where: { $0.id == identifier })
-            }
-        }
-        
-        var isSending = false
-        // skip if element on parent state wasn't found
-        guard let element = toLocalState(identifier, state) else { return nil }
-        
-        let localStore = Store<State.Element, LocalAction>.init(
-            initialState: element,
-            reducer: Reduce(internal: { localState, localAction in
-                isSending = true
-                defer { isSending = false }
-                if let task = self.send(fromLocalAction(localAction)) {
-                    return .fireAndForget {
-                        await task.cancellableValue
-                    }
-                } else {
-                    guard let finalState = toLocalState(identifier, self.state) else {
-                        return .none
-                    }
-                    localState = finalState
-                    return .none
-                }
-            }),
-            useNewScope: useNewScope
-        )
-        
-        relay
-            .skip(1)
-            .subscribe(onNext: { [weak localStore] newValue in
-                guard !isSending else { return }
-                guard let element = toLocalState(identifier, newValue) else { return }
-                localStore?.state = element
-            })
-            .disposed(by: localStore.disposeBag)
-        
-        return localStore
     }
 }
 #endif
