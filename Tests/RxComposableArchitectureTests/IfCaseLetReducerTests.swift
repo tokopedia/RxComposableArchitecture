@@ -6,7 +6,7 @@ final class IfCaseLetReducerTests: XCTestCase {
   func testChildAction() async {
     struct SomeError: Error, Equatable {}
 
-    let store = TestStore(
+    let store = TestStore2(
       initialState: Result.success(0),
       reducer: Reduce<Result<Int, SomeError>, Result<Int, SomeError>> { state, action in
         .none
@@ -35,7 +35,7 @@ final class IfCaseLetReducerTests: XCTestCase {
     func testNilChild() async {
       struct SomeError: Error, Equatable {}
 
-      let store = TestStore(
+      let store = TestStore2(
         initialState: Result.failure(SomeError()),
         reducer: EmptyReducer<Result<Int, SomeError>, Result<Int, SomeError>>()
           .ifCaseLet(/Result.success, action: /Result.success) {}

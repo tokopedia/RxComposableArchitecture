@@ -5,7 +5,7 @@ import XCTest
 final class IfLetReducerTests: XCTestCase {
   #if DEBUG
     func testNilChild() async {
-      let store = TestStore(
+      let store = TestStore2(
         initialState: Int?.none,
         reducer: EmptyReducer<Int?, Void>()
           .ifLet(\.self, action: /.self) {}

@@ -4,7 +4,7 @@ import XCTest
 @MainActor
 final class ForEachReducerTests: XCTestCase {
   func testElementAction() async {
-    let store = TestStore(
+    let store = TestStore2(
       initialState: Elements.State(
         rows: [
           .init(id: 1, value: "Blob"),
@@ -27,7 +27,7 @@ final class ForEachReducerTests: XCTestCase {
   }
 
   func testNonElementAction() async {
-    let store = TestStore(
+    let store = TestStore2(
       initialState: Elements.State(),
       reducer: Elements()
     )
@@ -37,7 +37,7 @@ final class ForEachReducerTests: XCTestCase {
 
   #if DEBUG
     func testMissingElement() async {
-      let store = TestStore(
+      let store = TestStore2(
         initialState: Elements.State(),
         reducer: EmptyReducer()
           .forEach(\.rows, action: /Elements.Action.row) {}

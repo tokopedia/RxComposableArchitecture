@@ -56,7 +56,7 @@ internal class TestStoreOldScopeTests: XCTestCase {
             }
         })
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: State(),
             reducer: reducer
         )
@@ -102,7 +102,7 @@ internal class TestStoreOldScopeTests: XCTestCase {
                 }
             })
             
-            let store = TestStore(
+            let store = TestStore2(
                 initialState: State(),
                 reducer: reducer
             )
@@ -147,7 +147,7 @@ internal class TestStoreOldScopeTests: XCTestCase {
                 }
             })
             
-            let store = TestStore(
+            let store = TestStore2(
                 initialState: State(),
                 reducer: reducer
             )
@@ -172,7 +172,7 @@ internal class TestStoreOldScopeTests: XCTestCase {
     internal func testStateAccess() {
         enum Action { case a, b, c, d }
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Action>({ count, action in
                 switch action {

@@ -44,11 +44,10 @@ internal class RxComposableArchitectureTests: XCTestCase {
 
         let scheduler = TestScheduler(initialClock: 0)
 
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 2,
             reducer: counterReducer,
-            environment: scheduler,
-            useNewScope: true
+            environment: scheduler
         )
 
         store.send(.incrAndSquareLater)
@@ -87,14 +86,13 @@ internal class RxComposableArchitectureTests: XCTestCase {
 
         let subject = PublishSubject<Void>()
 
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: reducer,
             environment: (
                 startEffect: subject.eraseToEffect(),
                 stopEffect: .fireAndForget { subject.onCompleted() }
-            ),
-            useNewScope: true
+            )
         )
 
         store.send(.start)
@@ -139,14 +137,13 @@ internal class RxComposableArchitectureTests: XCTestCase {
 
         let scheduler = TestScheduler(initialClock: 0)
 
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: reducer,
             environment: Environment(
                 fetch: { value in Effect(value: value * value) },
                 mainQueue: scheduler
-            ),
-            useNewScope: true
+            )
         )
 
         store.send(.incr) { $0 = 1 }

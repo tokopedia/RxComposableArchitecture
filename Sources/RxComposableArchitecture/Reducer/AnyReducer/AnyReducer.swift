@@ -25,14 +25,6 @@ import RxSwift
 /// > This is only an issue if using the Combine interface of ``Effect`` as mentioned above. If you
 ///   you are only using Swift's concurrency tools and the `.task`, `.run` and `.fireAndForget`
 ///   functions on ``Effect``, then the threading is automatically handled for you.
-@available(
-    iOS,
-    deprecated: 9999.0,
-    message:
-        """
-    This API has been soft-deprecated in favor of 'ReducerProtocol'. Read the migration guide for more information: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/reducerprotocol
-    """
-)
 public struct AnyReducer<State, Action, Environment> {
     private let reducer: (inout State, Action, Environment) -> Effect<Action>
 
@@ -68,14 +60,6 @@ public struct AnyReducer<State, Action, Environment> {
     ///
     /// - Parameter reducer: A function signature that takes state, action and
     ///   environment.
-    @available(
-        iOS,
-        deprecated: 9999.0,
-        message:
-            """
-      This API has been soft-deprecated in favor of 'ReducerProtocol'. Read the migration guide for more information: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/reducerprotocol
-      """
-    )
     public init(_ reducer: @escaping (inout State, Action, Environment) -> Effect<Action>) {
         self.reducer = reducer
     }
@@ -138,14 +122,6 @@ public struct AnyReducer<State, Action, Environment> {
     ///
     /// - Parameter reducers: A list of reducers.
     /// - Returns: A single reducer.
-    @available(
-        iOS,
-        deprecated: 9999.0,
-        message:
-            """
-      This API has been soft-deprecated in favor of combining reducers in a 'ReducerBuilder'. Read the migration guide for more information: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/reducerprotocol
-      """
-    )
     public static func combine(_ reducers: Self...) -> Self {
         .combine(reducers)
     }
@@ -162,14 +138,6 @@ public struct AnyReducer<State, Action, Environment> {
     ///
     /// - Parameter reducers: An array of reducers.
     /// - Returns: A single reducer.
-    @available(
-        iOS,
-        deprecated: 9999.0,
-        message:
-            """
-          This API has been soft-deprecated in favor of combining reducers in a 'ReducerBuilder'. Read the migration guide for more information: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/reducerprotocol
-          """
-    )
     public static func combine(_ reducers: [Self]) -> Self {
         Self { state, action, environment in
             .merge(reducers.map { $0.reducer(&state, action, environment) })
@@ -218,14 +186,6 @@ public struct AnyReducer<State, Action, Environment> {
     ///   - toChildAction: A case path that can extract/embed `Action` from `ParentAction`.
     ///   - toChildEnvironment: A function that transforms `ParentEnvironment` into `Environment`.
     /// - Returns: A reducer that works on `ParentState`, `ParentAction`, `ParentEnvironment`.
-    @available(
-        iOS,
-        deprecated: 9999.0,
-        message:
-            """
-        This API has been soft-deprecated in favor of 'Scope'. Read the migration guide for more information: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/reducerprotocol
-        """
-    )
     public func pullback<GlobalState, GlobalAction, GlobalEnvironment>(
         state toLocalState: WritableKeyPath<GlobalState, State>,
         action toLocalAction: CasePath<GlobalAction, Action>,
@@ -693,14 +653,6 @@ public struct AnyReducer<State, Action, Environment> {
     ///   - action: An action.
     ///   - environment: An environment.
     /// - Returns: An effect that can emit zero or more actions.
-    @available(
-        iOS,
-        deprecated: 9999.0,
-        message:
-            """
-        This API has been soft-deprecated in favor of 'ReducerProtocol.reduce(into:action:)'. Read the migration guide for more information: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/reducerprotocol
-        """
-    )
     public func run(
         _ state: inout State,
         _ action: Action,

@@ -10,8 +10,6 @@ import XCTest
 
 @testable import RxComposableArchitecture
 
-/// All Test cases in here using `useNewScope: true` on both Store(...) and TestStore(...)
-///
 @MainActor
 internal class TestStoreTests: XCTestCase {
     private let disposeBag = DisposeBag()
@@ -57,10 +55,9 @@ internal class TestStoreTests: XCTestCase {
             }
         })
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: State(),
-            reducer: reducer,
-            useNewScope: true
+            reducer: reducer
         )
         
         _ = await store.send(Action.a)
@@ -84,7 +81,7 @@ internal class TestStoreTests: XCTestCase {
             case response(Int)
         }
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Action>({ state, action in
                 switch action {
@@ -94,8 +91,7 @@ internal class TestStoreTests: XCTestCase {
                     state = number
                     return .none
                 }
-            }),
-            useNewScope: true
+            })
         )
         
         _ = await store.send(.tap)
@@ -130,10 +126,9 @@ internal class TestStoreTests: XCTestCase {
             }
         })
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: State(),
-            reducer: reducer,
-            useNewScope: true
+            reducer: reducer
         )
         
         _ = await store.send(.increment) {
@@ -176,10 +171,9 @@ internal class TestStoreTests: XCTestCase {
             }
         })
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: State(),
-            reducer: reducer,
-            useNewScope: true
+            reducer: reducer
         )
         
         _ = await store.send(.noop)
@@ -212,7 +206,7 @@ internal class TestStoreTests: XCTestCase {
             }
         })
         
-        let store = TestStore(initialState: 0, reducer: reducer)
+        let store = TestStore2(initialState: 0, reducer: reducer)
         
         let predicateShouldBeCalledExpectation = expectation(
             description: "predicate should be called")
@@ -239,7 +233,7 @@ internal class TestStoreTests: XCTestCase {
     internal func testStateAccess() async {
         enum Action { case a, b, c, d }
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Action>({ count, action in
                 switch action {
@@ -250,8 +244,7 @@ internal class TestStoreTests: XCTestCase {
                     count += 1
                     return .none
                 }
-            }),
-            useNewScope: true
+            })
         )
         
         _ = await store.send(.a) {
@@ -297,7 +290,7 @@ internal class TestStoreTests: XCTestCase {
             }
         }
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Counter()
                 .dependency(\.calendar, Calendar(identifier: .gregorian))
@@ -326,7 +319,7 @@ internal class TestStoreTests: XCTestCase {
             }
         }
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Counter()
         )
@@ -366,7 +359,7 @@ internal class TestStoreTests: XCTestCase {
             }
         }
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Feature.State(),
             reducer: Feature()
         ) {

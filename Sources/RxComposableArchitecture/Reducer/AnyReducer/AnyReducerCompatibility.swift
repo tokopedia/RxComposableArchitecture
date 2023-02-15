@@ -37,8 +37,7 @@ extension Store2 {
     ) {
         self.init(
             initialState: initialState,
-            reducer: Reduce(reducer, environment: environment),
-            useNewScope: useNewScope
+            reducer: Reduce(reducer, environment: environment)
         )
     }
 }

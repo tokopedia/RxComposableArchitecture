@@ -297,7 +297,7 @@ internal final class EffectTests: XCTestCase {
                 }
             }
         }
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Feature()
                 .dependency(\.date, .constant(.init(timeIntervalSinceReferenceDate: 1_234_567_890)))
@@ -327,7 +327,7 @@ internal final class EffectTests: XCTestCase {
                 }
             }
         }
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Feature()
                 .dependency(\.date, .constant(.init(timeIntervalSinceReferenceDate: 1_234_567_890)))

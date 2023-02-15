@@ -3,8 +3,6 @@ import XCTest
 
 @testable import RxComposableArchitecture
 
-/// All Test cases in here using `useNewScope: true` on both Store2(...) and TestStore(...)
-///
 @MainActor
 internal final class StoreTests: XCTestCase {
     private let disposeBag = DisposeBag()
@@ -358,7 +356,7 @@ internal final class StoreTests: XCTestCase {
             case doIncrement
         }
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Action>({ state, action in
                 switch action {
@@ -373,8 +371,7 @@ internal final class StoreTests: XCTestCase {
                     state += 1
                     return .none
                 }
-            }),
-            useNewScope: true
+            })
         )
         store.send(.initialize)
         store.send(.incrementTapped)
@@ -519,10 +516,9 @@ internal final class StoreTests: XCTestCase {
             }
         })
 
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
-            reducer: reducer,
-            useNewScope: true
+            reducer: reducer
         )
 
         let task = await store.send(Action.task)
@@ -535,15 +531,14 @@ internal final class StoreTests: XCTestCase {
     internal func testTaskCancellationEmpty() async {
         enum Action { case task }
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Action>({ state, action in
                 switch action {
                 case .task:
                     return .fireAndForget { try await Task.never() }
                 }
-            }),
-            useNewScope: true
+            })
         )
         
         await store.send(.task).cancel()

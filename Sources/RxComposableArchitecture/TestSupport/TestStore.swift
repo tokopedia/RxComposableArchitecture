@@ -422,7 +422,7 @@ import XCTestDynamicOverlay
 /// [merowing.info]: https://www.merowing.info
 /// [exhaustive-testing-in-tca]: https://www.merowing.info/exhaustive-testing-in-tca/
 /// [Composable-Architecture-at-Scale]: https://vimeo.com/751173570
-public final class TestStore<State, Action, ScopedState, ScopedAction, Environment> {
+public final class TestStore2<State, Action, ScopedState, ScopedAction, Environment> {
     
     /// The current dependencies of the test store.
     ///
@@ -555,9 +555,6 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
     private let store: Store2<State, TestReducer<State, Action>.TestAction>
     private let toScopedState: (State) -> ScopedState
     
-    private let failingWhenNothingChange: Bool
-    private let useNewScope: Bool
-    
     /// Creates a test store with an initial state and a reducer powering it's runtime.
     ///
     /// See <doc:Testing> and the documentation of ``TestStore`` for more information on how to best
@@ -566,16 +563,12 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
     /// - Parameters:
     ///   - initialState: The state the feature starts in.
     ///   - reducer: The reducer that powers the runtime of the feature.
-    ///   - failingWhenNothingChange: Flag to make test failed if you provide trailing closure on ``send(_:_:file:line:)`` or ``receive(_:_:file:line:)`` but the state is the same
-    ///   - useNewScope: Increase performance
     public init<Reducer: ReducerProtocol>(
         initialState: @autoclosure () -> State,
         reducer: Reducer,
         prepareDependencies: (inout DependencyValues) -> Void = { _ in },
         file: StaticString = #file,
-        line: UInt = #line,
-        failingWhenNothingChange: Bool = true,
-        useNewScope: Bool = false
+        line: UInt = #line
     )
     where
     Reducer.State == State,
@@ -598,12 +591,9 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         self.reducer = reducer
         self.timeout = 100 * NSEC_PER_MSEC
         self.toScopedState = { $0 }
-        self.failingWhenNothingChange = failingWhenNothingChange
-        self.useNewScope = useNewScope
         self.store = Store2(
             initialState: initialState,
-            reducer: reducer,
-            useNewScope: useNewScope
+            reducer: reducer
         )
         self.dependencies = dependencies
     }
@@ -653,9 +643,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         reducer: AnyReducer<ScopedState, ScopedAction, Environment>,
         environment: Environment,
         file: StaticString = #file,
-        line: UInt = #line,
-        failingWhenNothingChange: Bool = true,
-        useNewScope: Bool = false
+        line: UInt = #line
     )
     where State == ScopedState, Action == ScopedAction {
         let environment = TaskBox(wrappedValue: environment)
@@ -673,13 +661,10 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         self.reducer = reducer
         self.timeout = 100 * NSEC_PER_MSEC
         self.toScopedState = { $0 }
-        self.failingWhenNothingChange = failingWhenNothingChange
-        self.useNewScope = useNewScope
         
         self.store = Store2(
             initialState: initialState,
-            reducer: reducer,
-            useNewScope: useNewScope
+            reducer: reducer
         )
     }
     
@@ -691,9 +676,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         reducer: TestReducer<State, Action>,
         store: Store2<State, TestReducer<State, Action>.Action>,
         timeout: UInt64 = 100 * NSEC_PER_MSEC,
-        toScopedState: @escaping (State) -> ScopedState,
-        failingWhenNothingChange: Bool = true,
-        useNewScope: Bool = false
+        toScopedState: @escaping (State) -> ScopedState
     ) {
         self._environment = _environment
         self.file = file
@@ -703,8 +686,6 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         self.store = store
         self.timeout = timeout
         self.toScopedState = toScopedState
-        self.failingWhenNothingChange = failingWhenNothingChange
-        self.useNewScope = useNewScope
     }
     
     // NB: Only needed until Xcode ships a macOS SDK that uses the 5.7 standard library.
@@ -822,7 +803,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
     }
 }
 
-extension TestStore where ScopedState: Equatable {
+extension TestStore2 where ScopedState: Equatable {
     /// Sends an action to the store and asserts when state changes.
     ///
     /// To assert on how state changes you can provide a trailing closure, and that closure is handed
@@ -1150,7 +1131,7 @@ extension TestStore where ScopedState: Equatable {
         }
         
         func tryUnnecessaryModifyFailure() {
-            guard expected == current && updateStateToExpectedResult != nil && failingWhenNothingChange
+            guard expected == current && updateStateToExpectedResult != nil
             else { return }
             XCTFailHelper(
           """
@@ -1172,7 +1153,7 @@ extension TestStore where ScopedState: Equatable {
     }
 }
 
-extension TestStore where ScopedState: Equatable, Action: Equatable {
+extension TestStore2 where ScopedState: Equatable, Action: Equatable {
     /// Asserts an action was received from an effect and asserts when state changes.
     ///
     /// - Parameters:
@@ -1690,7 +1671,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
     }
 }
 
-extension TestStore {
+extension TestStore2 {
     /// Scopes a store to assert against scoped state and actions.
     ///
     /// Useful for testing view store-specific state and actions.
@@ -1705,7 +1686,7 @@ extension TestStore {
     public func scope<S, A>(
         state toScopedState: @escaping (ScopedState) -> S,
         action fromScopedAction: @escaping (A) -> ScopedAction
-    ) -> TestStore<State, Action, S, A, Environment> {
+    ) -> TestStore2<State, Action, S, A, Environment> {
         .init(
             _environment: self._environment,
             file: self.file,
@@ -1714,8 +1695,7 @@ extension TestStore {
             reducer: self.reducer,
             store: self.store,
             timeout: self.timeout,
-            toScopedState: { toScopedState(self.toScopedState($0)) },
-            failingWhenNothingChange: self.failingWhenNothingChange
+            toScopedState: { toScopedState(self.toScopedState($0)) }
         )
     }
     
@@ -1728,7 +1708,7 @@ extension TestStore {
     ///   view store state transformations.
     public func scope<S>(
         state toScopedState: @escaping (ScopedState) -> S
-    ) -> TestStore<State, Action, S, ScopedAction, Environment> {
+    ) -> TestStore2<State, Action, S, ScopedAction, Environment> {
         self.scope(state: toScopedState, action: { $0 })
     }
     

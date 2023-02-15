@@ -14,7 +14,7 @@ final class EffectTaskTests: XCTestCase {
         return .none
       }
     }
-    let store = TestStore(initialState: State(), reducer: reducer)
+    let store = TestStore2(initialState: State(), reducer: reducer)
     await store.send(.tapped)
     await store.receive(.response)
   }
@@ -35,7 +35,7 @@ final class EffectTaskTests: XCTestCase {
         return .none
       }
     }
-    let store = TestStore(initialState: State(), reducer: reducer)
+    let store = TestStore2(initialState: State(), reducer: reducer)
     await store.send(.tapped)
     await store.receive(.response)
   }
@@ -67,7 +67,7 @@ final class EffectTaskTests: XCTestCase {
           return .none
         }
       }
-      let store = TestStore(initialState: State(), reducer: reducer)
+      let store = TestStore2(initialState: State(), reducer: reducer)
       // NB: We wait a long time here because XCTest failures take a long time to generate
       await store.send(.tapped).finish(timeout: 5 * NSEC_PER_SEC)
     }
@@ -90,7 +90,7 @@ final class EffectTaskTests: XCTestCase {
         return .none
       }
     }
-    let store = TestStore(initialState: State(), reducer: reducer)
+    let store = TestStore2(initialState: State(), reducer: reducer)
     await store.send(.tapped).finish()
   }
 
@@ -113,7 +113,7 @@ final class EffectTaskTests: XCTestCase {
         return .none
       }
     }
-    let store = TestStore(initialState: State(), reducer: reducer)
+    let store = TestStore2(initialState: State(), reducer: reducer)
     await store.send(.tapped).finish()
   }
 }

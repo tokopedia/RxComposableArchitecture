@@ -30,7 +30,7 @@ final class DependencyKeyWritingReducerTests: XCTestCase {
             .dependency(\.myValue, 42)
             .dependency(\.myValue, 1729)
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Feature.State(),
             reducer: reducer
         )
@@ -45,7 +45,7 @@ final class DependencyKeyWritingReducerTests: XCTestCase {
             .transformDependency(\.myValue) { $0 = 42 }
             .transformDependency(\.myValue) { $0 = 1729 }
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Feature.State(),
             reducer: reducer
         )
@@ -62,7 +62,7 @@ final class DependencyKeyWritingReducerTests: XCTestCase {
         }
             .dependency(\.myValue, 1729)
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Feature.State(),
             reducer: reducer
         )
@@ -79,7 +79,7 @@ final class DependencyKeyWritingReducerTests: XCTestCase {
         }
             .transformDependency(\.myValue) { $0 = 1729 }
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Feature.State(),
             reducer: reducer
         )
@@ -116,7 +116,7 @@ final class DependencyKeyWritingReducerTests: XCTestCase {
             }
         }
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Feature.State(),
             reducer: Feature()
                 .dependency(\.myValue, 42)

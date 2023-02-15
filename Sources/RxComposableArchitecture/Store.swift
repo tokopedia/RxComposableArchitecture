@@ -9,7 +9,6 @@ public final class Store2<State, Action> {
     }
 
     private var isSending = false
-    private var synchronousActionsToSend: [Action] = []
     private var bufferedActions: [Action] = []
 
     #if swift(>=5.7)
@@ -22,8 +21,7 @@ public final class Store2<State, Action> {
     internal let disposeBag = DisposeBag()
     internal var effectDisposables = CompositeDisposable()
     internal let relay: BehaviorRelay<State>
-    
-    fileprivate let useNewScope: Bool
+
     fileprivate let cancelsEffectsOnDeinit: Bool
     
     #if DEBUG
@@ -37,13 +35,11 @@ public final class Store2<State, Action> {
     public init<R: ReducerProtocol>(
         initialState: R.State,
         reducer: R,
-        useNewScope: Bool = StoreConfig.default.useNewScope(),
         mainThreadChecksEnabled: Bool = StoreConfig.default.mainThreadChecksEnabled(),
         cancelsEffectsOnDeinit: Bool = StoreConfig.default.cancelsEffectsOnDeinit()
     ) where R.State == State, R.Action == Action {
         self.relay = BehaviorRelay(value: initialState)
         self.cancelsEffectsOnDeinit = cancelsEffectsOnDeinit
-        self.useNewScope = useNewScope
         #if swift(>=5.7)
             self.reducer = reducer
         #else
@@ -204,9 +200,6 @@ public final class Store2<State, Action> {
         action fromChildAction: @escaping (ChildAction) -> Action
     ) -> Store2<ChildState, ChildAction> {
         self.threadCheck(status: .scope)
-        guard self.useNewScope else {
-            return oldScope(state: toChildState, action: fromChildAction)
-        }
         
         #if swift(>=5.7)
             return self.reducer.rescope(self, state: toChildState, action: fromChildAction)
@@ -228,40 +221,11 @@ public final class Store2<State, Action> {
         self.scope(state: toChildState, action: { $0 })
     }
     
-    @inline(__always)
-    private func oldScope<ChildState, ChildAction>(
-        state toChildState: @escaping (State) -> ChildState,
-        action fromChildAction: @escaping (ChildAction) -> Action
-    ) -> Store2<ChildState, ChildAction> {
-        let localStore = Store2<ChildState, ChildAction>(
-            initialState: toChildState(state),
-            reducer: AnyReducer { localState, localAction, _ in
-                self.send(fromChildAction(localAction))
-                localState = toChildState(self.state)
-                return .none
-            },
-            environment: (),
-            useNewScope: useNewScope
-        )
-        
-        relay
-            .subscribe(onNext: { [weak localStore] newValue in
-                localStore?.state = toChildState(newValue)
-            })
-            .disposed(by: localStore.disposeBag)
-        
-        return localStore
-    }
-    
     @discardableResult
     public func send(
         _ action: Action,
         originatingFrom originatingAction: Action? = nil
     ) -> Task<Void, Never>? {
-        guard useNewScope else {
-            oldSend(action, originatingFrom: originatingAction)
-            return nil
-        }
         self.threadCheck(status: .send(action, originatingAction: originatingAction))
         
         self.bufferedActions.append(action)
@@ -480,63 +444,6 @@ public final class Store2<State, Action> {
         _ toLocalState: @escaping (State) -> LocalState
     ) -> Effect<LocalState> {
         return relay.map(toLocalState).distinctUntilChanged().eraseToEffect()
-    }
-    
-    @inline(__always)
-    private func oldSend(_ action: Action, originatingFrom originatingAction: Action? = nil) {
-        self.threadCheck(status: .send(action, originatingAction: originatingAction))
-        if !isSending {
-            synchronousActionsToSend.append(action)
-        } else {
-            bufferedActions.append(action)
-            return
-        }
-
-        while !synchronousActionsToSend.isEmpty || !bufferedActions.isEmpty {
-            let action = !synchronousActionsToSend.isEmpty
-                ? synchronousActionsToSend.removeFirst()
-                : bufferedActions.removeFirst()
-
-            isSending = true
-            #if swift(>=5.7)
-                let effect = self.reducer.reduce(into: &state, action: action)
-            #else
-                let effect = self.reducer(&state, action)
-            #endif
-            isSending = false
-
-            var didComplete = false
-            var isProcessingEffects = true
-            var disposeKey: CompositeDisposable.DisposeKey?
-            
-            switch effect.operation {
-            case .none, .run: break
-            case let .observable(observable):
-                let effectDisposable = observable.subscribe(
-                    onNext: { [weak self] effectAction in
-                        if isProcessingEffects {
-                            self?.synchronousActionsToSend.append(effectAction)
-                        } else {
-                            self?.send(effectAction, originatingFrom: action)
-                        }
-                    },
-                    onError: { err in
-                        assertionFailure("Error during effect handling: \(err.localizedDescription)")
-                    },
-                    onCompleted: { [weak self] in
-                        didComplete = true
-                        if let disposeKey = disposeKey {
-                            self?.effectDisposables.remove(for: disposeKey)
-                        }
-                    }
-                )
-                isProcessingEffects = false
-
-                if !didComplete {
-                    disposeKey = effectDisposables.insert(effectDisposable)
-                }
-            }
-        }
     }
 }
 
@@ -842,8 +749,7 @@ extension ScopedReducer: AnyScopedReducer {
         )
         let childStore = Store2<RescopedState, RescopedAction>(
             initialState: toRescopedState(store.state),
-            reducer: reducer,
-            useNewScope: self.rootStore.useNewScope
+            reducer: reducer
         )
         store.relay
             .skip(1)
@@ -924,8 +830,7 @@ extension Store2 where State: Collection, State.Element: HashDiffable, State: Eq
                     localState = finalState
                     return .none
                 }
-            }),
-            useNewScope: useNewScope
+            })
         )
         
         relay

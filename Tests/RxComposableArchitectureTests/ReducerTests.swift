@@ -35,7 +35,7 @@ internal final class ReducerTests: XCTestCase {
         var first = false
         var second = false
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: CombineReducers {
                 One(effect: { @MainActor in first = true })

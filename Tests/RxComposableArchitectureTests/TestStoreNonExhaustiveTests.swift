@@ -5,7 +5,7 @@ import XCTest
 @MainActor
 final class TestStoreNonExhaustiveTests: XCTestCase {
     func testSkipReceivedActions_NonStrict() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Bool> { state, action in
                 if action {
@@ -25,7 +25,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testSkipReceivedActions_Strict() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Bool> { state, action in
                 if action {
@@ -49,7 +49,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testSkipReceivedActions_NonExhaustive() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Bool> { state, action in
                 if action {
@@ -70,7 +70,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testSkipReceivedActions_PartialExhaustive() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Bool> { state, action in
                 if action {
@@ -91,7 +91,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testCancelInFlightEffects_NonStrict() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Bool> { _, action in
                     .run { _ in try await Task.sleep(nanoseconds: NSEC_PER_SEC) }
@@ -103,12 +103,11 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testCancelInFlightEffects_Strict() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Bool> { _, action in
                     .run { _ in try await Task.sleep(nanoseconds: NSEC_PER_SEC / 4) }
-            },
-            useNewScope: true
+            }
         )
         
         let task = await store.send(true)
@@ -120,7 +119,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testCancelInFlightEffects_NonExhaustive() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Bool> { _, action in
                     .run { _ in try await Task.sleep(nanoseconds: NSEC_PER_SEC) }
@@ -133,7 +132,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testCancelInFlightEffects_PartialExhaustive() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Bool> { _, action in
                     .run { _ in try await Task.sleep(nanoseconds: NSEC_PER_SEC) }
@@ -147,7 +146,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     
     // Confirms that you don't have to receive all actions before the test completes.
     func testIgnoreReceiveActions_PartialExhaustive() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Bool> { _, action in
                 action ? .init(value: false) : .none
@@ -160,7 +159,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     
     // Confirms that you don't have to receive all actions before the test completes.
     func testIgnoreReceiveActions_NonExhaustive() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Bool> { _, action in
                 action ? .init(value: false) : .none
@@ -173,7 +172,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     
     // Confirms that all effects do not need to complete before the test completes.
     func testIgnoreInFlightEffects_PartialExhaustive() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Bool> { _, action in
                     .run { _ in try await Task.sleep(nanoseconds: NSEC_PER_SEC) }
@@ -186,7 +185,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     
     // Confirms that all effects do not need to complete before the test completes.
     func testIgnoreInFlightEffects_NonExhaustive() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Reduce<Int, Bool> { _, action in
                     .run { _ in try await Task.sleep(nanoseconds: NSEC_PER_SEC) }
@@ -199,7 +198,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     
     // Confirms that you don't have to assert on all state changes in a non-exhaustive test store.
     func testNonExhaustiveSend_PartialExhaustive() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Counter.State(),
             reducer: Counter()
         )
@@ -220,7 +219,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testNonExhaustiveSend_PartialExhaustive_Prefix() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Counter.State(),
             reducer: Counter()
         )
@@ -235,7 +234,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     // Confirms that you don't have to assert on all state changes in a non-exhaustive test store,
     // *but* if you make an incorrect mutation you will still get a failure.
     func testNonExhaustiveSend_PartialExhaustive_BadAssertion() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Counter.State(),
             reducer: Counter()
         )
@@ -265,7 +264,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     // Confirms that you don't have to assert on all state changes in a non-exhaustive test store,
     // *and* that informational boxes of what was not asserted on is not shown.
     func testNonExhaustiveSend_NonExhaustive() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Counter.State(),
             reducer: Counter()
         )
@@ -304,7 +303,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
                 }
             }
         }
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Feature.State(),
             reducer: Feature()
         )
@@ -343,7 +342,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
                 }
             }
         }
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Feature.State(),
             reducer: Feature()
         )
@@ -375,7 +374,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     // Confirms that with non-exhaustive test stores you can send multiple actions without asserting
     // on any state changes until the very last action.
     func testMultipleSendsWithAssertionOnLast() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: Counter.State(),
             reducer: Counter()
         )
@@ -396,7 +395,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     // Confirms that you don't have to assert on all state changes when receiving an action from an
     // effect in a non-exhaustive test store.
     func testReceive_StateChange() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: NonExhaustiveReceive.State(),
             reducer: NonExhaustiveReceive()
         )
@@ -420,7 +419,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     
     // Confirms that you can skip receiving certain effect actions in a non-exhaustive test store.
     func testReceive_SkipAction() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: NonExhaustiveReceive.State(),
             reducer: NonExhaustiveReceive()
         )
@@ -441,7 +440,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     // Confirms that you are allowed to send actions without having received all actions queued
     // from effects.
     func testSendWithUnreceivedAction() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: NonExhaustiveReceive.State(),
             reducer: NonExhaustiveReceive()
         )
@@ -476,7 +475,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
             }
         }
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: 0,
             reducer: Feature()
         )
@@ -536,7 +535,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     //      }
     
     func testCasePathReceive_PartialExhaustive() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: NonExhaustiveReceive.State(),
             reducer: NonExhaustiveReceive()
         )
@@ -552,7 +551,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testCasePathReceive_NonExhaustive() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: NonExhaustiveReceive.State(),
             reducer: NonExhaustiveReceive()
         )
@@ -568,7 +567,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testCasePathReceive_Exhaustive() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: NonExhaustiveReceive.State(),
             reducer: NonExhaustiveReceive()
         )
@@ -585,7 +584,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testCasePathReceive_SkipReceivedAction() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: NonExhaustiveReceive.State(),
             reducer: NonExhaustiveReceive()
         )
@@ -598,10 +597,9 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testCasePathReceive_WrongAction() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: NonExhaustiveReceive.State(),
-            reducer: NonExhaustiveReceive(),
-            useNewScope: true
+            reducer: NonExhaustiveReceive()
         )
         store.exhaustivity = .off(showSkippedAssertions: true)
         await store.send(.onAppear)
@@ -618,7 +616,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testCasePathReceive_ReceivedExtraAction() async {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: NonExhaustiveReceive.State(),
             reducer: NonExhaustiveReceive()
         )
@@ -639,7 +637,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     // This example comes from Krzysztof Zabłocki's blog post:
     // https://www.merowing.info/exhaustive-testing-in-tca/
     func testKrzysztofExample1() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: KrzysztofExample.State(),
             reducer: KrzysztofExample()
         )
@@ -653,7 +651,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     // This example comes from Krzysztof Zabłocki's blog post:
     // https://www.merowing.info/exhaustive-testing-in-tca/
     func testKrzysztofExample2() {
-        let store = TestStore(
+        let store = TestStore2(
             initialState: KrzysztofExample.State(),
             reducer: KrzysztofExample()
         )
@@ -672,7 +670,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     func testKrzysztofExample3() {
         let mainQueue = TestScheduler(initialClock: 0)
         
-        let store = TestStore(
+        let store = TestStore2(
             initialState: KrzysztofExample.State(),
             reducer: KrzysztofExample()
         )

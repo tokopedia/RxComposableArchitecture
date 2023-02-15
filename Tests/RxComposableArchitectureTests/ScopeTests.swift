@@ -4,7 +4,7 @@ import XCTest
 @MainActor
 final class ScopeTests: XCTestCase {
   func testStructChild() async {
-    let store = TestStore(
+    let store = TestStore2(
       initialState: Feature.State(),
       reducer: Feature()
     )
@@ -24,7 +24,7 @@ final class ScopeTests: XCTestCase {
   }
 
   func testEnumChild() async {
-    let store = TestStore(
+    let store = TestStore2(
       initialState: Feature.State(),
       reducer: Feature()
     )
@@ -42,7 +42,7 @@ final class ScopeTests: XCTestCase {
 
   #if DEBUG
     func testNilChild() async {
-      let store = TestStore(
+      let store = TestStore2(
         initialState: Child2.State.count(0),
         reducer: Scope(state: /Child2.State.name, action: /Child2.Action.name) {}
       )
