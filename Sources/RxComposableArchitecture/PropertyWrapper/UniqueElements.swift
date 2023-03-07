@@ -7,10 +7,10 @@
 
 
 /**
- Property wrapper to reduce boiler plate code to remove duplicates from a collection of HashDiffable.
+ Property wrapper to reduce boiler plate code to remove duplicates from a collection of Identifiable.
 
  ```
- struct Element: Equatable, HashDiffable {}
+ struct Element: Equatable, Identifiable {}
 
  struct ParentState: Equatable {
     @UniqueElements var arrayState: [Element]
@@ -23,7 +23,7 @@
  */
 
 @propertyWrapper
-public struct UniqueElements<State>: Equatable where State: Collection & Equatable, State.Element: HashDiffable {
+public struct UniqueElements<State>: Equatable where State: Collection & Equatable, State.Element: Identifiable {
     public var wrappedValue: State {
         didSet {
             wrappedValue = Self.getUniqueState(wrappedValue)

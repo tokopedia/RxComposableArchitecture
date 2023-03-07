@@ -98,7 +98,7 @@ public enum DiffingInterfaceList {
             return inserts.count + deletes.count + updates.count + moves.count
         }
 
-        public func validate<T: HashDiffable>(_ oldArray: [T], _ newArray: [T]) -> Bool {
+        public func validate<T: Identifiable>(_ oldArray: [T], _ newArray: [T]) -> Bool {
             return (oldArray.count + inserts.count - deletes.count) == newArray.count
         }
 
@@ -114,9 +114,9 @@ public enum DiffingInterfaceList {
     /// Diffing a pair of collection to get which `index/item` is `deleted, inserted, updated or moved`
     ///
     /// - Parameters:
-    ///   - oldArray: An `Old/Source Array` of  generic `T` HashDiffable value.
-    ///   - newArray: An `New/Target Array` of  generic `T` HashDiffable value.
-    public static func diffing<T: HashDiffable>(oldArray: [T], newArray: [T]) -> Result {
+    ///   - oldArray: An `Old/Source Array` of  generic `T` Identifiable value.
+    ///   - newArray: An `New/Target Array` of  generic `T` Identifiable value.
+    public static func diffing<T: Identifiable & Equatable>(oldArray: [T], newArray: [T]) -> Result {
         // symbol table uses the old/new array `diffIdentifier` as the key and `Entry` as the value
         var table = [AnyHashable: Entry]()
 
@@ -171,7 +171,7 @@ public enum DiffingInterfaceList {
             if oldIndex < oldArray.count {
                 let n = newArray[i]
                 let o = oldArray[oldIndex]
-                if !n.isEqual(to: o) {
+                if n != o {
                     entry.updated = true
                 }
             }
