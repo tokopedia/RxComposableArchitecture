@@ -23,7 +23,7 @@
 
 public struct AnyHashDiffable: Identifiable, Equatable {
     /// The value of `Diffable` wrapped by this instance.
-    public var base: any Equatable {
+    public var base: Any {
         return box.base
     }
 
@@ -58,7 +58,7 @@ extension AnyHashDiffable: CustomDebugStringConvertible {
 }
 
 internal protocol AnyHashDiffableBox {
-    var base: any Equatable { get }
+    var base: Any { get }
     var id: AnyHashable { get }
 
     func isEqual(to source: AnyHashDiffableBox) -> Bool
@@ -67,7 +67,7 @@ internal protocol AnyHashDiffableBox {
 internal struct HashDiffableBox<Base: Identifiable & Equatable>: AnyHashDiffableBox {
     internal let baseComponent: Base
 
-    internal var base: any Equatable {
+    internal var base: Any {
         return baseComponent
     }
 
