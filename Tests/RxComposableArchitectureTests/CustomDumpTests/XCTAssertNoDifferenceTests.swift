@@ -1,5 +1,6 @@
 import RxComposableArchitecture
 import XCTest
+import CustomDump
 
 class XCTAssertNoDifferenceTests: XCTestCase {
   #if compiler(>=5.4) && (os(iOS) || os(macOS) || os(tvOS) || os(watchOS))

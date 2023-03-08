@@ -1,5 +1,6 @@
 import RxComposableArchitecture
 import XCTest
+import CustomDump
 
 #if canImport(CoreGraphics)
   import CoreGraphics
@@ -608,7 +609,7 @@ final class DumpTests: XCTestCase {
       dump,
       """
       Result.success(
-        Result.success(42)
+        .success(42)
       )
       """
     )

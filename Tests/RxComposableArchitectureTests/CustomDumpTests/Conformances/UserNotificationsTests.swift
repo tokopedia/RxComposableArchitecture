@@ -2,6 +2,7 @@
   import RxComposableArchitecture
   import XCTest
   import UserNotifications
+import CustomDump
 
   class UserNotificationsTests: XCTestCase {
     func testUNAuthorizationOptions() {

@@ -1,5 +1,6 @@
 import RxComposableArchitecture
 import XCTest
+import CustomDump
 
 final class TaskResultTests: XCTestCase {
   #if DEBUG

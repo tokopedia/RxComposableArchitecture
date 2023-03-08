@@ -1,6 +1,7 @@
 import RxComposableArchitecture
 import Foundation
 import XCTest
+import CustomDump
 
 #if canImport(FoundationNetworking)
   import FoundationNetworking
@@ -134,7 +135,7 @@ final class FoundationTests: XCTestCase {
       dump,
       """
       Calendar(
-        identifier: Calendar.Identifier.gregorian,
+        identifier: .gregorian,
         locale: Locale(),
         timeZone: TimeZone(
           identifier: "GMT",

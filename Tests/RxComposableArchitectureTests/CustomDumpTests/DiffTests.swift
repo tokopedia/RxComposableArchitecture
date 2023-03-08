@@ -1,5 +1,6 @@
 import RxComposableArchitecture
 import XCTest
+import CustomDump
 
 final class DiffTests: XCTestCase {
   func testAny() {

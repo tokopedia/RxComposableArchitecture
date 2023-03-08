@@ -1,5 +1,6 @@
 import RxComposableArchitecture
 import Foundation
+import CustomDump
 
 class RecursiveFoo { var foo: RecursiveFoo? }
 

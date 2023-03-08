@@ -2,6 +2,7 @@
   import CoreImage
   import RxComposableArchitecture
   import XCTest
+import CustomDump
 
   final class CoreImageTests: XCTestCase {
     func testCIQRCodeDescriptor() {
