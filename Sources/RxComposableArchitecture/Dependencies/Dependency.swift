@@ -89,7 +89,13 @@ public struct Dependency<Value>: @unchecked Sendable {
                 /// Here we tried first get the `Mocked Environment` from Bootstrap MockKit
                 /// and give fallback value to original our dependency injection when not get any mocked environment
                 ///
-                Bootstrap.get(environment: Value.self) ?? DependencyValues._current[keyPath: self.keyPath]
+                /// Before we try to get from Bootstrap, let's check if there's overriden one with mock
+                if !Bootstrap.getAllBootstrappedIdentifier().isEmpty,
+                   let bootstrapValue = Bootstrap.get(environment: Value.self) {
+                    return bootstrapValue
+                } else {
+                    return DependencyValues._current[keyPath: self.keyPath]
+                }
             }
         #else
             return DependencyValues._current[keyPath: self.keyPath]
