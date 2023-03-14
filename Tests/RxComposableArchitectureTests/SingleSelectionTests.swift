@@ -9,7 +9,7 @@ import RxComposableArchitecture
 import XCTest
 
 internal final class SingleSelectionTests: XCTestCase {
-    internal struct Item: HashDiffable, Equatable {
+    internal struct Item: Identifiable, Equatable {
         internal let id: Int
         internal var isSelected: Bool
     }

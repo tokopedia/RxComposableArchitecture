@@ -176,12 +176,12 @@ internal final class IdentifiedArrayTests: XCTestCase {
     }
 }
 
-internal struct User: Equatable, HashDiffable {
+internal struct User: Equatable, Identifiable {
     internal let id: Int
     internal var name: String
 }
 
-internal struct ComparableValue: Comparable, HashDiffable {
+internal struct ComparableValue: Comparable, Identifiable {
     internal let id: Int
     internal let value: Int
 

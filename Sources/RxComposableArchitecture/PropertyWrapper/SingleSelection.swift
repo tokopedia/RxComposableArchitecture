@@ -11,7 +11,7 @@
  if you have state like this
 
  ```swift
- struct Item: HashDiffable, Equatable {
+ struct Item: Identifiable, Equatable {
      let id: Int
      var isSelected: Bool
  }
@@ -44,7 +44,7 @@
  here, `SingleSelection` comes to rescue.
 
  ```swift
- struct Item: HashDiffable, Equatable {
+ struct Item: Identifiable, Equatable {
      let id: Int
      var isSelected: Bool
  }
@@ -79,7 +79,7 @@
  your array item also can conform to `Selectable`, so you don't need to manually give the keypath
 
  ```swift
- struct Item: HashDiffable, Equatable, Selectable {
+ struct Item: Identifiable, Equatable, Selectable {
      let id: Int
      var isSelected: Bool
  }
@@ -94,11 +94,11 @@
  everytime array is mutated, SingleSelection need to check if only one item is selected every time mutation happend.
  */
 @propertyWrapper
-public struct SingleSelection<Element> where Element: HashDiffable {
+public struct SingleSelection<Element> where Element: Identifiable {
     private let _getSelection: (Element) -> Bool
     private let _setSelection: (inout Element, Bool) -> Void
 
-    private var _currentSelectedId: Element.IdentifierType?
+    private var _currentSelectedId: Element.ID?
     private var _wrappedValue: IdentifiedArrayOf<Element>
 
     public var wrappedValue: IdentifiedArrayOf<Element> {
@@ -158,9 +158,9 @@ public struct SingleSelection<Element> where Element: HashDiffable {
         - will keep track of current selected id on `_currentSelectedId`
      */
     private mutating func set(_ values: IdentifiedArrayOf<Element>) {
-        /// filter all element where `isSelected` is true, and map it to its `Element.IdentifierType` or `id`
+        /// filter all element where `isSelected` is true, and map it to its `Element.ID` or `id`
         let selectedIds = values
-            .compactMap { value -> Element.IdentifierType? in
+            .compactMap { value -> Element.ID? in
                 guard _getSelection(value) else { return nil }
                 return value.id
             }

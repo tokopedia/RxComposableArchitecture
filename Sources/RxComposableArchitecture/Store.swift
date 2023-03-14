@@ -582,7 +582,7 @@ extension Store where State: Equatable {
 /// ```
 public typealias StoreOf<R: ReducerProtocol> = Store<R.State, R.Action>
 
-extension Store where State: Collection, State.Element: HashDiffable, State: Equatable, State.Element: Equatable {
+extension Store where State: Collection, State.Element: Identifiable, State: Equatable, State.Element: Equatable {
     /**
      A version of scope that scope an collection of sub store.
 
@@ -615,11 +615,11 @@ extension Store where State: Collection, State.Element: HashDiffable, State: Equ
      - Returns: A new store with its domain (state and domain) transformed based on the index you set
      */
     public func scope<LocalAction>(
-        at identifier: State.Element.IdentifierType,
+        at identifier: State.Element.ID,
         action fromLocalAction: @escaping (LocalAction) -> Action
     ) -> Store<State.Element, LocalAction>? {
         self.threadCheck(status: .scope)
-        let toLocalState: (State.Element.IdentifierType, State) -> State.Element? = { identifier, state in
+        let toLocalState: (State.Element.ID, State) -> State.Element? = { identifier, state in
             /**
              if current state is IdentifiedArray, use pre exist subscript by identifier, to improve performance
              */
