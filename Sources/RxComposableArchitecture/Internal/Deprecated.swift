@@ -84,7 +84,7 @@ extension AnyReducer {
     }
 }
 
-extension AnyReducer where State: HashDiffable {
+extension AnyReducer where State: Identifiable {
     /// https://github.com/pointfreeco/swift-composable-architecture/pull/641
     @available(*, deprecated, message: "Use the 'IdentifiedArray'-based version, instead.")
     public func forEach<Identifier, GlobalState, GlobalAction, GlobalEnvironment>(
@@ -92,7 +92,7 @@ extension AnyReducer where State: HashDiffable {
         action toLocalAction: CasePath<GlobalAction, (Identifier, Action)>,
         environment toLocalEnvironment: @escaping (GlobalEnvironment) -> Environment
     ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment>
-        where Identifier == State.IdentifierType {
+        where Identifier == State.ID {
         .init { globalState, globalAction, globalEnvironment in
             guard let (identifier, localAction) = toLocalAction.extract(from: globalAction) else {
                 return .none

@@ -6,7 +6,6 @@ RxComposableArchitecture is a forked of [Composable Architecture](https://github
 
 ## What is the differences between RxComposable and TCA
 - Use of `RxSwift` instead of `Combine` (to support iOS<13) as the Reactive backbone.
-- Use of `HashDiffable` instead of `Identifiable`
 - Effect only have 1 generic, doesn't have Error counterpart.
 - We are not using `ViewStore`, because on UIKit, we don't need the presence of `ViewStore` yet.
 
@@ -138,7 +137,7 @@ let appReducer = Reducer<AppState, AppAction, AppEnvironment> { state, action, e
 }
 ```
 
-And then finally we define the view that displays the feature. It holds onto a `Store<AppState, AppAction>` so that it can observe all changes to the state and re-render, and we can send all user actions to the store so that state changes. We must also introduce a struct wrapper around the fact alert to make it `HashDiffable`, which the `.alert` view modifier requires:
+And then finally we define the view that displays the feature. It holds onto a `Store<AppState, AppAction>` so that it can observe all changes to the state and re-render, and we can send all user actions to the store so that state changes. We must also introduce a struct wrapper around the fact alert to make it `Identifiable`, which the `.alert` view modifier requires:
 
 ```swift
   class AppViewController: UIViewController {

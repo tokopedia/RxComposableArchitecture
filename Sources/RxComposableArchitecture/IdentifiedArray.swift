@@ -243,7 +243,7 @@ extension IdentifiedArray: CustomStringConvertible {
     }
 }
 
-extension IdentifiedArray: Decodable where Element: Decodable & HashDiffable, ID == Element.IdentifierType {
+extension IdentifiedArray: Decodable where Element: Decodable & Identifiable, ID == Element.ID {
     public init(from decoder: Decoder) throws {
         self.init(try [Element](from: decoder))
     }
@@ -265,20 +265,20 @@ extension IdentifiedArray where Element: Comparable {
     }
 }
 
-extension IdentifiedArray: ExpressibleByArrayLiteral where Element: HashDiffable, ID == Element.IdentifierType {
+extension IdentifiedArray: ExpressibleByArrayLiteral where Element: Identifiable, ID == Element.ID {
     public init(arrayLiteral elements: Element...) {
         self.init(elements)
     }
 }
 
-extension IdentifiedArray where Element: HashDiffable, ID == Element.IdentifierType {
+extension IdentifiedArray where Element: Identifiable, ID == Element.ID {
     public init<S>(_ elements: S) where S: Sequence, S.Element == Element {
         self.init(elements, id: \.id)
     }
 }
 
 extension IdentifiedArray: RangeReplaceableCollection
-    where Element: HashDiffable, ID == Element.IdentifierType {
+    where Element: Identifiable, ID == Element.ID {
     public init() {
         self.init([], id: \.id)
     }
@@ -300,10 +300,10 @@ extension IdentifiedArray: RangeReplaceableCollection
 }
 
 /// A convenience type to specify an `IdentifiedArray` by an identifiable element.
-public typealias IdentifiedArrayOf<Element> = IdentifiedArray<Element.IdentifierType, Element>
-    where Element: HashDiffable
+public typealias IdentifiedArrayOf<Element> = IdentifiedArray<Element.ID, Element>
+    where Element: Identifiable
 
-extension IdentifiedArrayOf where Element: HashDiffable, Element.IdentifierType == ID {
+extension IdentifiedArrayOf where Element: Identifiable, Element.ID == ID {
     public func removeDuplicates() -> Self {
         /// This table will contain `diffIdentifier` as the `key` and object `type` as the value
         var tableOfObjectType = [AnyHashable: Any.Type]()

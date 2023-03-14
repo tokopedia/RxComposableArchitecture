@@ -73,7 +73,7 @@ final class ForEachReducerTests: XCTestCase {
 
 struct Elements: ReducerProtocol {
   struct State: Equatable {
-    struct Row: Equatable, HashDiffable {
+    struct Row: Equatable, Identifiable {
       var id: Int
       var value: String
     }

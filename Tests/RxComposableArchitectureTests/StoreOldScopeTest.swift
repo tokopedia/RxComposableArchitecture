@@ -178,7 +178,7 @@ internal final class StoreOldScopeTest: XCTestCase {
     }
     
     internal func testScopeAtIndexCallCount2() {
-        struct Item: HashDiffable, Equatable {
+        struct Item: Identifiable, Equatable {
             var id: Int
             var qty: Int
         }
