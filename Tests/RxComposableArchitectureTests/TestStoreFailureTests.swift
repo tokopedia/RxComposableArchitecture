@@ -136,7 +136,7 @@
             The store received 1 unexpected action after this one: …
 
             Unhandled actions: [
-              [0]: TestStoreFailureTests.Action.second
+              [0]: .second
             ]
             """
         }
@@ -200,7 +200,7 @@
           Must handle 1 received action before sending an action: …
 
           Unhandled actions: [
-            [0]: TestStoreFailureTests.Action.second
+            [0]: .second
           ]
           """
       }

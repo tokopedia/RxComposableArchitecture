@@ -3,6 +3,9 @@ build-library:
 
 test-library:
 	swift test --enable-code-coverage | xcpretty
+	
+default:
+	make build-library && make test-library
 
 test-example:
 	mkdir -p derivedData && \

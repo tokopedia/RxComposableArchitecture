@@ -1,5 +1,6 @@
 import CasePaths
 import Dispatch
+import CustomDump
 
 @available(iOS, deprecated: 9999.0, message: "Use a 'ReducerProtocol' conformance, instead.")
 extension AnyReducer {

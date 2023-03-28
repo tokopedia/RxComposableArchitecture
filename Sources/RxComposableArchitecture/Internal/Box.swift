@@ -17,8 +17,8 @@ func isMirrorEqual(_ lhs: Any, _ rhs: Any) -> Bool {
     (Box<LHS>.self as? AnyEquatable.Type)?.isEqual(lhs, rhs)
   }
   if let isEqual = _openExistential(type(of: lhs), do: open) { return isEqual }
-  let lhsMirror = Mirror(customDumpReflecting: lhs)
-  let rhsMirror = Mirror(customDumpReflecting: rhs)
+    let lhsMirror = Mirror(reflecting: lhs)
+    let rhsMirror = Mirror(reflecting: rhs)
   guard
     lhsMirror.subjectType == rhsMirror.subjectType,
     lhsMirror.children.count == rhsMirror.children.count
