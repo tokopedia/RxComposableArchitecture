@@ -1,3 +1,5 @@
+import CustomDump
+
 extension ReducerProtocol {
     /// Enhances a reducer with debug logging of received actions and state mutations for the given
     /// printer.
@@ -37,7 +39,7 @@ extension _ReducerPrinter {
             guard context != .preview else { return }
             var target = ""
             target.write("received action:\n")
-            RxComposableArchitecture.customDump(receivedAction, to: &target, indent: 2)
+            CustomDump.customDump(receivedAction, to: &target, indent: 2)
             target.write("\n")
             target.write(diff(oldState, newState).map { "\($0)\n" } ?? "  (No state changes)\n")
             print(target)

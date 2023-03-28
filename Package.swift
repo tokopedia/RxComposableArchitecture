@@ -20,6 +20,7 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-case-paths", from: "0.8.1"),
         .package(name: "Benchmark", url: "https://github.com/google/swift-benchmark", from: "0.1.0"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "0.8.0"),
+        .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "0.3.0"),
     ],
     targets: [
         .target(
@@ -29,11 +30,15 @@ let package = Package(
                 .product(name: "RxSwift", package: "RxSwift"),
                 .product(name: "RxRelay", package: "RxSwift"),
                 .product(name: "XCTestDynamicOverlay", package: "xctest-dynamic-overlay"),
+                .product(name: "CustomDump", package: "swift-custom-dump"),
             ]
         ),
         .testTarget(
             name: "RxComposableArchitectureTests",
-            dependencies: ["RxComposableArchitecture"]
+            dependencies: [
+                "RxComposableArchitecture",
+                .product(name: "CustomDump", package: "swift-custom-dump"),
+            ]
         ),
         .executableTarget(
             name: "RxComposableArchitecture-Benchmark",

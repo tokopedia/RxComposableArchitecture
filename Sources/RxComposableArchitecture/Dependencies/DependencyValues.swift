@@ -1,5 +1,6 @@
 import Foundation
 import XCTestDynamicOverlay
+import CustomDump
 
 /// A collection of dependencies that is globally available.
 ///

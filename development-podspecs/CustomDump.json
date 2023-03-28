@@ -1,0 +1,36 @@
+{
+  "name": "CustomDump",
+  "version": "0.9.1",
+  "summary": "A collection of tools for debugging, diffing, and testing your application's data structures.",
+  "description": "A collection of tools for debugging, diffing, and testing your application's data structures.",
+  "homepage": "https://github.com/pointfreeco/swift-custom-dump",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "PointFree": "support@pointfree.co"
+  },
+  "social_media_url": "http://twitter.com/pointfreeco",
+  "platforms": {
+    "ios": "13.0",
+    "osx": "10.15"
+  },
+  "source": {
+    "git": "https://github.com/pointfreeco/swift-custom-dump.git",
+    "tag": "0.9.1"
+  },
+  "ios": {
+    "source_files": "Sources/CustomDump/**/*.swift"
+  },
+  "osx": {
+    "source_files": "Sources/CustomDump/**/*.swift"
+  },
+  "swift_versions": "5.0",
+  "dependencies": {
+    "XCTestDynamicOverlay": [
+
+    ]
+  },
+  "swift_version": "5.0"
+}
