@@ -5,31 +5,31 @@
 //  Created by Edho Prasetyo on 25/09/20.
 //
 
-extension Int: HashDiffable {
+extension Int: Identifiable {
     public var id: Int {
         return self
     }
 }
 
-extension String: HashDiffable {
+extension String: Identifiable {
     public var id: String {
         return self
     }
 }
 
-extension Bool: HashDiffable {
+extension Bool: Identifiable {
     public var id: Bool {
         return self
     }
 }
 
-extension Double: HashDiffable {
+extension Double: Identifiable {
     public var id: Double {
         return self
     }
 }
 
-extension Float: HashDiffable {
+extension Float: Identifiable {
     public var id: Float {
         return self
     }
@@ -64,7 +64,7 @@ extension Array where Element == AnyHashDiffable {
     }
 }
 
-extension Array where Element: HashDiffable {
+extension Array where Element: Identifiable {
     public func removeDuplicates() -> Self {
         /// This table will contain `diffIdentifier` as the `key` and object `type` as the value
         var tableOfObjectType = [AnyHashable: Any.Type]()

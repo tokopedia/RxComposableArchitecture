@@ -5,13 +5,13 @@
 //  Created by Edho Prasetyo on 24/09/20.
 //
 
-/// A type-erased `HashDiffable` value.
+/// A type-erased `Identifiable` value.
 ///
 /// The `AnyHashDiffable` wrap the `HashDiffableProtocol` associatedType
 ///
-/// If you want to use multiple element of array model conforming `HashDiffable`, you can't directly call
+/// If you want to use multiple element of array model conforming `Identifiable`, you can't directly call
 ///
-///     let myArrayData = [HashDiffable]()
+///     let myArrayData = [Identifiable]()
 ///
 /// Instead you wrap it like this:
 ///
@@ -21,7 +21,7 @@
 ///     ]
 ///
 
-public struct AnyHashDiffable: HashDiffable {
+public struct AnyHashDiffable: Identifiable, Equatable {
     /// The value of `Diffable` wrapped by this instance.
     public var base: Any {
         return box.base
@@ -33,12 +33,11 @@ public struct AnyHashDiffable: HashDiffable {
     }
 
     internal let box: AnyHashDiffableBox
-
-    /// Creates a type-erased `HashDiffable` value that wraps the given instance.
+    /// Creates a type-erased `Identifiable` value that wraps the given instance.
     ///
     /// - Parameters:
     ///   - base: A differentiable value to wrap.
-    public init<D: HashDiffable>(_ base: D) {
+    public init<D: Identifiable & Equatable>(_ base: D) {
         /// Condition to handle if accidentaly `AnyHashDiffable` being wrapped in another `AnyHashDiffable` again.
         if let anyDifferentiable = base as? AnyHashDiffable {
             self = anyDifferentiable
@@ -46,16 +45,9 @@ public struct AnyHashDiffable: HashDiffable {
             box = HashDiffableBox(base)
         }
     }
-
-    /// Indicate whether the content of `base` is equals to the content of the given source value.
-    ///
-    /// - Parameters:
-    ///   - source: A source value to be compared.
-    ///
-    ///   - Returns: A Boolean value indicating whether the content of `base` is equals
-    ///            to the content of `base` of the given source value.
-    public func isEqual(to source: AnyHashDiffable) -> Bool {
-        return box.isEqual(to: source.box)
+    
+    public static func == (lhs: AnyHashDiffable, rhs: AnyHashDiffable) -> Bool {
+        lhs.box.isEqual(to: rhs.box)
     }
 }
 
@@ -72,7 +64,7 @@ internal protocol AnyHashDiffableBox {
     func isEqual(to source: AnyHashDiffableBox) -> Bool
 }
 
-internal struct HashDiffableBox<Base: HashDiffable>: AnyHashDiffableBox {
+internal struct HashDiffableBox<Base: Identifiable & Equatable>: AnyHashDiffableBox {
     internal let baseComponent: Base
 
     internal var base: Any {
@@ -91,6 +83,6 @@ internal struct HashDiffableBox<Base: HashDiffable>: AnyHashDiffableBox {
         guard let sourceBase = source.base as? Base else {
             return false
         }
-        return baseComponent.isEqual(to: sourceBase)
+        return baseComponent == sourceBase
     }
 }

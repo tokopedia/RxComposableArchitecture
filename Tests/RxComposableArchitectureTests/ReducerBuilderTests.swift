@@ -42,7 +42,7 @@ private struct Root: ReducerProtocol {
     case feature(Feature.Action)
     case optionalFeature(Feature.Action)
     case enumFeature(Features.Action)
-    case features(id: Feature.State.IdentifierType, feature: Feature.Action)
+    case features(id: Feature.State.ID, feature: Feature.Action)
   }
 
   @available(iOS, introduced: 9999.0)
@@ -166,7 +166,7 @@ private struct Root: ReducerProtocol {
   #endif
 
   struct Feature: ReducerProtocol {
-    struct State: Equatable, HashDiffable {
+    struct State: Equatable, Identifiable {
       let id: Int
     }
     enum Action {
@@ -248,14 +248,14 @@ private struct IfCaseLetExample: ReducerProtocol {
 }
 
 private struct ForEachExample: ReducerProtocol {
-  struct Element: Equatable, HashDiffable { let id: Int }
+  struct Element: Equatable, Identifiable { let id: Int }
 
   struct State {
     var values: IdentifiedArrayOf<Element>
   }
 
   enum Action {
-    case value(id: Element.IdentifierType, action: Never)
+    case value(id: Element.ID, action: Never)
   }
 
   #if swift(>=5.7)
