@@ -31,5 +31,6 @@ Pod::Spec.new do |s|
   s.dependency 'RxCocoa', '5.1.1'
   s.dependency 'CasePaths'
   s.dependency 'XCTestDynamicOverlay'
+  s.dependency 'CustomDump'
   
 end
