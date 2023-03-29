@@ -9,47 +9,54 @@
 import RxComposableArchitecture
 import RxSwift
 import XCTest
+import XCTestDynamicOverlay
 
 internal class RxComposableArchitectureTests: XCTestCase {
     internal func testScheduling() {
-        enum CounterAction: Equatable {
-            case incrAndSquareLater
-            case incrNow
-            case squareNow
-        }
-
-        let counterReducer = AnyReducer<Int, CounterAction, SchedulerType> {
-            state, action, scheduler in
-            switch action {
-            case .incrAndSquareLater:
-                return .merge(
-                    Effect(value: .incrNow)
-                        .delay(.seconds(2), scheduler: scheduler)
-                        .eraseToEffect(),
-                    Effect(value: .squareNow)
-                        .delay(.seconds(1), scheduler: scheduler)
-                        .eraseToEffect(),
-                    Effect(value: .squareNow)
-                        .delay(.seconds(2), scheduler: scheduler)
-                        .eraseToEffect()
-                )
-            case .incrNow:
-                state += 1
-                return .none
-            case .squareNow:
-                state *= state
-                return .none
+        struct Counter: ReducerProtocol {
+            typealias State = Int
+            
+            enum Action: Equatable {
+                case incrAndSquareLater
+                case incrNow
+                case squareNow
+            }
+            
+            @Dependency(\.mainQueue) var scheduler
+            
+            func reduce(into state: inout Int, action: Action) -> Effect<Action> {
+                switch action {
+                case .incrAndSquareLater:
+                    return .merge(
+                        Effect(value: .incrNow)
+                            .delay(.seconds(2), scheduler: scheduler)
+                            .eraseToEffect(),
+                        Effect(value: .squareNow)
+                            .delay(.seconds(1), scheduler: scheduler)
+                            .eraseToEffect(),
+                        Effect(value: .squareNow)
+                            .delay(.seconds(2), scheduler: scheduler)
+                            .eraseToEffect()
+                    )
+                case .incrNow:
+                    state += 1
+                    return .none
+                case .squareNow:
+                    state *= state
+                    return .none
+                }
             }
         }
-
+        
         let scheduler = TestScheduler(initialClock: 0)
 
         let store = TestStore(
             initialState: 2,
-            reducer: counterReducer,
-            environment: scheduler,
+            reducer: Counter(),
             useNewScope: true
         )
+        
+        store.dependencies.mainQueue = scheduler
 
         store.send(.incrAndSquareLater)
         scheduler.advance(by: .seconds(1))
@@ -64,36 +71,27 @@ internal class RxComposableArchitectureTests: XCTestCase {
         store.receive(.incrNow) { $0 = 626 }
         store.receive(.squareNow) { $0 = 391_876 }
     }
-
+    
     internal func testLongLivingEffects() {
-        typealias Environment = (
-            startEffect: Effect<Void>,
-            stopEffect: Effect<Never>
-        )
-
+        let subject = PublishSubject<Void>()
+        
         enum Action { case end, incr, start }
 
-        let reducer = AnyReducer<Int, Action, Environment> { state, action, environment in
+        let reducer = Reduce<Int, Action> { state, action in
             switch action {
             case .end:
-                return environment.stopEffect.fireAndForget()
+                return .fireAndForget { subject.onCompleted() }
             case .incr:
                 state += 1
                 return .none
             case .start:
-                return environment.startEffect.map { Action.incr }
+                return subject.eraseToEffect().map { Action.incr }
             }
         }
-
-        let subject = PublishSubject<Void>()
-
+        
         let store = TestStore(
             initialState: 0,
             reducer: reducer,
-            environment: (
-                startEffect: subject.eraseToEffect(),
-                stopEffect: .fireAndForget { subject.onCompleted() }
-            ),
             useNewScope: true
         )
 
@@ -105,49 +103,51 @@ internal class RxComposableArchitectureTests: XCTestCase {
     }
 
     internal func testCancellation() {
-        enum Action: Equatable {
-            case cancel
-            case incr
-            case response(Int)
-        }
+        struct Cancellation: ReducerProtocol {
+            typealias State = Int
+            
+            enum Action: Equatable {
+                case cancel
+                case incr
+                case response(Int)
+            }
+            
+            @Dependency(\.myEnvironment) var environment
+            @Dependency(\.mainQueue) var mainQueue
+            
+            func reduce(into state: inout Int, action: Action) -> Effect<Action> {
+                enum CancelId {}
 
-        struct Environment {
-            let fetch: (Int) -> Effect<Int>
-            let mainQueue: TestScheduler
-        }
+                switch action {
+                case .cancel:
+                    return .cancel(id: CancelId.self)
 
-        let reducer = AnyReducer<Int, Action, Environment> { state, action, environment in
-            enum CancelId {}
+                case .incr:
+                    state += 1
+                    return environment.fetch(state)
+                        .observeOn(mainQueue)
+                        .map(Action.response)
+                        .eraseToEffect()
+                        .cancellable(id: CancelId.self)
 
-            switch action {
-            case .cancel:
-                return .cancel(id: CancelId.self)
-
-            case .incr:
-                state += 1
-                return environment.fetch(state)
-                    .observeOn(environment.mainQueue)
-                    .map(Action.response)
-                    .eraseToEffect()
-                    .cancellable(id: CancelId.self)
-
-            case let .response(value):
-                state = value
-                return .none
+                case let .response(value):
+                    state = value
+                    return .none
+                }
             }
         }
-
+        
+        
         let scheduler = TestScheduler(initialClock: 0)
 
         let store = TestStore(
             initialState: 0,
-            reducer: reducer,
-            environment: Environment(
-                fetch: { value in Effect(value: value * value) },
-                mainQueue: scheduler
-            ),
+            reducer: Cancellation(),
             useNewScope: true
         )
+        
+        store.dependencies.myEnvironment.fetch = { value in Effect(value: value * value) }
+        store.dependencies.mainQueue = scheduler
 
         store.send(.incr) { $0 = 1 }
         scheduler.advance(by: .milliseconds(1))
@@ -156,5 +156,24 @@ internal class RxComposableArchitectureTests: XCTestCase {
         store.send(.incr) { $0 = 2 }
         store.send(.cancel)
         scheduler.run()
+    }
+}
+
+private struct MyEnvironment: DependencyKey {
+    var fetch: (Int) -> Effect<Int>
+    
+    static let liveValue: MyEnvironment = MyEnvironment(
+        fetch: { value in Effect(value: value * value) }
+    )
+    
+    static let testValue: MyEnvironment = MyEnvironment(
+        fetch: unimplemented("unimplemented fetch")
+    )
+}
+
+extension DependencyValues {
+    fileprivate var myEnvironment: MyEnvironment {
+        get { self[MyEnvironment.self] }
+        set { self[MyEnvironment.self] = newValue }
     }
 }
