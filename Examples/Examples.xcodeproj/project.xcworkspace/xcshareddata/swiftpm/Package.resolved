@@ -38,6 +38,15 @@
         }
       },
       {
+        "package": "swift-custom-dump",
+        "repositoryURL": "https://github.com/pointfreeco/swift-custom-dump",
+        "state": {
+          "branch": null,
+          "revision": "de8ba65649e7ee317b9daf27dd5eebf34bd4be57",
+          "version": "0.9.1"
+        }
+      },
+      {
         "package": "xctest-dynamic-overlay",
         "repositoryURL": "https://github.com/pointfreeco/xctest-dynamic-overlay",
         "state": {
