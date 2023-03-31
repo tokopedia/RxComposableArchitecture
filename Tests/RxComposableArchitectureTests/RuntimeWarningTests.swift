@@ -79,5 +79,21 @@ final class RuntimeWarningTests: XCTestCase {
         }
         _ = XCTWaiter.wait(for: [.init()], timeout: 0.5)
     }
+    
+    func testStoreSendMainThread() {
+        XCTExpectFailure {
+            $0.compactDescription == """
+          "Store.send/ViewStore.send" was called on a non-main thread with: () …
+          
+          The "Store" class is not thread-safe, and so all interactions with an instance of "Store" (including all of its scopes and derived view stores) must be done on the main thread.
+          """
+        }
+        
+        let store = Store<Int, Void>(initialState: 0, reducer: EmptyReducer())
+        Task {
+            store.send(())
+        }
+        _ = XCTWaiter.wait(for: [.init()], timeout: 0.5)
+    }
 }
 #endif
