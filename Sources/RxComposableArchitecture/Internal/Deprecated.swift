@@ -7,6 +7,14 @@
 
 import Darwin
 
+// MARK: - Depreacted after 0.50.0:
+@available(
+  *,
+  deprecated,
+  message: "Use 'ReducerBuilder<_, _>' with explicit 'State' and 'Action' generics, instead."
+)
+public typealias ReducerBuilderOf<R: ReducerProtocol> = ReducerBuilder<R.State, R.Action>
+
 // MARK: - Deprecated after 0.42.0:
 
 /// This API has been soft-deprecated in favor of ``ReducerProtocol``.
