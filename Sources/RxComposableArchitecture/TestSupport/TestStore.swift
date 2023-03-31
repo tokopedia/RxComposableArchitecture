@@ -700,7 +700,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         self.dependencies = dependencies
     }
     
-    // TODO: Andhika, Need to check if this one still needed 
+    // TODO: Andhika, Need to check if this one still needed
     /// Creates a test store with an initial state and a reducer powering its runtime.
     ///
     /// See <doc:Testing> and the documentation of ``TestStore`` for more information on how to best
@@ -1358,6 +1358,7 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
             line: line
         )
     }
+    
     /// Asserts a matching action was received from an effect and asserts how the state changes.
     ///
     /// See ``receive(_:timeout:assert:file:line:)-3myco`` for more information of how to use this

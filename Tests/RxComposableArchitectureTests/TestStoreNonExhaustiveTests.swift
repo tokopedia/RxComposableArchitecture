@@ -597,6 +597,47 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
         }
     }
     
+    // TODO: Andhika, If we can remove the deprecated init TestStore without state: Equatable, we can also remove this test case
+//    func testCasePathReceive_Exhaustive_NonEquatable() async {
+//        struct NonEquatable {}
+//        enum Action { case tap, response(NonEquatable) }
+//
+//        let store = TestStore(
+//            initialState: 0,
+//            reducer: Reduce<Int, Action> { state, action in
+//                switch action {
+//                case .tap:
+//                    return Effect(value: .response(NonEquatable()))
+//                case .response:
+//                    return .none
+//                }
+//            }
+//        )
+//
+//        await store.send(.tap)
+//        await store.receive(/Action.response)
+//    }
+//    
+//    func testPredicateReceive_Exhaustive_NonEquatable() async {
+//        struct NonEquatable {}
+//        enum Action { case tap, response(NonEquatable) }
+//
+//        let store = TestStore(
+//            initialState: 0,
+//            reducer: Reduce<Int, Action> { state, action in
+//                switch action {
+//                case .tap:
+//                    return Effect(value: .response(NonEquatable()))
+//                case .response:
+//                    return .none
+//                }
+//            }
+//        )
+//
+//        await store.send(.tap)
+//        await store.receive({ (/Action.response) ~= $0 })
+//    }
+    
     func testCasePathReceive_WrongAction() async {
         let store = TestStore(
             initialState: NonExhaustiveReceive.State(),
