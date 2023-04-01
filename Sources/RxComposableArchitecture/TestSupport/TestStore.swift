@@ -700,58 +700,6 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         self.dependencies = dependencies
     }
     
-    // TODO: Andhika, Need to check if this one still needed
-    /// Creates a test store with an initial state and a reducer powering its runtime.
-    ///
-    /// See <doc:Testing> and the documentation of ``TestStore`` for more information on how to best
-    /// use a test store.
-    ///
-    /// - Parameters:
-    ///   - initialState: The state the feature starts in.
-    ///   - reducer: The reducer that powers the runtime of the feature.
-    ///   - failingWhenNothingChange: Flag to make test failed if you provide trailing closure on ``send(_:_:file:line:)`` or ``receive(_:_:file:line:)`` but the state is the same
-    ///   - useNewScope: Increase performance
-//    @available(*, deprecated, message: "State must be equatable to perform assertions.")
-//    public init<R: ReducerProtocol>(
-//        initialState: @autoclosure () -> State,
-//        reducer: R,
-//        prepareDependencies: (inout DependencyValues) -> Void = { _ in },
-//        file: StaticString = #file,
-//        line: UInt = #line,
-//        failingWhenNothingChange: Bool = true,
-//        useNewScope: Bool = false
-//    )
-//    where
-//    R.State == State,
-//    R.Action == Action,
-//    State == ScopedState,
-//    Action == ScopedAction,
-//    Environment == Void
-//    {
-//        var dependencies = DependencyValues()
-//        dependencies.context = .test
-//        prepareDependencies(&dependencies)
-//
-//        let initialState = DependencyValues.$_current.withValue(dependencies) { initialState() }
-//
-//        let reducer = TestReducer(Reduce(reducer), initialState: initialState)
-//        self._environment = .init(wrappedValue: ())
-//        self.file = file
-//        self.fromScopedAction = { $0 }
-//        self.line = line
-//        self.reducer = reducer
-//        self.timeout = 100 * NSEC_PER_MSEC
-//        self.toScopedState = { $0 }
-//        self.failingWhenNothingChange = failingWhenNothingChange
-//        self.useNewScope = useNewScope
-//        self.store = Store(
-//            initialState: initialState,
-//            reducer: reducer,
-//            useNewScope: useNewScope
-//        )
-//        self.dependencies = dependencies
-//    }
-    
     @available(
         iOS,
         deprecated: 9999,
