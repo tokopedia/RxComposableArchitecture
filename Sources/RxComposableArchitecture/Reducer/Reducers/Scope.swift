@@ -143,11 +143,11 @@ public struct Scope<ParentState, ParentAction, Child: ReducerProtocol>: ReducerP
     ///   - toChildAction: A case path from parent action to a case containing child actions.
     ///   - child: A reducer that will be invoked with child actions against child state.
     @inlinable
-    public init(
-        state toChildState: WritableKeyPath<ParentState, Child.State>,
-        action toChildAction: CasePath<ParentAction, Child.Action>,
-        @ReducerBuilderOf<Child> _ child: () -> Child
-    ) {
+    public init<ChildState, ChildAction>(
+        state toChildState: WritableKeyPath<ParentState, ChildState>,
+        action toChildAction: CasePath<ParentAction, ChildAction>,
+        @ReducerBuilder<ChildState, ChildAction> _ child: () -> Child
+    ) where ChildState == Child.State, ChildAction == Child.Action {
         self.init(
             toChildState: .keyPath(toChildState),
             toChildAction: toChildAction,
@@ -156,14 +156,14 @@ public struct Scope<ParentState, ParentAction, Child: ReducerProtocol>: ReducerP
     }
     
     @inlinable
-    public init(
-        state toChildState: OptionalPath<ParentState, Child.State>,
-        action toChildAction: CasePath<ParentAction, Child.Action>,
-        @ReducerBuilderOf<Child> _ child: () -> Child,
+    public init<ChildState, ChildAction>(
+        state toChildState: OptionalPath<ParentState, ChildState>,
+        action toChildAction: CasePath<ParentAction, ChildAction>,
+        @ReducerBuilder<ChildState, ChildAction> _ child: () -> Child,
         file: StaticString = #file,
         fileID: StaticString = #fileID,
         line: UInt = #line
-    ) {
+    ) where ChildState == Child.State, ChildAction == Child.Action {
         self.init(
             toChildState: .optionalPath(toChildState, file: file, fileID: fileID, line: line),
             toChildAction: toChildAction,
@@ -231,14 +231,14 @@ public struct Scope<ParentState, ParentAction, Child: ReducerProtocol>: ReducerP
     ///   - toChildAction: A case path from parent action to a case containing child actions.
     ///   - child: A reducer that will be invoked with child actions against child state.
     @inlinable
-    public init(
-        state toChildState: CasePath<ParentState, Child.State>,
-        action toChildAction: CasePath<ParentAction, Child.Action>,
-        @ReducerBuilderOf<Child> _ child: () -> Child,
+    public init<ChildState, ChildAction>(
+        state toChildState: CasePath<ParentState, ChildState>,
+        action toChildAction: CasePath<ParentAction, ChildAction>,
+        @ReducerBuilder<ChildState, ChildAction> _ child: () -> Child,
         file: StaticString = #file,
         fileID: StaticString = #fileID,
         line: UInt = #line
-    ) {
+    ) where ChildState == Child.State, ChildAction == Child.Action {
         self.init(
             toChildState: .optionalPath(OptionalPath(toChildState), file: file, fileID: fileID, line: line),
             toChildAction: toChildAction,
