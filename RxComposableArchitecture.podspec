@@ -32,5 +32,6 @@ Pod::Spec.new do |s|
   s.dependency 'CasePaths'
   s.dependency 'XCTestDynamicOverlay'
   s.dependency 'CustomDump'
+  s.dependency 'Dependencies'
   
 end
