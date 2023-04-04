@@ -1,3 +1,4 @@
+#if DEBUG
 import CasePaths
 import Dispatch
 import CustomDump
@@ -188,3 +189,4 @@ private let _queue = DispatchQueue(
     label: "com.tokopedia.Tokopedia.DebugEnvironment",
     qos: .default
 )
+#endif

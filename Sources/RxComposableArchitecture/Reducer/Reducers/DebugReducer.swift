@@ -1,3 +1,4 @@
+#if DEBUG
 import CustomDump
 
 extension ReducerProtocol {
@@ -75,18 +76,17 @@ public struct _PrintChangesReducer<Base: ReducerProtocol>: ReducerProtocol {
     public func reduce(
         into state: inout Base.State, action: Base.Action
     ) -> Effect<Base.Action> {
-        #if DEBUG
-            if self.context != .test, let printer = self.printer {
-                let oldState = state
-                let effects = self.base.reduce(into: &state, action: action)
-                return effects.merge(
-                    with: .fireAndForget { [newState = state] in
-                        printer.printChange(
-                            receivedAction: action, oldState: oldState, newState: newState)
-                    }
-                )
-            }
-        #endif
+        if self.context != .test, let printer = self.printer {
+            let oldState = state
+            let effects = self.base.reduce(into: &state, action: action)
+            return effects.merge(
+                with: .fireAndForget { [newState = state] in
+                    printer.printChange(
+                        receivedAction: action, oldState: oldState, newState: newState)
+                }
+            )
+        }
         return self.base.reduce(into: &state, action: action)
     }
 }
+#endif

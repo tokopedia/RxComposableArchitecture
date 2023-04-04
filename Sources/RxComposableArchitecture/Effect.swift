@@ -1,6 +1,8 @@
 import Foundation
 import RxSwift
+#if DEBUG
 import CustomDump
+#endif
 
 /// A type that encapsulates a unit of work that can be run in the outside world, and can feed
 /// actions back to the ``Store``.
