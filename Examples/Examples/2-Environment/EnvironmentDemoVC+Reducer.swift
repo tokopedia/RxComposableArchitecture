@@ -10,6 +10,7 @@ import Foundation
 import RxComposableArchitecture
 import RxSwift
 import XCTestDynamicOverlay
+import Dependencies
 
 struct Environment: ReducerProtocol {
     struct State: Equatable {
