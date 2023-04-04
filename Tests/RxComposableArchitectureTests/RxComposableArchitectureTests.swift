@@ -10,6 +10,7 @@ import RxComposableArchitecture
 import RxSwift
 import XCTest
 import XCTestDynamicOverlay
+import Dependencies
 
 internal class RxComposableArchitectureTests: XCTestCase {
     internal func testScheduling() {

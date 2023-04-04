@@ -3,6 +3,7 @@ import Foundation
 import RxSwift
 import XCTestDynamicOverlay
 import CustomDump
+import Dependencies
 
 /// A testable runtime for a reducer.
 ///

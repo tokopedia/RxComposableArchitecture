@@ -1,6 +1,7 @@
 import Benchmark
 import RxComposableArchitecture
 import Foundation
+import Dependencies
 
 let dependenciesSuite = BenchmarkSuite(name: "Dependencies") { suite in
     #if swift(>=5.7)

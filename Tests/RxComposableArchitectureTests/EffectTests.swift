@@ -7,6 +7,7 @@
 
 import RxSwift
 import XCTest
+import Dependencies
 
 @_spi(Canary) import RxComposableArchitecture
 

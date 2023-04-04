@@ -21,6 +21,7 @@ let package = Package(
         .package(name: "Benchmark", url: "https://github.com/google/swift-benchmark", from: "0.1.0"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "0.8.0"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "0.3.0"),
+        .package(url: "https://github.com/TokoFree/swift-dependencies", branch: "rxswift-compatible-scheduler")
     ],
     targets: [
         .target(
@@ -31,6 +32,7 @@ let package = Package(
                 .product(name: "RxRelay", package: "RxSwift"),
                 .product(name: "XCTestDynamicOverlay", package: "xctest-dynamic-overlay"),
                 .product(name: "CustomDump", package: "swift-custom-dump"),
+                .product(name: "Dependencies", package: "swift-dependencies"),
             ]
         ),
         .testTarget(

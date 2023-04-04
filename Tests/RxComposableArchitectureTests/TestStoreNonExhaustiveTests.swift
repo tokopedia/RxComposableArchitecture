@@ -1,5 +1,6 @@
 #if DEBUG
 import RxComposableArchitecture
+import Dependencies
 import XCTest
 
 @MainActor
@@ -359,16 +360,16 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
             }
         } issueMatcher: {
             $0.compactDescription == """
-          A state change does not match expectation: …
+            A state change does not match expectation: …
 
-                TestStoreNonExhaustiveTests.Feature.State(
-              −   count: 2,
-              +   count: 1,
-                  isLoggedIn: true
-                )
+                  TestStoreNonExhaustiveTests.State(
+                −   count: 2,
+                +   count: 1,
+                    isLoggedIn: true
+                  )
 
-          (Expected: −, Actual: +)
-          """
+            (Expected: −, Actual: +)
+            """
         }
     }
     
