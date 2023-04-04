@@ -66,11 +66,11 @@
       },
       {
         "package": "swift-dependencies",
-        "repositoryURL": "https://github.com/tokofree/swift-dependencies",
+        "repositoryURL": "https://github.com/pointfreeco/swift-dependencies",
         "state": {
-          "branch": "rxswift-compatible-scheduler",
-          "revision": "6df2e8576a9433cfd8841697b86be20aa804e37c",
-          "version": null
+          "branch": null,
+          "revision": "6bb1034e8a1bfbf46dfb766b6c09b7b17e1cba10",
+          "version": "0.2.0"
         }
       },
       {
