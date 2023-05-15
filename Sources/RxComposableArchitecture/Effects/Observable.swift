@@ -1,4 +1,5 @@
 import RxSwift
+import Dependencies
 
 extension Effect: ObservableType {
     public typealias Element = Action

@@ -1,5 +1,6 @@
 import RxSwift
 import XCTest
+import Dependencies
 
 @testable import RxComposableArchitecture
 

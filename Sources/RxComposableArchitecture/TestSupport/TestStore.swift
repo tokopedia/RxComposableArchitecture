@@ -3,6 +3,7 @@ import Foundation
 import RxSwift
 import XCTestDynamicOverlay
 import CustomDump
+import Dependencies
 
 /// A testable runtime for a reducer.
 ///
@@ -676,15 +677,13 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
     ScopedState: Equatable,
     Environment == Void
     {
-        /// Notes: We still use old implementation
-        /// on 0.50.0 version, this code already using `withDependencies` implementation
-        /// which required us to do vendored `swift-dependencies`
-        ///
-        var dependencies = DependencyValues()
-        dependencies.context = .test
+        var dependencies = DependencyValues._current
         prepareDependencies(&dependencies)
-        
-        let initialState = DependencyValues.$_current.withValue(dependencies) { initialState() }
+        let initialState = withDependencies {
+            $0 = dependencies
+        } operation: {
+            initialState()
+        }
         
         let reducer = TestReducer(Reduce(reducer), initialState: initialState)
         self._environment = .init(wrappedValue: ())

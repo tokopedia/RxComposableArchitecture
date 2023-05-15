@@ -9,7 +9,7 @@
       "file": "LICENSE"
     },
     "platforms": {
-      "ios": "10.0"
+      "ios": "13.0"
     },
     "source": {
       "git": "https://github.com/pointfreeco/swift-case-paths",

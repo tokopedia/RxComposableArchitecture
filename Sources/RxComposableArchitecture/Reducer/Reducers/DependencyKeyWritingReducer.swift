@@ -1,3 +1,5 @@
+import Dependencies
+
 extension ReducerProtocol {
     /// Sets the dependency value of the specified key path to the given value.
     ///

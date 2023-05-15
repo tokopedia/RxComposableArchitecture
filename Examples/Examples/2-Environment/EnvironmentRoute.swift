@@ -7,6 +7,7 @@
 
 import RxComposableArchitecture
 import UIKit
+import Dependencies
 
 class EnvironmentRouteVC: UITableViewController {
     internal enum Route: String, CaseIterable {

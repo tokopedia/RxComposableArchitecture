@@ -10,6 +10,7 @@ import RxComposableArchitecture
 import RxSwift
 import XCTest
 import XCTestDynamicOverlay
+import Dependencies
 
 internal class RxComposableArchitectureTests: XCTestCase {
     internal func testScheduling() {
@@ -22,7 +23,7 @@ internal class RxComposableArchitectureTests: XCTestCase {
                 case squareNow
             }
             
-            @Dependency(\.mainQueue) var scheduler
+            @Dependency(\.rxMainQueue) var scheduler
             
             func reduce(into state: inout Int, action: Action) -> Effect<Action> {
                 switch action {
@@ -56,7 +57,7 @@ internal class RxComposableArchitectureTests: XCTestCase {
             useNewScope: true
         )
         
-        store.dependencies.mainQueue = scheduler
+        store.dependencies.rxMainQueue = scheduler
 
         store.send(.incrAndSquareLater)
         scheduler.advance(by: .seconds(1))
@@ -113,7 +114,7 @@ internal class RxComposableArchitectureTests: XCTestCase {
             }
             
             @Dependency(\.myEnvironment) var environment
-            @Dependency(\.mainQueue) var mainQueue
+            @Dependency(\.rxMainQueue) var mainQueue
             
             func reduce(into state: inout Int, action: Action) -> Effect<Action> {
                 enum CancelId {}
@@ -147,7 +148,7 @@ internal class RxComposableArchitectureTests: XCTestCase {
         )
         
         store.dependencies.myEnvironment.fetch = { value in Effect(value: value * value) }
-        store.dependencies.mainQueue = scheduler
+        store.dependencies.rxMainQueue = scheduler
 
         store.send(.incr) { $0 = 1 }
         scheduler.advance(by: .milliseconds(1))

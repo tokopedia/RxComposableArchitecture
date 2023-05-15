@@ -1,5 +1,6 @@
 import RxSwift
 import Foundation
+import Dependencies
 
 extension DependencyValues {
     /// The "main" queue.
@@ -65,7 +66,7 @@ extension DependencyValues {
     /// }
     /// await task.cancel()
     /// ```
-    public var mainQueue: SchedulerType {
+    public var rxMainQueue: SchedulerType {
         get { self[MainQueueKey.self] }
         set { self[MainQueueKey.self] = newValue }
     }

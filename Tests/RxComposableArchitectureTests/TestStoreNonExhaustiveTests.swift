@@ -1,5 +1,6 @@
 #if DEBUG
 import RxComposableArchitecture
+import Dependencies
 import XCTest
 
 @MainActor
@@ -359,16 +360,16 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
             }
         } issueMatcher: {
             $0.compactDescription == """
-          A state change does not match expectation: …
+            A state change does not match expectation: …
 
-                TestStoreNonExhaustiveTests.Feature.State(
-              −   count: 2,
-              +   count: 1,
-                  isLoggedIn: true
-                )
+                  TestStoreNonExhaustiveTests.State(
+                −   count: 2,
+                +   count: 1,
+                    isLoggedIn: true
+                  )
 
-          (Expected: −, Actual: +)
-          """
+            (Expected: −, Actual: +)
+            """
         }
     }
     
@@ -677,7 +678,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
             reducer: KrzysztofExample()
         )
         store.exhaustivity = .off
-        store.dependencies.mainQueue = mainQueue
+        store.dependencies.rxMainQueue = mainQueue
         
         store.send(.advanceAgeAndMoodAfterDelay)
         mainQueue.advance(by: .seconds(1))
@@ -758,7 +759,7 @@ struct KrzysztofExample: ReducerProtocol {
         case advanceAgeAndMoodAfterDelay
     }
     
-    @Dependency(\.mainQueue) var mainQueue
+    @Dependency(\.rxMainQueue) var mainQueue
     
     func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {

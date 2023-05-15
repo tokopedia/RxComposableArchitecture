@@ -1,5 +1,6 @@
 import RxComposableArchitecture
 import XCTest
+import Dependencies
 
 @MainActor
 final class DependencyKeyWritingReducerTests: XCTestCase {

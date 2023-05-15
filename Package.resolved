@@ -2,6 +2,15 @@
   "object": {
     "pins": [
       {
+        "package": "combine-schedulers",
+        "repositoryURL": "https://github.com/pointfreeco/combine-schedulers",
+        "state": {
+          "branch": null,
+          "revision": "0625932976b3ae23949f6b816d13bd97f3b40b7c",
+          "version": "0.10.0"
+        }
+      },
+      {
         "package": "RxSwift",
         "repositoryURL": "https://github.com/ReactiveX/RxSwift",
         "state": {
@@ -38,6 +47,15 @@
         }
       },
       {
+        "package": "swift-clocks",
+        "repositoryURL": "https://github.com/pointfreeco/swift-clocks",
+        "state": {
+          "branch": null,
+          "revision": "f9acfa1a45f4483fe0f2c434a74e6f68f865d12d",
+          "version": "0.3.0"
+        }
+      },
+      {
         "package": "swift-custom-dump",
         "repositoryURL": "https://github.com/pointfreeco/swift-custom-dump",
         "state": {
@@ -47,12 +65,21 @@
         }
       },
       {
+        "package": "swift-dependencies",
+        "repositoryURL": "https://github.com/pointfreeco/swift-dependencies",
+        "state": {
+          "branch": null,
+          "revision": "ad0a6a0dd4d4741263e798f4f5029589c9b5da73",
+          "version": "0.4.2"
+        }
+      },
+      {
         "package": "xctest-dynamic-overlay",
         "repositoryURL": "https://github.com/pointfreeco/xctest-dynamic-overlay",
         "state": {
           "branch": null,
-          "revision": "a9daebf0bf65981fd159c885d504481a65a75f02",
-          "version": "0.8.0"
+          "revision": "4af50b38daf0037cfbab15514a241224c3f62f98",
+          "version": "0.8.5"
         }
       }
     ]

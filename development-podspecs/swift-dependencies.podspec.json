@@ -1,8 +1,8 @@
 {
-    "name": "XCTestDynamicOverlay",
-    "version": "0.8.5",
+    "name": "Dependencies",
+    "version": "0.2.0",
     "authors": "local pod",
-    "homepage": "https://github.com/pointfreeco/xctest-dynamic-overlay",
+    "homepage": "https://github.com/pointfreeco/swift-dependencies",
     "summary": "local pod",
     "license": {
       "type": "MIT",
@@ -12,8 +12,8 @@
       "ios": "13.0"
     },
     "source": {
-      "git": "https://github.com/pointfreeco/xctest-dynamic-overlay",
-      "tag": "0.8.5"
+      "git": "https://github.com/pointfreeco/swift-dependencies",
+      "tag": "0.2.0"
     },
     "source_files": "Sources/**/*.swift",
     "swift_version": "5.0"
