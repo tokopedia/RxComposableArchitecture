@@ -2,7 +2,7 @@
     "name": "Dependencies",
     "version": "0.2.0",
     "authors": "local pod",
-    "homepage": "https://github.com/pointfreeco/swift-dependencies",
+    "homepage": "https://github.com/TokoFree/swift-dependencies",
     "summary": "local pod",
     "license": {
       "type": "MIT",
@@ -12,8 +12,8 @@
       "ios": "13.0"
     },
     "source": {
-      "git": "https://github.com/pointfreeco/swift-dependencies",
-      "tag": "0.2.0"
+      "git": "https://github.com/TokoFree/swift-dependencies.git",
+      "commit": "a57edad11c6ebd311006cdcde6e48cdda034f711"
     },
     "source_files": "Sources/**/*.swift",
     "swift_version": "5.0"
