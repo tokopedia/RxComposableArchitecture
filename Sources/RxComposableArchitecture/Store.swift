@@ -856,7 +856,7 @@ extension ScopedReducer: AnyScopedReducer {
                 guard !reducer.isSending else { return }
                 childStore?.relay.accept(toRescopedState(newValue))
             })
-            .disposed(by: store.disposeBag)
+            .disposed(by: childStore.disposeBag)
         return childStore
     }
 }
