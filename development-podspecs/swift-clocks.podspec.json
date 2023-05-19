@@ -1,6 +1,6 @@
 {
     "name": "Clocks",
-    "version": "0.1.0",
+    "version": "0.3.0",
     "authors": "local pod",
     "homepage": "https://github.com/pointfreeco/swift-clock",
     "summary": "local pod",
@@ -13,7 +13,7 @@
     },
     "source": {
       "git": "https://github.com/pointfreeco/swift-clock",
-      "tag": "0.1.0"
+      "tag": "0.3.0"
     },
     "source_files": "Sources/**/*.swift",
     "swift_version": "5.0"
