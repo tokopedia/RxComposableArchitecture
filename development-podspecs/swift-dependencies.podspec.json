@@ -13,7 +13,7 @@
     },
     "source": {
       "git": "https://github.com/TokoFree/swift-dependencies",
-      "commit": "cc63093badc9b35040cb1e47698266e41a90c3fe"
+      "tag": "0.5.0"
     },
     "source_files": "Sources/**/*.swift",
     "swift_version": "5.0"
