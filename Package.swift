@@ -21,7 +21,7 @@ let package = Package(
         .package(name: "Benchmark", url: "https://github.com/google/swift-benchmark", from: "0.1.0"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "0.8.5"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "0.3.0"),
-        .package(url: "https://github.com/TokoFree/swift-dependencies", revision: "cc63093badc9b35040cb1e47698266e41a90c3fe")
+        .package(url: "https://github.com/TokoFree/swift-dependencies", from: "0.5.01")
     ],
     targets: [
         .target(
