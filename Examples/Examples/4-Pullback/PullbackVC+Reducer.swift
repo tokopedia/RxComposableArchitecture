@@ -40,3 +40,30 @@ internal struct Pullback: ReducerProtocol {
         }
     }
 }
+
+//internal struct GrandChildCounterContent: ReducerProtocol {
+//    internal struct State: Equatable {
+//        internal var buttonNumber: Int = 0
+//    }
+//    
+//    internal enum Action: Equatable {
+//        case didTapMinus
+//        case didTapPlus
+//        case didTapButton
+//    }
+//    
+//    func reduce(into state: inout State, action: Action) -> Effect<Action> {
+//        switch action {
+//        case .didTapPlus:
+//            state.number += 1
+//            return .none
+//        case .didTapMinus:
+//            state.number -= 1
+//            return .none
+//        case .didTapButton:
+//            state.buttonNumber = Int.random(in: 0...100)
+//            return .none
+//        }
+//    }
+//    
+//}

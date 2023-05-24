@@ -17,6 +17,7 @@ class RouteVC: UITableViewController {
         case optionalIfLet = "5. IfLet & Reducer.optional"
         case neverEqual = "6. Demo NeverEqual"
         case timer = "7. Demo Timer"
+        case nestedScope = "8. Nested Scope"
     }
 
     internal var routes: [Route] = Route.allCases
@@ -78,6 +79,15 @@ class RouteVC: UITableViewController {
                 store: Store(
                     initialState: TimerExample.State(),
                     reducer: TimerExample()
+                )
+            )
+            navigationController?.pushViewController(viewController, animated: true)
+        case .nestedScope:
+            let viewController = NestedScopeVC(
+                store: Store(
+                    initialState: Parent.State(),
+                    reducer: Parent(),
+                    useNewScope: false
                 )
             )
             navigationController?.pushViewController(viewController, animated: true)
