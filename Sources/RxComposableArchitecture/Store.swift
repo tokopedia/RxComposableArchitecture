@@ -45,33 +45,54 @@ public final class Store<State, Action> {
         self.cancelsEffectsOnDeinit = cancelsEffectsOnDeinit
         self.useNewScope = useNewScope
         
-        let prepareBootstrapReducer: (R) -> any ReducerProtocol<R.State, R.Action> = { currentReducer in
-            /// we just only want to applied dependencies bootstrap on debug
-            /// return original reducer on fallback value
-            /// 
-            #if DEBUG
-                let reducerTypeString = String(reflecting: type(of: currentReducer))
-                
-                if let mockedData = _bootstrappedDependencies[reducerTypeString],
-                   let mockedReducer = mockedData as? _DependencyKeyWritingReducer<R> {
-                    return mockedReducer
-                } else {
-                    return currentReducer
-                }
-            #else
-                return currentReducer
-            #endif
-        }
-        
-        /// here we save our dependencies-bootstrap reducer
-        /// the fallback value will be original reducer without any dependencies bootstrap
-        ///
-        let _currentReducer = prepareBootstrapReducer(reducer)
-        
         #if swift(>=5.7)
+            let prepareBootstrapReducer: (R) -> any ReducerProtocol<R.State, R.Action> = { currentReducer in
+                /// we just only want to applied dependencies bootstrap on debug
+                /// return original reducer on fallback value
+                ///
+                #if DEBUG
+                    let reducerTypeString = String(reflecting: type(of: currentReducer))
+                    
+                    if let mockedData = _bootstrappedDependencies[reducerTypeString],
+                       let mockedReducer = mockedData as? _DependencyKeyWritingReducer<R> {
+                        return mockedReducer
+                    } else {
+                        return currentReducer
+                    }
+                #else
+                    return currentReducer
+                #endif
+            }
+        
+            /// here we save our dependencies-bootstrap reducer
+            /// the fallback value will be original reducer without any dependencies bootstrap
+            ///
+            let _currentReducer = prepareBootstrapReducer(reducer)
             self.reducer = _currentReducer
         #else
-            self.reducer = _currentReducer.reduce
+            let prepareBootstrapReducer: (R) -> (inout R.State, R.Action) -> Effect<R.Action> = { currentReducer in
+                /// we just only want to applied dependencies bootstrap on debug
+                /// return original reducer on fallback value
+                ///
+                #if DEBUG
+                    let reducerTypeString = String(reflecting: type(of: currentReducer))
+                    
+                    if let mockedData = _bootstrappedDependencies[reducerTypeString],
+                       let mockedReducer = mockedData as? _DependencyKeyWritingReducer<R> {
+                        return mockedReducer.reduce
+                    } else {
+                        return currentReducer.reduce
+                    }
+                #else
+                    return currentReducer.reduce
+                #endif
+            }
+            
+            /// here we save our dependencies-bootstrap reducer
+            /// the fallback value will be original reducer without any dependencies bootstrap
+            ///
+            let _currentReducer = prepareBootstrapReducer(reducer)
+            self.reducer = _currentReducer
         #endif
         #if DEBUG
             self.mainThreadChecksEnabled = mainThreadChecksEnabled
