@@ -151,7 +151,7 @@ import Foundation
         /// }
         /// ```
         /// - Parameter for: the `Reducer` to be injected
-        /// - Parameter withMock: the closure for mocking reducer
+        /// - Parameter withMock: the closure for mocking reducer's dependencies
         public static func mock<Reducer>(
             for reducer: Reducer,
             _ withMock: @escaping (Reducer) -> _DependencyKeyWritingReducer<Reducer>
