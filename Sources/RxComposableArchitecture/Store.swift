@@ -51,16 +51,22 @@ public final class Store<State, Action> {
             /// here we save our dependencies-bootstrap reducer
             /// the fallback value will be original reducer without any dependencies bootstrap
             ///
-            var currentReducer: any ReducerProtocol<R.State, R.Action> = reducer
             if let mockedReducer = _bootstrappedDependencies[reducerTypeString] as? _DependencyKeyWritingReducer<R> {
-                currentReducer = mockedReducer
+                #if swift(>=5.7)
+                    self.reducer = mockedReducer
+                #else
+                    self.reducer = mockedReducer.reduce
+                #endif
+            } else {
+                /// means we didn't find any bootstrap dependecies for this reducer
+                /// return the original ones
+                ///
+                #if swift(>=5.7)
+                    self.reducer = reducer
+                #else
+                    self.reducer = reducer.reduce
+                #endif
             }
-            
-            #if swift(>=5.7)
-                self.reducer = currentReducer
-            #else
-                self.reducer = currentReducer.reduce
-            #endif
         #else
             /// means on non-debug mode
             /// we not applied any bootstrap dependencies
