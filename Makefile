@@ -13,7 +13,7 @@ test-example:
 	xcodebuild test \
 	-project Examples.xcodeproj \
 	-scheme Examples \
-	-destination "platform=iOS Simulator,name=iPhone 13 Pro Max"
+	-destination "platform=iOS Simulator,name=iPhone 14 Pro"
 	-derivedDataPath ../derivedData \
 	| xcpretty \
 	&& rm -rf ../derivedData
