@@ -120,15 +120,65 @@ import Foundation
         /// - Warning: this api only supposed to be used on `BootstrapPicker`
         internal static func clearAll() {
             _bootstrappedEnvironments.removeAll()
+            _bootstrappedDependencies.removeAll()
         }
 
         /// get all Bootstrapped identifier
         /// - Warning: this api only supposed to be used on `BootstrapPicker`
         /// - Returns: all active indentifier
         internal static func getAllBootstrappedIdentifier() -> [String] {
-            _bootstrappedEnvironments.map(\.key)
+            _bootstrappedEnvironments.map(\.key) + _bootstrappedDependencies.map(\.key)
+        }
+    }
+
+    /// for our `Dependencies` mocking functionality
+    ///
+    extension Bootstrap {
+        /// Inject your `Reducer` along with your custom `Dependencies`
+        ///
+        /// ## Example
+        ///
+        /// ```swift
+        /// let requestFail = Environment {
+        ///    request: {
+        ///       return Effect(value: .failure(.serverError))
+        ///    }
+        /// }
+        ///
+        /// Bootstrap.mock(for: FeatureA()) { currentReducer in
+        ///     currentReducer
+        ///         .dependency(\.featureAEnvironment, mockFailed)
+        /// }
+        /// ```
+        /// - Parameter for: the `Reducer` to be injected
+        /// - Parameter withMock: the closure for mocking reducer's dependencies
+        public static func mock<Reducer>(
+            for reducer: Reducer,
+            _ withMock: @escaping (Reducer) -> _DependencyKeyWritingReducer<Reducer>
+        ) where Reducer: ReducerProtocol {
+            let reducerTypeString = String(reflecting: type(of: reducer))
+            let mockedReducer = withMock(reducer)
+            
+            _bootstrappedDependencies[reducerTypeString] = mockedReducer
+        }
+
+        /// Clear previous custom `Reducer` that injected with your custom `Dependencies`
+        ///
+        /// ## Example
+        ///
+        /// ```swift
+        /// Bootstrap.clear(for: FeatureA.self)
+        /// ```
+        ///
+        /// - Parameter keypath: the kaypath for our injected dependencies
+        public static func clear<Reducer>(
+            for reducer: Reducer.Type
+        ) where Reducer: ReducerProtocol {
+            let reducerTypeString = String(reflecting: reducer)
+            _bootstrappedDependencies.removeValue(forKey: reducerTypeString)
         }
     }
 
     internal var _bootstrappedEnvironments: [String: Any] = [:]
+    internal var _bootstrappedDependencies: [String: Any] = [:]
 #endif

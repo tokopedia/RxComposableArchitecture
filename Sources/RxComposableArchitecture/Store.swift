@@ -44,11 +44,40 @@ public final class Store<State, Action> {
         self.relay = BehaviorRelay(value: initialState)
         self.cancelsEffectsOnDeinit = cancelsEffectsOnDeinit
         self.useNewScope = useNewScope
-        #if swift(>=5.7)
-            self.reducer = reducer
+        
+        #if DEBUG
+            let reducerTypeString = String(reflecting: type(of: reducer))
+            
+            /// here we save our dependencies-bootstrap reducer
+            /// the fallback value will be original reducer without any dependencies bootstrap
+            ///
+            if let mockedReducer = _bootstrappedDependencies[reducerTypeString] as? _DependencyKeyWritingReducer<R> {
+                #if swift(>=5.7)
+                    self.reducer = mockedReducer
+                #else
+                    self.reducer = mockedReducer.reduce
+                #endif
+            } else {
+                /// means we didn't find any bootstrap dependecies for this reducer
+                /// return the original ones
+                ///
+                #if swift(>=5.7)
+                    self.reducer = reducer
+                #else
+                    self.reducer = reducer.reduce
+                #endif
+            }
         #else
-            self.reducer = reducer.reduce
+            /// means on non-debug mode
+            /// we not applied any bootstrap dependencies
+            ///
+            #if swift(>=5.7)
+                self.reducer = reducer
+            #else
+                self.reducer = reducer.reduce
+            #endif
         #endif
+
         #if DEBUG
             self.mainThreadChecksEnabled = mainThreadChecksEnabled
         #endif

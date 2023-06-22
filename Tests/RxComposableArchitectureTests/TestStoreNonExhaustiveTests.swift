@@ -362,7 +362,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
             $0.compactDescription == """
             A state change does not match expectation: …
 
-                  TestStoreNonExhaustiveTests.State(
+                  TestStoreNonExhaustiveTests.Feature.State(
                 −   count: 2,
                 +   count: 1,
                     isLoggedIn: true
