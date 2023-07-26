@@ -19,6 +19,10 @@ struct Environment: ReducerProtocol {
         var alertMessage: String?
         var uuidString: String = "NONE"
         var currentDate: Date?
+        
+        var isShowingAlert: Bool {
+            self.alertMessage != nil
+        }
     }
     
     enum Action: Equatable {

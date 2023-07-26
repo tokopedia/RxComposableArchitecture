@@ -6,15 +6,57 @@
 //
 
 import SwiftUI
+import RxComposableArchitecture
 
 struct BasicUsageView: View {
+    let store: StoreOf<Basic>
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        WithViewStore(self.store) { viewStore in
+            VStack {
+                Text("This is a demo for Basic usage State, Action, Reducer, and how to bind it to the UI using SwiftUI")
+                    .padding()
+                Spacer()
+                HStack(spacing: 48) {
+                    Button {
+                        viewStore.send(.didTapPlus)
+                    } label: {
+                        Label {
+                            Text("+")
+                                .font(.title3)
+                        } icon: {
+                            Image(systemName: "plus")
+                        }
+                        .labelStyle(.titleOnly)
+
+                    }
+                    
+                    Text("\(viewStore.number)")
+                        .font(.largeTitle)
+
+                    
+                    Button {
+                        viewStore.send(.didTapMinus)
+                    } label: {
+                        Label {
+                            Text("-")
+                                .font(.title3)
+                        } icon: {
+                            Image(systemName: "plus")
+                        }
+                        .labelStyle(.titleOnly)
+
+                    }
+                }
+                Spacer()
+            }
+            
+        }
     }
 }
 
 struct BasicUsageView_Previews: PreviewProvider {
     static var previews: some View {
-        BasicUsageView()
+        BasicUsageView(store: Store(initialState: Basic.State(number: 0), reducer: Basic()))
     }
 }
