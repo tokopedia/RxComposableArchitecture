@@ -35,7 +35,6 @@ class RouteVC: UITableViewController {
     }
     
     override internal func tableView(_: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print("<<< da-dbg: \(indexPath.section)")
         let route = routes[indexPath.section == 0 ? .UIKit : .SwiftUI]!
         tableView.deselectRow(at: indexPath, animated: true)
 
