@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/pointfreeco/combine-schedulers",
         "state": {
           "branch": null,
-          "revision": "882ac01eb7ef9e36d4467eb4b1151e74fcef85ab",
-          "version": "0.9.1"
+          "revision": "ec62f32d21584214a4b27c8cee2b2ad70ab2c38a",
+          "version": "0.11.0"
         }
       },
       {
@@ -51,8 +51,17 @@
         "repositoryURL": "https://github.com/pointfreeco/swift-clocks",
         "state": {
           "branch": null,
-          "revision": "20b25ca0dd88ebfb9111ec937814ddc5a8880172",
-          "version": "0.2.0"
+          "revision": "0fbaebfc013715dab44d715a4d350ba37f297e4d",
+          "version": "0.4.0"
+        }
+      },
+      {
+        "package": "swift-concurrency-extras",
+        "repositoryURL": "https://github.com/pointfreeco/swift-concurrency-extras",
+        "state": {
+          "branch": null,
+          "revision": "479750bd98fac2e813fffcf2af0728b5b0085795",
+          "version": "0.1.1"
         }
       },
       {
@@ -66,11 +75,11 @@
       },
       {
         "package": "swift-dependencies",
-        "repositoryURL": "https://github.com/TokoFree/swift-dependencies",
+        "repositoryURL": "https://github.com/pointfreeco/swift-dependencies",
         "state": {
-          "branch": "rxswift-compatible-scheduler",
-          "revision": "6df2e8576a9433cfd8841697b86be20aa804e37c",
-          "version": null
+          "branch": null,
+          "revision": "16fd42ae04c6e7f74a6a86395d04722c641cccee",
+          "version": "0.6.0"
         }
       },
       {
@@ -78,8 +87,8 @@
         "repositoryURL": "https://github.com/pointfreeco/xctest-dynamic-overlay",
         "state": {
           "branch": null,
-          "revision": "ab8c9f45843694dd16be4297e6d44c0634fd9913",
-          "version": "0.8.4"
+          "revision": "50843cbb8551db836adec2290bb4bc6bac5c1865",
+          "version": "0.9.0"
         }
       }
     ]
