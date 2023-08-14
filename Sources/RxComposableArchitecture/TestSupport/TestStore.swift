@@ -487,46 +487,12 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
     ///   // ...
     /// }
     /// ```
-    @available(
-        iOS,
-        deprecated: 9999,
-        message:
-          """
-          'Reducer' and `Environment` have been deprecated in favor of 'ReducerProtocol' and 'DependencyValues'.
-          
-          See the migration guide for more information: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/reducerprotocol
-          """
-    )
-    @available(
-        macOS,
-        deprecated: 9999,
-        message:
-          """
-          'Reducer' and `Environment` have been deprecated in favor of 'ReducerProtocol' and 'DependencyValues'.
-          
-          See the migration guide for more information: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/reducerprotocol
-          """
-    )
-    @available(
-        tvOS,
-        deprecated: 9999,
-        message:
-          """
-          'Reducer' and `Environment` have been deprecated in favor of 'ReducerProtocol' and 'DependencyValues'.
-          
-          See the migration guide for more information: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/reducerprotocol
-          """
-    )
-    @available(
-        watchOS,
-        deprecated: 9999,
-        message:
-          """
-          'Reducer' and `Environment` have been deprecated in favor of 'ReducerProtocol' and 'DependencyValues'.
-          
-          See the migration guide for more information: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/reducerprotocol
-          """
-    )
+    ///
+    /// 🗒️ in original Composable Architecture, environment is deprecated
+    /// but in our cases, we gonna use it to support `Environment` inside `ReducerProtocol`
+    /// so in the future, we will keep this implementation
+    /// if original Composable Architecture decided to delete this property
+    ///
     public var environment: Environment {
         _read { yield self._environment.wrappedValue }
         _modify { yield &self._environment.wrappedValue }
@@ -697,6 +663,51 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         self.timeout = 100 * NSEC_PER_MSEC
         self.toScopedState = toScopedState
         self.dependencies = dependencies
+    }
+    
+    /// Hence here we are creating an init for supporting non-dependencies World / Environment
+    /// we are using current Environment implementations
+    ///
+    /// ⚠️ Use this init only if you are having case of non-Dependencies Environment
+    ///
+    public init<R: ReducerProtocol>(
+        initialState: @autoclosure () -> State,
+        environment: Environment,
+        reducer prepareReducer: @escaping (Environment) -> R,
+        file: StaticString = #file,
+        line: UInt = #line
+    )
+    where
+    R.State == State,
+    R.Action == Action,
+    State == ScopedState,
+    State: Equatable,
+    Action == ScopedAction
+    {
+        let environment = TaskBox(wrappedValue: environment)
+        let reducer = TestReducer(
+            Reduce(
+                internal: { state, action in
+                    prepareReducer(environment.wrappedValue).reduce(into: &state, action: action)
+                }
+            ),
+            initialState: initialState()
+        )
+        self._environment = environment
+        self.file = file
+        self.fromScopedAction = { $0 }
+        self.line = line
+        self.reducer = reducer
+        self.timeout = 100 * NSEC_PER_MSEC
+        self.toScopedState = { $0 }
+        self.failingWhenNothingChange = true
+        self.useNewScope = true
+
+        self.store = Store(
+            initialState: initialState(),
+            reducer: reducer,
+            useNewScope: useNewScope
+        )
     }
     
     @available(
