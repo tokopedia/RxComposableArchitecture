@@ -665,7 +665,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         self.dependencies = dependencies
     }
     
-    /// Hence here we are creating an init for supporting non-dependencies World / Environment
+    /// Hence here we are creating an init for supporting non-Dependencies Environment
     /// we are using current Environment implementations
     ///
     /// ⚠️ Use this init only if you are having case of non-Dependencies Environment
