@@ -60,20 +60,6 @@ private struct Failure: Error {
 private struct AuthenticatorService {
     var getAuthResult: () -> Result<String, Failure>
     
-    static var live: AuthenticatorService {
-        return AuthenticatorService(
-            getAuthResult: {
-                let isSuccess = Bool.random()
-                
-                if isSuccess {
-                    return Result.success("Success Login")
-                }
-                
-                return Result.failure(Failure(message: "Failed Login"))
-            }
-        )
-    }
-    
     static var mock: AuthenticatorService {
         return AuthenticatorService(
             getAuthResult: unimplemented(
