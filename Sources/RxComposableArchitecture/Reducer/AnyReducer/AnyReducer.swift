@@ -245,17 +245,48 @@ public struct AnyReducer<State, Action, Environment> {
     public func pullback<GlobalState, GlobalAction, GlobalEnvironment, StatePath, ActionPath>(
         state toLocalState: StatePath,
         action toLocalAction: ActionPath,
-        environment toLocalEnvironment: @escaping (GlobalEnvironment) -> Environment
+        environment toLocalEnvironment: @escaping (GlobalEnvironment) -> Environment,
+        file: StaticString = #file,
+        fileID: StaticString = #fileID,
+        line: UInt = #line
     ) -> AnyReducer<GlobalState, GlobalAction, GlobalEnvironment>
     where
         StatePath: WritablePath, StatePath.Root == GlobalState, StatePath.Value == State,
         ActionPath: WritablePath, ActionPath.Root == GlobalAction, ActionPath.Value == Action
     {
         return .init { globalState, globalAction, globalEnvironment in
-            guard
-                var localState = toLocalState.extract(from: globalState),
-                let localAction = toLocalAction.extract(from: globalAction)
-            else { return .none }
+            guard let localAction = toLocalAction.extract(from: globalAction) else { return .none }
+            
+            guard var localState = toLocalState.extract(from: globalState) else {
+                runtimeWarn(
+                  """
+                  A reducer pulled back from "\(fileID):\(line)" received an action when child state was \
+                  unavailable. …
+
+                    Action:
+                      \(debugCaseOutput(localAction))
+
+                  This is generally considered an application logic error, and can happen for a few \
+                  reasons:
+
+                  • The reducer for a particular case of state was combined with or run from another \
+                  reducer that set "\(typeName(GlobalState.self))" to another case before the reducer ran. \
+                  Combine or run case-specific reducers before reducers that may set their state to \
+                  another case. This ensures that case-specific reducers can handle their actions while \
+                  their state is available.
+
+                  • An in-flight effect emitted this action when state was unavailable. While it may be \
+                  perfectly reasonable to ignore this action, you may want to cancel the associated \
+                  effect before state is set to another case, especially if it is a long-living effect.
+
+                  • This action was sent to the store while state was another case. Make sure that \
+                  actions for this reducer can only be sent to a view store when state is non-"nil". \
+                  In SwiftUI applications, use "SwitchStore".
+                  """
+                )
+                return .none
+            }
+            
             let effect =
                 self
                 .reducer(&localState, localAction, toLocalEnvironment(globalEnvironment))
