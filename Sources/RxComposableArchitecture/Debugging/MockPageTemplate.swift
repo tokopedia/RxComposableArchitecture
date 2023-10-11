@@ -7,7 +7,7 @@
 
 /**
  Use this template to help you create a list of behaviour on your `Example`, and also used it on MainApp's `BootstrapPicker`.
- Here is an example, i create new VC named `MockViewController` to be used on `Example` and MainApp's `BootstrapPicker`.
+ Here is an example, I created a new VC named `MockViewController` to be used on `Example` and MainApp's `BootstrapPicker`.
 
  ## Example
  ```swift
@@ -31,7 +31,8 @@
           var sections = [
               Section(
                   title: "Mock",
-                  mocks: [mockNoInternet, ...]
+                  mocks: [mockNoInternet, ...],
+                  footerTitle: "This section contains network-related mocks."
               ),
               ...
           ]
@@ -68,10 +69,12 @@
     public struct Section {
         public let title: String
         public let mocks: [Mock]
+        public let footerTitle: String?
 
-        public init(title: String, mocks: [Mock]) {
+        public init(title: String, mocks: [Mock], footerTitle: String? = nil) {
             self.title = title
             self.mocks = mocks
+            self.footerTitle = footerTitle
         }
     }
 
@@ -218,6 +221,10 @@
 
         override open func tableView(_: UITableView, titleForHeaderInSection section: Int) -> String? {
             filteredSections[section].title
+        }
+
+        override open func tableView(_: UITableView, titleForFooterInSection section: Int) -> String? {
+            filteredSections[section].footerTitle
         }
     }
 
