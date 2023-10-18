@@ -241,12 +241,19 @@ public struct AnyReducer<State, Action, Environment> {
             .map(toLocalAction.embed)
         }
     }
-
+    
+    ///
+    /// - Parameters:
+    ///   - toLocalState: A key path that can get/set `State` inside `ParentState`.
+    ///   - toLocalAction: A case path that can extract/embed `Action` from `ParentAction`.
+    ///   - toLocalEnvironment: A function that transforms `ParentEnvironment` into `Environment`.
+    ///   - assertOnInvalidAction: A flag indicate we run assertion for `invalid action` that `not match` with our current extract-ed/embed-ed `State` from `ParentState`.
+    /// - Returns: A reducer that works on `ParentState`, `ParentAction`, `ParentEnvironment`.
     public func pullback<GlobalState, GlobalAction, GlobalEnvironment, StatePath, ActionPath>(
         state toLocalState: StatePath,
         action toLocalAction: ActionPath,
         environment toLocalEnvironment: @escaping (GlobalEnvironment) -> Environment,
-        breakpointOnNil: Bool = true,
+        assertOnInvalidAction: Bool = true,
         file: StaticString = #file,
         fileID: StaticString = #fileID,
         line: UInt = #line
@@ -260,7 +267,7 @@ public struct AnyReducer<State, Action, Environment> {
             
             guard var localState = toLocalState.extract(from: globalState) else {
                 #if DEBUG
-                    if breakpointOnNil {
+                    if assertOnInvalidAction {
                         runtimeWarn(
                           """
                           A reducer pulled back from "\(fileID):\(line)" received an action when child state was \
