@@ -22,6 +22,7 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.0.2"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.1.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0")
+        .package(url: "https://github.com/pointfreeco/swift-concurrency-extras", from: "1.0.0")
     ],
     targets: [
         .target(
@@ -33,6 +34,7 @@ let package = Package(
                 .product(name: "XCTestDynamicOverlay", package: "xctest-dynamic-overlay"),
                 .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
+                .product(name: "ConcurrencyExtras", package: "swift-concurrency-extras"),
             ]
         ),
         .testTarget(

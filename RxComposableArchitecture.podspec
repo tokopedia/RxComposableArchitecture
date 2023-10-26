@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'RxComposableArchitecture'
-  s.version          = '0.17.0'
+  s.version          = '0.50.5'
   s.summary          = 'The Composable Architecture (TCA, for short) is a library for building applications in a consistent and understandable way, with composition, testing, and ergonomics in mind.'
   s.description      = <<-DESC
   The Composable Architecture (TCA, for short) is a library for building applications in a consistent and understandable way, with composition, testing, and ergonomics in mind. 
@@ -33,5 +33,6 @@ Pod::Spec.new do |s|
   s.dependency 'XCTestDynamicOverlay'
   s.dependency 'CustomDump'
   s.dependency 'Dependencies'
+  s.dependency 'ConcurrencyExtras'
   
 end
