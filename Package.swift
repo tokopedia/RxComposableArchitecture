@@ -17,11 +17,12 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ReactiveX/RxSwift", from: "5.1.1"),
-        .package(url: "https://github.com/pointfreeco/swift-case-paths", from: "0.8.1"),
+        .package(url: "https://github.com/pointfreeco/swift-case-paths", from: "1.0.0"),
         .package(name: "Benchmark", url: "https://github.com/google/swift-benchmark", from: "0.1.0"),
-        .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "0.8.5"),
-        .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "0.3.0"),
-        .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "0.2.0")
+        .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.0.2"),
+        .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.1.0"),
+        .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0")
+        .package(url: "https://github.com/pointfreeco/swift-concurrency-extras", from: "1.0.0")
     ],
     targets: [
         .target(
@@ -33,6 +34,7 @@ let package = Package(
                 .product(name: "XCTestDynamicOverlay", package: "xctest-dynamic-overlay"),
                 .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
+                .product(name: "ConcurrencyExtras", package: "swift-concurrency-extras"),
             ]
         ),
         .testTarget(
