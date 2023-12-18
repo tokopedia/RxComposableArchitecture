@@ -1,5 +1,5 @@
 //
-//  BindingLocalTest.swift
+//  BindingLocalTests.swift
 //
 //
 //  Created by andhika.setiadi on 18/12/23.
