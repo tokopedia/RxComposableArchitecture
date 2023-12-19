@@ -787,7 +787,7 @@ private struct StoreScope<RootState, RootAction>: AnyStoreScope {
                 
                 guard
                     let scopedAction = fromRescopedAction(rescopedState, rescopedAction),
-                    let rootAction = fromScopedAction(scopedStore.state.value, scopedAction)
+                    let rootAction = fromScopedAction(scopedStore.state, scopedAction)
                 else { return .none }
                 
                 self.root.send(rootAction)
@@ -809,7 +809,7 @@ private struct StoreScope<RootState, RootAction>: AnyStoreScope {
         rescopedStore.scope = StoreScope<RootState, RootAction>(
             root: self.root,
             fromScopedAction: {
-                fromRescopedAction($0, $1).flatMap { fromScopedAction(scopedStore.state.value, $0) }
+                fromRescopedAction($0, $1).flatMap { fromScopedAction(scopedStore.state, $0) }
             }
         )
         return rescopedStore
