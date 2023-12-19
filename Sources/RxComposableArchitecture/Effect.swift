@@ -76,7 +76,7 @@ extension Effect {
     ///   struct State { … }
     ///   enum FeatureAction {
     ///     case factButtonTapped
-    ///     case faceResponse(TaskResult<String>)
+    ///     case factResponse(TaskResult<String>)
     ///   }
     ///   @Dependency(\.numberFact) var numberFact
     ///
