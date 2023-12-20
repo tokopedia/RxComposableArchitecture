@@ -104,20 +104,21 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testCancelInFlightEffects_Strict() async {
-        let store = TestStore(
-            initialState: 0,
-            reducer: Reduce<Int, Bool> { _, action in
-                    .run { _ in try await Task.sleep(nanoseconds: NSEC_PER_SEC / 4) }
-            },
-            useNewScope: true
-        )
-        
-        let task = await store.send(true)
-        await task.finish(timeout: NSEC_PER_SEC / 2)
-        XCTExpectFailure {
-            $0.compactDescription == "There were no in-flight effects to skip."
+        await _withMainSerialExecutor {
+            let store = TestStore(
+                initialState: 0,
+                reducer: Reduce<Int, Bool> { _, action in
+                        .run { _ in try await Task.sleep(nanoseconds: NSEC_PER_SEC / 4) }
+                }
+            )
+            
+            let task = await store.send(true)
+            await task.finish(timeout: NSEC_PER_SEC / 2)
+            XCTExpectFailure {
+                $0.compactDescription == "There were no in-flight effects to skip."
+            }
+            await store.skipInFlightEffects(strict: true)
         }
-        await store.skipInFlightEffects(strict: true)
     }
     
     func testCancelInFlightEffects_NonExhaustive() async {
