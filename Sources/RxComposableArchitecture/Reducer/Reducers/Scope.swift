@@ -256,7 +256,7 @@ public struct Scope<ParentState, ParentAction, Child: ReducerProtocol>: ReducerP
         case let .keyPath(toChildState):
             return self.child
                 .reduce(into: &state[keyPath: toChildState], action: childAction)
-                .map(self.toChildAction.embed)
+                .map { self.toChildAction.embed($0) }
         case let .optionalPath(toChildState, file, fileID, line):
             guard var childState = toChildState.extract(from: state) else {
                 runtimeWarn(
@@ -296,7 +296,7 @@ public struct Scope<ParentState, ParentAction, Child: ReducerProtocol>: ReducerP
 
             return self.child
                 .reduce(into: &childState, action: childAction)
-                .map(self.toChildAction.embed)
+                .map { self.toChildAction.embed($0) }
         }
     }
 }

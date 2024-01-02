@@ -238,7 +238,7 @@ public struct AnyReducer<State, Action, Environment> {
                 localAction,
                 toLocalEnvironment(globalEnvironment)
             )
-            .map(toLocalAction.embed)
+            .map { toLocalAction.embed($0) }
         }
     }
     
