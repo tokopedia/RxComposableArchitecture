@@ -444,7 +444,7 @@ public final class Store<State, Action> {
                 tasks.wrappedValue.append(
                     Task(priority: priority) {
                         await operation(
-                            Send {
+                            Effect<Action>.Send {
                                 if let task = self.send($0, originatingFrom: action) {
                                     tasks.wrappedValue.append(task)
                                 }
