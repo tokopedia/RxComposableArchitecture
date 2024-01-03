@@ -12,6 +12,7 @@ import XCTest
 import XCTestDynamicOverlay
 import Dependencies
 
+@MainActor
 internal class RxComposableArchitectureTests: XCTestCase {
     internal func testScheduling() {
         struct Counter: ReducerProtocol {
@@ -157,6 +158,54 @@ internal class RxComposableArchitectureTests: XCTestCase {
         store.send(.incr) { $0 = 2 }
         store.send(.cancel)
         scheduler.run()
+    }
+    
+    /// creating new test cases for using async await
+    ///
+    internal func testCancellationWithAsync() async {
+        await withMainSerialExecutor {
+            let mainQueue = DispatchQueue.test
+            
+            enum Action: Equatable {
+                case cancel
+                case incr
+                case response(Int)
+            }
+            
+            let reducer = Reduce<Int, Action> { state, action in
+                enum CancelID {}
+                
+                switch action {
+                case .cancel:
+                    return .cancel(id: CancelID.self)
+                    
+                case .incr:
+                    state += 1
+                    return .task { [state] in
+                        try await mainQueue.sleep(for: .seconds(1))
+                        return .response(state * state)
+                    }
+                    .cancellable(id: CancelID.self)
+                    
+                case let .response(value):
+                    state = value
+                    return .none
+                }
+            }
+            
+            let store = TestStore(
+                initialState: 0,
+                reducer: reducer
+            )
+            
+            await store.send(.incr) { $0 = 1 }
+            await mainQueue.advance(by: .seconds(1))
+            await store.receive(.response(1))
+            
+            await store.send(.incr) { $0 = 2 }
+            await store.send(.cancel)
+            await store.finish()
+        }
     }
 }
 
