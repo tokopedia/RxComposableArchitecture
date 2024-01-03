@@ -238,10 +238,10 @@ public final class Store<State, Action> {
         }
         
         #if swift(>=5.7)
-            return self.reducer.rescope(self, state: toChildState, action: fromChildAction)
+            return self.reducer.rescope(self, state: toChildState, action: { fromChildAction($1) })
         #else
             return (self.scope ?? StoreScope(root: self))
-                .rescope(self, state: toChildState, action: fromChildAction)
+                .rescope(self, state: toChildState, action: { fromChildAction($1) })
         #endif
     }
     
@@ -255,6 +255,19 @@ public final class Store<State, Action> {
         state toChildState: @escaping (State) -> ChildState
     ) -> Store<ChildState, Action> {
         self.scope(state: toChildState, action: { $0 })
+    }
+    
+    func filter(
+        _ isSent: @escaping (State, Action) -> Bool
+    ) -> Store<State, Action> {
+        self.threadCheck(status: .scope)
+                
+        #if swift(>=5.7)
+                return self.reducer.rescope(self, state: { $0 }, action: { isSent($0, $1) ? $1 : nil })
+        #else
+                return (self.scope ?? StoreScope(root: self))
+                    .rescope(self, state: { $0 }, action: { isSent($0, $1) ? $1 : nil })
+        #endif
     }
     
     @inline(__always)
@@ -429,10 +442,32 @@ public final class Store<State, Action> {
             
             case let .run(priority, operation):
                 tasks.wrappedValue.append(
-                    Task(priority: priority) {
+                    Task(priority: priority) { @MainActor [weak self] in
+                        #if DEBUG
+                            var isCompleted = false
+                            defer { isCompleted = true }
+                        #endif
                         await operation(
-                            Send {
-                                if let task = self.send($0, originatingFrom: action) {
+                            Effect<Action>.Send {
+                                #if DEBUG
+                                    if isCompleted {
+                                        runtimeWarn(
+                                          """
+                                          An action was sent from a completed effect:
+                                            Action:
+                                              \(debugCaseOutput($0))
+                                            Effect returned from:
+                                              \(debugCaseOutput(action))
+                                          Avoid sending actions using the 'send' argument from 'EffectTask.run' after \
+                                          the effect has completed. This can happen if you escape the 'send' argument in \
+                                          an unstructured context.
+                                          To fix this, make sure that your 'run' closure does not return until you're \
+                                          done calling 'send'.
+                                          """
+                                        )
+                                    }
+                                #endif
+                                if let task = self?.send($0, originatingFrom: action) {
                                     tasks.wrappedValue.append(task)
                                 }
                             }
@@ -735,7 +770,7 @@ private protocol AnyStoreScope {
     func rescope<ScopedState, ScopedAction, RescopedState, RescopedAction>(
         _ store: Store<ScopedState, ScopedAction>,
         state toRescopedState: @escaping (ScopedState) -> RescopedState,
-        action fromRescopedAction: @escaping (RescopedAction) -> ScopedAction
+        action fromRescopedAction: @escaping (RescopedState, RescopedAction) -> ScopedAction?
     ) -> Store<RescopedState, RescopedAction>
 }
 
@@ -744,12 +779,15 @@ private struct StoreScope<RootState, RootAction>: AnyStoreScope {
     let fromScopedAction: Any
     
     init(root: Store<RootState, RootAction>) {
-        self.init(root: root, fromScopedAction: { $0 })
+        self.init(
+            root: root,
+            fromScopedAction: { (state: RootState, action: RootAction) -> RootAction? in action }
+        )
     }
     
-    private init<ScopedAction>(
+    private init<ScopedState, ScopedAction>(
         root: Store<RootState, RootAction>,
-        fromScopedAction: @escaping (ScopedAction) -> RootAction
+        fromScopedAction: @escaping (ScopedState, ScopedAction) -> RootAction?
     ) {
         self.root = root
         self.fromScopedAction = fromScopedAction
@@ -758,9 +796,9 @@ private struct StoreScope<RootState, RootAction>: AnyStoreScope {
     func rescope<ScopedState, ScopedAction, RescopedState, RescopedAction>(
         _ scopedStore: Store<ScopedState, ScopedAction>,
         state toRescopedState: @escaping (ScopedState) -> RescopedState,
-        action fromRescopedAction: @escaping (RescopedAction) -> ScopedAction
+        action fromRescopedAction: @escaping (RescopedState, RescopedAction) -> ScopedAction?
     ) -> Store<RescopedState, RescopedAction> {
-        let fromScopedAction = self.fromScopedAction as! (ScopedAction) -> RootAction
+        let fromScopedAction = self.fromScopedAction as! (ScopedState, ScopedAction) -> RootAction?
         
         var isSending = false
         let rescopedStore = Store<RescopedState, RescopedAction>(
@@ -768,7 +806,13 @@ private struct StoreScope<RootState, RootAction>: AnyStoreScope {
             reducer: Reducer { rescopedState, rescopedAction, _ in
                 isSending = true
                 defer { isSending = false }
-                self.root.send(fromScopedAction(fromRescopedAction(rescopedAction)))
+                
+                guard
+                    let scopedAction = fromRescopedAction(rescopedState, rescopedAction),
+                    let rootAction = fromScopedAction(scopedStore.state, scopedAction)
+                else { return .none }
+                
+                self.root.send(rootAction)
                 rescopedState = toRescopedState(scopedStore.state)
                 return .none
             },
@@ -786,7 +830,9 @@ private struct StoreScope<RootState, RootAction>: AnyStoreScope {
         
         rescopedStore.scope = StoreScope<RootState, RootAction>(
             root: self.root,
-            fromScopedAction: { fromScopedAction(fromRescopedAction($0)) }
+            fromScopedAction: {
+                fromRescopedAction($0, $1).flatMap { fromScopedAction(scopedStore.state, $0) }
+            }
         )
         return rescopedStore
     }
@@ -799,7 +845,7 @@ extension ReducerProtocol {
     fileprivate func rescope<ChildState, ChildAction>(
         _ store: Store<State, Action>,
         state toChildState: @escaping (State) -> ChildState,
-        action fromChildAction: @escaping (ChildAction) -> Action
+        action fromChildAction: @escaping (ChildState, ChildAction) -> Action?
     ) -> Store<ChildState, ChildAction> {
         (self as? any AnyScopedReducer ?? ScopedReducer(rootStore: store))
             .rescope(store, state: toChildState, action: fromChildAction)
@@ -810,7 +856,7 @@ private final class ScopedReducer<RootState, RootAction, ScopedState, ScopedActi
     let rootStore: Store<RootState, RootAction>
     let toScopedState: (RootState) -> ScopedState
     private let parentStores: [Any]
-    let fromScopedAction: (ScopedAction) -> RootAction
+    let fromScopedAction: (ScopedState, ScopedAction) -> RootAction?
     private(set) var isSending = false
     
     @inlinable
@@ -819,14 +865,14 @@ private final class ScopedReducer<RootState, RootAction, ScopedState, ScopedActi
         self.rootStore = rootStore
         self.toScopedState = { $0 }
         self.parentStores = []
-        self.fromScopedAction = { $0 }
+        self.fromScopedAction = { $1 }
     }
     
     @inlinable
     init(
         rootStore: Store<RootState, RootAction>,
         state toScopedState: @escaping (RootState) -> ScopedState,
-        action fromScopedAction: @escaping (ScopedAction) -> RootAction,
+        action fromScopedAction: @escaping (ScopedState, ScopedAction) -> RootAction?,
         parentStores: [Any]
     ) {
         self.rootStore = rootStore
@@ -844,7 +890,8 @@ private final class ScopedReducer<RootState, RootAction, ScopedState, ScopedActi
             state = self.toScopedState(self.rootStore.state)
             self.isSending = false
         }
-        if let task = self.rootStore.send(self.fromScopedAction(action)) {
+        if let action = self.fromScopedAction(state, action),
+           let task = self.rootStore.send(action) {
             return .fireAndForget { await task.cancellableValue }
         } else {
             return .none
@@ -856,7 +903,7 @@ protocol AnyScopedReducer {
     func rescope<ScopedState, ScopedAction, RescopedState, RescopedAction>(
         _ store: Store<ScopedState, ScopedAction>,
         state toRescopedState: @escaping (ScopedState) -> RescopedState,
-        action fromRescopedAction: @escaping (RescopedAction) -> ScopedAction
+        action fromRescopedAction: @escaping (RescopedState, RescopedAction) -> ScopedAction?
     ) -> Store<RescopedState, RescopedAction>
 }
 
@@ -865,13 +912,13 @@ extension ScopedReducer: AnyScopedReducer {
     func rescope<ScopedState, ScopedAction, RescopedState, RescopedAction>(
         _ store: Store<ScopedState, ScopedAction>,
         state toRescopedState: @escaping (ScopedState) -> RescopedState,
-        action fromRescopedAction: @escaping (RescopedAction) -> ScopedAction
+        action fromRescopedAction: @escaping (RescopedState, RescopedAction) -> ScopedAction?
     ) -> Store<RescopedState, RescopedAction> {
-        let fromScopedAction = self.fromScopedAction as! (ScopedAction) -> RootAction
+        let fromScopedAction = self.fromScopedAction as! (ScopedState, ScopedAction) -> RootAction?
         let reducer = ScopedReducer<RootState, RootAction, RescopedState, RescopedAction>(
             rootStore: self.rootStore,
             state: { _ in toRescopedState(store.state) },
-            action: { fromScopedAction(fromRescopedAction($0)) },
+            action: { fromRescopedAction($0, $1).flatMap { fromScopedAction(store.state, $0) } },
             parentStores: self.parentStores + [store]
         )
         let childStore = Store<RescopedState, RescopedAction>(

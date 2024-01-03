@@ -146,7 +146,7 @@ public struct Scope<ParentState, ParentAction, Child: ReducerProtocol>: ReducerP
     public init<ChildState, ChildAction>(
         state toChildState: WritableKeyPath<ParentState, ChildState>,
         action toChildAction: CasePath<ParentAction, ChildAction>,
-        @ReducerBuilder<ChildState, ChildAction> _ child: () -> Child
+        @ReducerBuilder<ChildState, ChildAction> child: () -> Child
     ) where ChildState == Child.State, ChildAction == Child.Action {
         self.init(
             toChildState: .keyPath(toChildState),
@@ -159,7 +159,7 @@ public struct Scope<ParentState, ParentAction, Child: ReducerProtocol>: ReducerP
     public init<ChildState, ChildAction>(
         state toChildState: OptionalPath<ParentState, ChildState>,
         action toChildAction: CasePath<ParentAction, ChildAction>,
-        @ReducerBuilder<ChildState, ChildAction> _ child: () -> Child,
+        @ReducerBuilder<ChildState, ChildAction> child: () -> Child,
         file: StaticString = #file,
         fileID: StaticString = #fileID,
         line: UInt = #line
@@ -234,7 +234,7 @@ public struct Scope<ParentState, ParentAction, Child: ReducerProtocol>: ReducerP
     public init<ChildState, ChildAction>(
         state toChildState: CasePath<ParentState, ChildState>,
         action toChildAction: CasePath<ParentAction, ChildAction>,
-        @ReducerBuilder<ChildState, ChildAction> _ child: () -> Child,
+        @ReducerBuilder<ChildState, ChildAction> child: () -> Child,
         file: StaticString = #file,
         fileID: StaticString = #fileID,
         line: UInt = #line
@@ -256,7 +256,7 @@ public struct Scope<ParentState, ParentAction, Child: ReducerProtocol>: ReducerP
         case let .keyPath(toChildState):
             return self.child
                 .reduce(into: &state[keyPath: toChildState], action: childAction)
-                .map(self.toChildAction.embed)
+                .map { self.toChildAction.embed($0) }
         case let .optionalPath(toChildState, file, fileID, line):
             guard var childState = toChildState.extract(from: state) else {
                 runtimeWarn(
@@ -296,7 +296,7 @@ public struct Scope<ParentState, ParentAction, Child: ReducerProtocol>: ReducerP
 
             return self.child
                 .reduce(into: &childState, action: childAction)
-                .map(self.toChildAction.embed)
+                .map { self.toChildAction.embed($0) }
         }
     }
 }

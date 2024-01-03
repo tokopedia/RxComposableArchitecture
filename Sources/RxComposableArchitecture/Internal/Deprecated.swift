@@ -7,6 +7,15 @@
 
 import Darwin
 
+// MARK: - Deprecated after 0.50.4
+
+@available(
+  *,
+  deprecated,
+  message: "Use 'Effect<Action>.Send' instead."
+)
+public typealias Send<Action> = Effect<Action>.Send
+
 // MARK: - Deprecated after 0.42.0:
 
 /// This API has been soft-deprecated in favor of ``ReducerProtocol``.
