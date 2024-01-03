@@ -104,7 +104,7 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
     }
     
     func testCancelInFlightEffects_Strict() async {
-        await _withMainSerialExecutor {
+        await withMainSerialExecutor {
             let store = TestStore(
                 initialState: 0,
                 reducer: Reduce<Int, Bool> { _, action in
