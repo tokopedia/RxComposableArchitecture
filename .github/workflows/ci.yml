@@ -9,7 +9,7 @@ on:
       - '*'
 
 jobs:
-  job:
+  ci:
     strategy:
       fail-fast: 'false'
       matrix:
