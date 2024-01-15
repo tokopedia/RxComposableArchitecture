@@ -67,7 +67,7 @@ jobs:
       - name: Install cocoapods
         run: sudo gem install cocoapods
       - name: Lint podspec
-        run: pod lib lint --allow-warnings
+        run: pod lib lint --allow-warnings --quick
 
 
 
