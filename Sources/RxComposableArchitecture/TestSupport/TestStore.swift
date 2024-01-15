@@ -1025,7 +1025,11 @@ extension TestStore where ScopedState: Equatable {
         let previousState = self.reducer.state
         let task = self.store
             .send(.init(origin: .send(self.fromScopedAction(action)), file: file, line: line))
-        await self.reducer.effectDidSubscribe.stream.first(where: { _ in true })
+        
+        for await _ in self.reducer.effectDidSubscribe.stream {
+            break
+        }
+        
         do {
             let currentState = self.state
             self.reducer.state = previousState
