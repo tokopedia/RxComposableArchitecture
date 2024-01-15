@@ -20,11 +20,15 @@ jobs:
         include:
         - os: macos-13
           xcode: '15.0.1'
+          device: 'iPhone 15'
         - os: macos-13
           xcode: '14.3.1'
+          device: 'iPhone 14'
         - os: macos-12
           xcode: '13.4.1'
+          device: 'iPhone 13'
     uses: ./.github/workflows/base.yml
     with:
       os: ${{ matrix.os }}
       xcode: ${{ matrix.xcode }}
+      device: ${{ matrix.device }}

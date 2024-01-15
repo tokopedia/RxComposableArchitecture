@@ -11,6 +11,10 @@ on:
         description: 'The Xcode version to run the job on'
         required: true
         type: string
+      device:
+        description: 'The device to run the job on'
+        required: true
+        type: string
 
 jobs:
 
@@ -41,7 +45,7 @@ jobs:
       - name: Select Xcode ${{ inputs.xcode }}
         run: sudo xcode-select -s /Applications/Xcode_${{ inputs.xcode }}.app
       - name: Run tests
-        run: make test-example
+        run: make test-example ${{ inputs.device }}
 
   lint_podspec:
     runs-on: ${{ inputs.os }}
