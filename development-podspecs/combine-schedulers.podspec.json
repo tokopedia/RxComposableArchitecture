@@ -1,0 +1,21 @@
+
+{
+    "name": "CombineSchedulers",
+    "version": "0.9.1",
+    "authors": "local pod",
+    "homepage": "https://github.com/pointfreeco/combine-schedulers",
+    "summary": "local pod",
+    "license": {
+      "type": "MIT",
+      "file": "LICENSE"
+    },
+    "platforms": {
+      "ios": "13.0"
+    },
+    "source": {
+      "git": "https://github.com/pointfreeco/combine-schedulers",
+      "tag": "0.9.1"
+    },
+    "source_files": "Sources/**/*.swift",
+    "swift_version": "5.0"
+}

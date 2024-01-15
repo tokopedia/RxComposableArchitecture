@@ -308,11 +308,6 @@ You can add ComposableArchitecture to an Xcode project by adding it as a package
 Add this into your Podfile
 ```
 pod "RxComposableArchitecture", :git => 'https://github.com/tokopedia/RxComposableArchitecture', :tag => '0.50.3'
-pod 'CasePaths', :git => 'git@github.com:tokopedia/RxComposableArchitecture.git', :branch => 'fix_cocoapods'
-pod 'Clocks', :git => 'git@github.com:tokopedia/RxComposableArchitecture.git', :branch => 'fix_cocoapods'
-pod 'CombineSchedulers', :git => 'git@github.com:tokopedia/RxComposableArchitecture.git', :branch => 'fix_cocoapods'
-pod 'CustomDump', :git => 'git@github.com:tokopedia/RxComposableArchitecture.git', :branch => 'fix_cocoapods'
-pod 'XCTestDynamicOverlay', :git => 'git@github.com:tokopedia/RxComposableArchitecture.git', :branch => 'fix_cocoapods'  
 ```
 
 ## License
