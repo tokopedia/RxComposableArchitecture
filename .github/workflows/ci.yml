@@ -9,7 +9,6 @@ on:
       - '*'
 
 jobs:
-  
   build_library:
     strategy:
       matrix:
@@ -48,6 +47,15 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode_14.1.app
       - name: Run tests
         run: make test-example
+
+  lint_podspec:
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install cocoapods
+        run: sudo gem install cocoapods
+      - name: Lint podspec
+        run: pod lib lint --allow-warnings
 
 
 
