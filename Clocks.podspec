@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'Clocks'
-  s.version          = '0.1.0'
+  s.version          = '0.17.0'
   s.summary          = 'local pod'
 
   s.homepage         = 'https://github.com/pointfreeco/swift-clocks'

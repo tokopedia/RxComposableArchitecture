@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'CasePaths'
-  s.version          = '0.8.1'
+  s.version          = '0.17.0'
   s.summary          = 'local pod'
 
   s.homepage         = 'https://github.com/pointfreeco/swift-case-paths'
