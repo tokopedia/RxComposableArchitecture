@@ -1,4 +1,5 @@
 #if DEBUG
+@_spi(Internals) import CasePaths
 import Foundation
 import RxSwift
 import XCTestDynamicOverlay
@@ -1150,6 +1151,13 @@ extension TestStore where ScopedState: Equatable {
     ) throws {
         let current = expected
         var expected = expected
+        let updateStateToExpectedResult = updateStateToExpectedResult.map { original in
+            { (state: inout ScopedState) in
+                try XCTModifyLocals.$isExhaustive.withValue(self.exhaustivity == .on) {
+                    try original(&state)
+                }
+            }
+        }
         
         switch self.exhaustivity {
         case .on:
@@ -1709,6 +1717,14 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
         file: StaticString,
         line: UInt
     ) {
+        let updateStateToExpectedResult = updateStateToExpectedResult.map { original in
+            { (state: inout ScopedState) in
+                try XCTModifyLocals.$isExhaustive.withValue(self.exhaustivity == .on) {
+                    try original(&state)
+                }
+            }
+        }
+        
         guard !self.reducer.receivedActions.isEmpty else {
             XCTFail(
                 failureMessage(),

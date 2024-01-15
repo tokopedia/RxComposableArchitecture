@@ -638,6 +638,75 @@ final class TestStoreNonExhaustiveTests: XCTestCase {
         await store.receive(/NonExhaustiveReceive.Action.response2)
     }
     
+    func testXCTModifyExhaustive() async {
+        struct State: Equatable {
+            var child: Int? = 0
+            var count = 0
+        }
+        
+        enum Action: Equatable { case tap, response }
+        
+        let store = TestStore(
+            initialState: State(),
+            reducer: Reduce<State, Action> { state, action in
+                switch action {
+                case .tap:
+                    state.count += 1
+                    return Effect(value: .response)
+                case .response:
+                    state.count += 1
+                    return .none
+                }
+            }
+        )
+        
+        await store.send(.tap) { state in
+            state.count = 1
+            XCTExpectFailure {
+                XCTModify(&state.child, case: /.some) { _ in }
+            } issueMatcher: {
+                $0.compactDescription == """
+            XCTModify failed: expected "Int" value to be modified but it was unchanged.
+            """
+            }
+        }
+        
+        await store.receive(.response) { state in
+            state.count = 2
+            XCTExpectFailure {
+                XCTModify(&state.child, case: /.some) { _ in }
+            } issueMatcher: {
+                $0.compactDescription == """
+            XCTModify failed: expected "Int" value to be modified but it was unchanged.
+            """
+            }
+        }
+    }
+    
+    func testXCTModifyNonExhaustive() async {
+        enum Action { case tap, response }
+        
+        let store = TestStore(
+            initialState: Optional(1),
+            reducer: Reduce<Int?, Action> { state, action in
+                switch action {
+                case .tap:
+                    return Effect(value: .response)
+                case .response:
+                    return .none
+                }
+            }
+        )
+        store.exhaustivity = .off
+        
+        await store.send(.tap) {
+            XCTModify(&$0, case: /.some) { _ in }
+        }
+        await store.receive(.response) {
+            XCTModify(&$0, case: /.some) { _ in }
+        }
+    }
+    
     // This example comes from Krzysztof Zabłocki's blog post:
     // https://www.merowing.info/exhaustive-testing-in-tca/
     func testKrzysztofExample1() {
