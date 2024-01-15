@@ -6,7 +6,7 @@ Pod::Spec.new do |s|
   s.homepage         = 'https://github.com/pointfreeco/swift-dependencies'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'PointFree' => 'support@pointfree.co' }
-  s.source           = { :git => 'https://github.com/pointfreeco/swift-dependencies.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/tokopedia/RxComposableArchitecture.git', :branch => 'fix_cocoapods' }
 
   s.ios.deployment_target = '13.0'
   s.swift_version = '5.0'
