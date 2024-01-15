@@ -9,8 +9,9 @@ on:
       - '*'
 
 jobs:
-  build:
+  job:
     strategy:
+      fail-fast: 'false'
       matrix:
         include:
         - os: macos-13
