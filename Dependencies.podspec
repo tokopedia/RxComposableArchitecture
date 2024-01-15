@@ -12,6 +12,11 @@ Pod::Spec.new do |s|
   s.swift_version = '5.0'
 
   s.source_files = [
-    'Sources/**/*.swift',
+    'Sources/Dependencies/**/*.swift',
   ]
+
+  s.dependency 'XCTestDynamicOverlay'
+  s.dependency 'Clocks'
+  s.dependency 'CombineSchedulers'
+
 end
