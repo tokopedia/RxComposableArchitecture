@@ -24,9 +24,6 @@ jobs:
         - os: macos-13
           xcode: '14.3.1'
           device: 'iPhone 14'
-        - os: macos-12
-          xcode: '13.4.1'
-          device: 'iPhone 13'
     uses: ./.github/workflows/base.yml
     with:
       os: ${{ matrix.os }}
