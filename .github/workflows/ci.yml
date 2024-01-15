@@ -9,66 +9,19 @@ on:
       - '*'
 
 jobs:
-  build_library:
+  build:
     strategy:
       matrix:
-        xcode:
-          - '14.3.1'
-          - '15.0.1'
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v3
-      - name: Select Xcode ${{ matrix.xcode }}
-        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
-      - name: Run build
-        run: make build-library
-      - name: Run benchmark
-        run: make benchmark
-
-  unit_test_library:
-    strategy:
-      matrix:
-        xcode:
-          - '14.3.1'
-          - '15.0.1'
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v3
-      - name: Select Xcode ${{ matrix.xcode }}
-        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
-      - name: Run tests
-        run: make test-library
-
-  unit_test_example:
-    strategy:
-      matrix:
-        xcode:
-          - '14.3.1'
-          - '15.0.1'
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v3
-      - name: Selext Xcode ${{ matrix.xcode }}
-        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
-      - name: Run tests
-        run: make test-example
-
-  lint_podspec:
-    strategy:
-      matrix:
-        xcode:
-          - '14.3.1'
-          - '15.0.1'
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v3
-      - name: Selext Xcode ${{ matrix.xcode }}
-        run: sudo xcode-select -s /Applications/Xcode_14.1.app
-      - name: Install cocoapods
-        run: sudo gem install cocoapods
-      - name: Lint podspec
-        run: pod lib lint --allow-warnings --quick
-
-
-
-      
+        include:
+        - os: macos-13
+          xcode: '15.0.1'
+        - os: macos-13
+          xcode: '14.3.1'
+        - os: macos-12
+          xcode: '14.3.1'
+        - os: macos-12
+          xcode: '13.4.1'
+    uses: ./.github/workflows/base.yml
+    with:
+      os: ${{ matrix.os }}
+      xcode: ${{ matrix.xcode }}
