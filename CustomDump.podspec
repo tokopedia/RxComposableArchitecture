@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.swift_version = '5.0'
 
   s.source_files = [
-    'Sources/CustomDump/**/*.swift',
+    'swift-custom-dump/Sources/CustomDump/**/*.swift',
   ]
 
   s.dependency 'XCTestDynamicOverlay'

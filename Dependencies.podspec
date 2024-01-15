@@ -11,9 +11,7 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = '13.0'
   s.swift_version = '5.0'
 
-  s.source_files = [
-    'Sources/Dependencies/**/*.swift',
-  ]
+  s.source_files = 'swift-dependencies/Sources/Dependencies/**/*.swift'
 
   s.dependency 'XCTestDynamicOverlay'
   s.dependency 'Clocks'

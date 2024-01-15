@@ -11,5 +11,7 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = '13.0'
   s.swift_version = '5.0'
 
-  s.source_files = 'Sources/CasePaths/**/*.swift'
+  s.source_files = 'swift-case-paths/Sources/CasePaths/**/*.swift'
+
+  s.dependency 'XCTestDynamicOverlay'
 end
