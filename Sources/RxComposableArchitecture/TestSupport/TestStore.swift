@@ -577,7 +577,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         file: StaticString = #file,
         line: UInt = #line,
         failingWhenNothingChange: Bool = true,
-        useNewScope: Bool = false
+        useNewScope: Bool = StoreConfig.default.useNewScope()
     )
     where
     R.State == State,
@@ -622,7 +622,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         file: StaticString = #file,
         line: UInt = #line,
         failingWhenNothingChange: Bool = true,
-        useNewScope: Bool = false
+        useNewScope: Bool = StoreConfig.default.useNewScope()
     )
     where
     R.State == State,
@@ -670,7 +670,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         file: StaticString = #file,
         line: UInt = #line,
         failingWhenNothingChange: Bool = true,
-        useNewScope: Bool = false
+        useNewScope: Bool = StoreConfig.default.useNewScope()
     )
     where
     R.State == State,
@@ -679,8 +679,8 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
     Environment == Void
     {
         var dependencies = DependencyValues._current
-        prepareDependencies(&dependencies)
         let initialState = withDependencies {
+            prepareDependencies(&dependencies)
             $0 = dependencies
         } operation: {
             initialState()
@@ -773,6 +773,10 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
             reducer: reducer,
             useNewScope: useNewScope
         )
+        
+        /// we need to set this as this init coming from old reducer style implementations
+        ///
+        self.store.isReducerProtocolStore = false
     }
     
     internal init(
@@ -785,7 +789,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         timeout: UInt64 = 100 * NSEC_PER_MSEC,
         toScopedState: @escaping (State) -> ScopedState,
         failingWhenNothingChange: Bool = true,
-        useNewScope: Bool = false
+        useNewScope: Bool = StoreConfig.default.useNewScope()
     ) {
         self._environment = _environment
         self.file = file

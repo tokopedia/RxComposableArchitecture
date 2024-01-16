@@ -60,8 +60,7 @@ internal class TestStoreTests: XCTestCase {
         
         let store = TestStore(
             initialState: State(),
-            reducer: reducer,
-            useNewScope: true
+            reducer: reducer
         )
         
         _ = await store.send(Action.a)
@@ -95,8 +94,7 @@ internal class TestStoreTests: XCTestCase {
                     state = number
                     return .none
                 }
-            }),
-            useNewScope: true
+            })
         )
         
         _ = await store.send(.tap)
@@ -133,8 +131,7 @@ internal class TestStoreTests: XCTestCase {
         
         let store = TestStore(
             initialState: State(),
-            reducer: reducer,
-            useNewScope: true
+            reducer: reducer
         )
         
         _ = await store.send(.increment) {
@@ -179,8 +176,7 @@ internal class TestStoreTests: XCTestCase {
         
         let store = TestStore(
             initialState: State(),
-            reducer: reducer,
-            useNewScope: true
+            reducer: reducer
         )
         
         _ = await store.send(.noop)
@@ -251,8 +247,7 @@ internal class TestStoreTests: XCTestCase {
                     count += 1
                     return .none
                 }
-            }),
-            useNewScope: true
+            })
         )
         
         _ = await store.send(.a) {
@@ -313,6 +308,7 @@ internal class TestStoreTests: XCTestCase {
     func testOverrideDependenciesOnTestStore() {
         struct Counter: ReducerProtocol {
             @Dependency(\.calendar) var calendar
+            @Dependency(\.client.fetch) var fetch
             @Dependency(\.locale) var locale
             @Dependency(\.timeZone) var timeZone
             @Dependency(\.urlSession) var urlSession
@@ -330,11 +326,13 @@ internal class TestStoreTests: XCTestCase {
         let store = TestStore(
             initialState: 0,
             reducer: Counter()
-        )
-        store.dependencies.calendar = Calendar(identifier: .gregorian)
-        store.dependencies.locale = Locale(identifier: "en_US")
-        store.dependencies.timeZone = TimeZone(secondsFromGMT: 0)!
-        store.dependencies.urlSession = URLSession(configuration: .ephemeral)
+        ) {
+            $0.calendar = Calendar(identifier: .gregorian)
+            $0.client.fetch = { 1 }
+            $0.locale = Locale(identifier: "en_US")
+            $0.timeZone = TimeZone(secondsFromGMT: 0)!
+            $0.urlSession = URLSession(configuration: .ephemeral)
+        }
         
         store.send(true) { $0 = 1 }
     }
@@ -384,5 +382,17 @@ internal class TestStoreTests: XCTestCase {
             $0.count = 42
             $0.date = now
         }
+    }
+}
+
+private struct Client: DependencyKey {
+    var fetch: () -> Int
+    static let liveValue = Client(fetch: { 42 })
+}
+
+extension DependencyValues {
+    fileprivate var client: Client {
+        get { self[Client.self] }
+        set { self[Client.self] = newValue }
     }
 }
