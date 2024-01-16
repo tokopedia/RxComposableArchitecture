@@ -1,0 +1,63 @@
+name: Base
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: 'The OS to run the job on'
+        required: true
+        type: string
+      xcode:
+        description: 'The Xcode version to run the job on'
+        required: true
+        type: string
+      device:
+        description: 'The device to run the job on'
+        required: true
+        type: string
+
+jobs:
+
+  build_library:
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Select Xcode ${{ inputs.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ inputs.xcode }}.app
+      - name: Run build
+        run: make build-library
+      - name: Run benchmark
+        run: make benchmark
+
+  unit_test_library:
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Select Xcode ${{ inputs.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ inputs.xcode }}.app
+      - name: Run tests
+        run: make test-library
+  
+  unit_test_example:
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Select Xcode ${{ inputs.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ inputs.xcode }}.app
+      - name: Run tests
+        run: make test-example DEVICE='${{ inputs.device }}'
+
+  lint_podspec:
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Select Xcode ${{ inputs.xcode }}
+        run: sudo xcode-select -s /Applications/Xcode_${{ inputs.xcode }}.app
+      - name: Install cocoapods
+        run: sudo gem install cocoapods
+      - name: Lint podspec
+        run: pod lib lint --allow-warnings --quick
+
+
+
+      
