@@ -7,18 +7,6 @@
 
 import Darwin
 
-// MARK: - Deprecated after 0.51.0
-
-// NB Soft deprecation to avoid deprecation messages when this type is inferred in `Effect`
-// without having to qualify it as `RxComposableArchitecture.Send` there.
-@available(iOS, deprecated: 9999.0, message: "Use 'Send<Action>' instead.")
-@available(macOS, deprecated: 9999.0, message: "Use 'Send<Action>' instead.")
-@available(tvOS, deprecated: 9999.0, message: "Use 'Send<Action>' instead.")
-@available(watchOS, deprecated: 9999.0, message: "Use 'Send<Action>' instead.")
-extension Effect {
-    public typealias Send = RxComposableArchitecture.Send
-}
-
 // MARK: - Deprecated after 0.42.0:
 
 /// This API has been soft-deprecated in favor of ``ReducerProtocol``.
