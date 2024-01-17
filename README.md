@@ -1,6 +1,11 @@
 
 
 # RxComposableArchitecture
+[![CI](https://github.com/tokopedia/RxComposableArchitecture/actions/workflows/ci.yml/badge.svg)](https://github.com/tokopedia/RxComposableArchitecture/actions/workflows/ci.yml)
+![GitHub Release](https://img.shields.io/github/v/release/tokopedia/RxComposableArchitecture)
+![GitHub contributors](https://img.shields.io/github/contributors/tokopedia/RxComposableArchitecture)
+![GitHub License](https://img.shields.io/github/license/tokopedia/RxComposableArchitecture)
+
 
 RxComposableArchitecture is a forked of [Composable Architecture](https://github.com/pointfreeco/swift-composable-architecture) with adjustment to make it work with UIKit.
 
@@ -309,6 +314,21 @@ Add this into your Podfile
 ```
 pod "RxComposableArchitecture", :git => 'https://github.com/tokopedia/RxComposableArchitecture', :tag => '0.50.3'
 ```
+
+as several `RxComposableArchitecture` deps do not support cocoapods, you need to add it manually on your `Podfile`.
+
+1. Download directory [development-podspecs](https://github.com/tokopedia/RxComposableArchitecture/tree/main/development-podspecs) and place it on your codebase.
+2. on your Podfile, add this entry
+
+```
+pod 'CasePaths', :podspec => './development-podspecs/CasePaths.podspec.json'
+pod 'Clocks', :podspec => './development-podspecs/swift-clocks.podspec.json'
+pod 'CombineSchedulers', :podspec => './development-podspecs/combine-schedulers.podspec.json'
+pod 'CustomDump', :podspec => './development-podspecs/CustomDump.podspec.json'
+pod 'Dependencies', :podspec => './development-podspecs/swift-dependencies.podspec.json'
+pod 'XCTestDynamicOverlay', :podspec => './development-podspecs/xctest-dynamic-overlay.podspec.json'
+```
+
 
 ## License
 
