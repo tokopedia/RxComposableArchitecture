@@ -40,5 +40,9 @@ extension Store {
             reducer: Reduce(reducer, environment: environment),
             useNewScope: useNewScope
         )
+        
+        /// We mark this flag as false, since this init is for old style reducer
+        ///
+        self.isReducerProtocolStore = false
     }
 }

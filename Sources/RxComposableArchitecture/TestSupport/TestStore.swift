@@ -1,4 +1,5 @@
 #if DEBUG
+@_spi(Internals) import CasePaths
 import Foundation
 import RxSwift
 import XCTestDynamicOverlay
@@ -576,7 +577,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         file: StaticString = #file,
         line: UInt = #line,
         failingWhenNothingChange: Bool = true,
-        useNewScope: Bool = false
+        useNewScope: Bool = StoreConfig.default.useNewScope()
     )
     where
     R.State == State,
@@ -621,7 +622,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         file: StaticString = #file,
         line: UInt = #line,
         failingWhenNothingChange: Bool = true,
-        useNewScope: Bool = false
+        useNewScope: Bool = StoreConfig.default.useNewScope()
     )
     where
     R.State == State,
@@ -669,7 +670,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         file: StaticString = #file,
         line: UInt = #line,
         failingWhenNothingChange: Bool = true,
-        useNewScope: Bool = false
+        useNewScope: Bool = StoreConfig.default.useNewScope()
     )
     where
     R.State == State,
@@ -678,8 +679,8 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
     Environment == Void
     {
         var dependencies = DependencyValues._current
-        prepareDependencies(&dependencies)
         let initialState = withDependencies {
+            prepareDependencies(&dependencies)
             $0 = dependencies
         } operation: {
             initialState()
@@ -772,6 +773,10 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
             reducer: reducer,
             useNewScope: useNewScope
         )
+        
+        /// we need to set this as this init coming from old reducer style implementations
+        ///
+        self.store.isReducerProtocolStore = false
     }
     
     internal init(
@@ -784,7 +789,7 @@ public final class TestStore<State, Action, ScopedState, ScopedAction, Environme
         timeout: UInt64 = 100 * NSEC_PER_MSEC,
         toScopedState: @escaping (State) -> ScopedState,
         failingWhenNothingChange: Bool = true,
-        useNewScope: Bool = false
+        useNewScope: Bool = StoreConfig.default.useNewScope()
     ) {
         self._environment = _environment
         self.file = file
@@ -1024,7 +1029,11 @@ extension TestStore where ScopedState: Equatable {
         let previousState = self.reducer.state
         let task = self.store
             .send(.init(origin: .send(self.fromScopedAction(action)), file: file, line: line))
-        await self.reducer.effectDidSubscribe.stream.first(where: { _ in true })
+        
+        for await _ in self.reducer.effectDidSubscribe.stream {
+            break
+        }
+        
         do {
             let currentState = self.state
             self.reducer.state = previousState
@@ -1150,6 +1159,13 @@ extension TestStore where ScopedState: Equatable {
     ) throws {
         let current = expected
         var expected = expected
+        let updateStateToExpectedResult = updateStateToExpectedResult.map { original in
+            { (state: inout ScopedState) in
+                try XCTModifyLocals.$isExhaustive.withValue(self.exhaustivity == .on) {
+                    try original(&state)
+                }
+            }
+        }
         
         switch self.exhaustivity {
         case .on:
@@ -1709,6 +1725,14 @@ extension TestStore where ScopedState: Equatable, Action: Equatable {
         file: StaticString,
         line: UInt
     ) {
+        let updateStateToExpectedResult = updateStateToExpectedResult.map { original in
+            { (state: inout ScopedState) in
+                try XCTModifyLocals.$isExhaustive.withValue(self.exhaustivity == .on) {
+                    try original(&state)
+                }
+            }
+        }
+        
         guard !self.reducer.receivedActions.isEmpty else {
             XCTFail(
                 failureMessage(),

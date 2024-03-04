@@ -3,6 +3,10 @@ import RxRelay
 import RxSwift
 
 public final class Store<State, Action> {
+    /// Notes: we are not using @_spi(Internals) for limiting access of the `State` Properties
+    /// since there are many of our code that still access it, so we leave it as it is for now
+    ///
+    /// reference PR: https://github.com/pointfreeco/swift-composable-architecture/pull/1954/files
     public private(set) var state: State {
         get { relay.value }
         set { relay.accept(newValue) }
@@ -33,6 +37,12 @@ public final class Store<State, Action> {
     public var observable: Observable<State> {
         return relay.asObservable()
     }
+    
+    /// Notes: We use this internal flag to gradually enforce new send from Store initialization for ReducerProtocol
+    ///
+    /// by default the value is `true`, we will set to false when the store being init from old reducer
+    ///
+    internal var isReducerProtocolStore: Bool = true
     
     public init<R: ReducerProtocol>(
         initialState: R.State,
@@ -297,9 +307,19 @@ public final class Store<State, Action> {
     
     @discardableResult
     public func send(_ action: Action, originatingFrom originatingAction: Action? = nil) -> Task<Void, Never>? {
-        if useNewScope  {
+        
+        if isReducerProtocolStore || useNewScope {
+            /// here we add extra assertion for make sure all ReducerProtocol Store will be always using newSend mechanism
+            ///
+            #if DEBUG
+                if isReducerProtocolStore && !useNewScope {
+                    assertionFailure("ReducerProtocol Store not support old send action, remove overriden useNewScope params")
+                }
+            #endif
+            
             return newSend(action, originatingFrom: originatingAction)
         }
+        
         self.threadCheck(status: .send(action, originatingAction: originatingAction))
         if !isSending {
             synchronousActionsToSend.append(action)
@@ -404,31 +424,35 @@ public final class Store<State, Action> {
                 var didComplete = false
                 let boxedTask = TaskBox<Task<Void, Never>?>(wrappedValue: nil)
                 var disposeKey: CompositeDisposable.DisposeKey?
-                let effectDisposable = observable
-                    .do(onDispose: { [weak self] in
-                        self?.threadCheck(status: .effectCompletion(action))
-                        if let disposeKey = disposeKey {
-                            self?.effectDisposables.remove(for: disposeKey)
-                        }
-                    })
-                    .subscribe(
-                        onNext: { [weak self] effectAction in
-                            if let task = self?.send(effectAction, originatingFrom: action) {
-                                tasks.wrappedValue.append(task)
-                            }
-                        },
-                        onError: {
-                            assertionFailure("Error during effect handling: \($0.localizedDescription)")
-                        },
-                        onCompleted: { [weak self] in
+                let effectDisposable = withEscapedDependencies { [weak self] continuation in
+                    return observable
+                        .do(onDispose: { [weak self] in
                             self?.threadCheck(status: .effectCompletion(action))
-                            boxedTask.wrappedValue?.cancel()
-                            didComplete = true
                             if let disposeKey = disposeKey {
                                 self?.effectDisposables.remove(for: disposeKey)
                             }
-                        }
-                    )
+                        })
+                        .subscribe(
+                            onNext: { [weak self] effectAction in
+                                if let task = continuation.yield({
+                                    self?.send(effectAction, originatingFrom: action)
+                                }) {
+                                    tasks.wrappedValue.append(task)
+                                }
+                            },
+                            onError: {
+                                assertionFailure("Error during effect handling: \($0.localizedDescription)")
+                            },
+                            onCompleted: { [weak self] in
+                                self?.threadCheck(status: .effectCompletion(action))
+                                boxedTask.wrappedValue?.cancel()
+                                didComplete = true
+                                if let disposeKey = disposeKey {
+                                    self?.effectDisposables.remove(for: disposeKey)
+                                }
+                            }
+                        )
+                }
                 
                 if !didComplete {
                     let task = Task<Void, Never> { @MainActor in
@@ -441,39 +465,43 @@ public final class Store<State, Action> {
                 }
             
             case let .run(priority, operation):
-                tasks.wrappedValue.append(
-                    Task(priority: priority) { @MainActor [weak self] in
-                        #if DEBUG
-                            var isCompleted = false
-                            defer { isCompleted = true }
-                        #endif
-                        await operation(
-                            Effect<Action>.Send {
-                                #if DEBUG
-                                    if isCompleted {
-                                        runtimeWarn(
-                                          """
-                                          An action was sent from a completed effect:
-                                            Action:
-                                              \(debugCaseOutput($0))
-                                            Effect returned from:
-                                              \(debugCaseOutput(action))
-                                          Avoid sending actions using the 'send' argument from 'EffectTask.run' after \
-                                          the effect has completed. This can happen if you escape the 'send' argument in \
-                                          an unstructured context.
-                                          To fix this, make sure that your 'run' closure does not return until you're \
-                                          done calling 'send'.
-                                          """
-                                        )
-                                    }
-                                #endif
-                                if let task = self?.send($0, originatingFrom: action) {
-                                    tasks.wrappedValue.append(task)
+                withEscapedDependencies { [weak self] continuation in
+                    tasks.wrappedValue.append(
+                        Task(priority: priority) { @MainActor [weak self] in
+                            #if DEBUG
+                                var isCompleted = false
+                                defer { isCompleted = true }
+                            #endif
+                            await operation(
+                                Send<Action> { effectAction in
+                                    #if DEBUG
+                                        if isCompleted {
+                                            runtimeWarn(
+                                              """
+                                              An action was sent from a completed effect:
+                                                Action:
+                                                  \(debugCaseOutput(effectAction))
+                                                Effect returned from:
+                                                  \(debugCaseOutput(action))
+                                              Avoid sending actions using the 'send' argument from 'EffectTask.run' after \
+                                              the effect has completed. This can happen if you escape the 'send' argument in \
+                                              an unstructured context.
+                                              To fix this, make sure that your 'run' closure does not return until you're \
+                                              done calling 'send'.
+                                              """
+                                            )
+                                        }
+                                    #endif
+                                    if let task = continuation.yield({
+                                        self?.send(effectAction, originatingFrom: action)
+                                    }) {
+                                        tasks.wrappedValue.append(task)
+                                    }                                    
                                 }
-                            }
-                        )
-                    }
-                )
+                            )
+                        }
+                    )
+                }
             }
         }
         
