@@ -11,6 +11,15 @@
         }
       },
       {
+        "package": "RxCombine",
+        "repositoryURL": "https://github.com/jeffersonsetiawan/RxCombine",
+        "state": {
+          "branch": null,
+          "revision": "0b984ee089e29736b7f07df03b3af667683deefd",
+          "version": null
+        }
+      },
+      {
         "package": "RxSwift",
         "repositoryURL": "https://github.com/ReactiveX/RxSwift",
         "state": {
