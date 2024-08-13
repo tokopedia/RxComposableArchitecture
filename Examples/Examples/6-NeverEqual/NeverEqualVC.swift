@@ -53,23 +53,23 @@ class NeverEqualVC: UIScrollVC {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-//        store.subscribeNeverEqual(\.$showAlert)
-//            .subscribe(onNext: { [weak self] message in
-//                if let message = message {
-//                    let alert = UIAlertController(title: message, message: nil, preferredStyle: .alert)
-//                    let okAction = UIAlertAction(title: "Ok", style: .default)
-//                    alert.addAction(okAction)
-//                    self?.navigationController?.present(alert, animated: true)
-//                }
-//            })
-//            .disposed(by: disposeBag)
-//        
-//        store.subscribeNeverEqual(\.$scrollToTop)
-//            .filter { $0 != nil }
-//            .subscribe(onNext: { [weak self] _ in
-//                self?.scrollView.scrollToTop()
-//            })
-//            .disposed(by: disposeBag)
+        store.subscribeNeverEqual(\.$showAlert)
+            .subscribe(onNext: { [weak self] message in
+                if let message = message {
+                    let alert = UIAlertController(title: message, message: nil, preferredStyle: .alert)
+                    let okAction = UIAlertAction(title: "Ok", style: .default)
+                    alert.addAction(okAction)
+                    self?.navigationController?.present(alert, animated: true)
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        store.subscribeNeverEqual(\.$scrollToTop)
+            .filter { $0 != nil }
+            .subscribe(onNext: { [weak self] _ in
+                self?.scrollView.scrollToTop()
+            })
+            .disposed(by: disposeBag)
         
         showAlertButton.addTarget(self, action: #selector(didTapShowAlert), for: .touchUpInside)
         scrollToTopButton.addTarget(self, action: #selector(didTapScrollToTop), for: .touchUpInside)

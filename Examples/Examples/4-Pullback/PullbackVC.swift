@@ -69,11 +69,11 @@ class PullbackVC: UIScrollVC {
     }
     
     private func bindState() {
-//        store.subscribe(\.text)
-//            .subscribe(onNext: { [textLabel] in
-//                textLabel.text = $0
-//            })
-//            .disposed(by: disposeBag)
+        store.subscribe(\.text)
+            .subscribe(onNext: { [textLabel] in
+                textLabel.text = $0
+            })
+            .disposed(by: disposeBag)
     }
     
     required init?(coder aDecoder: NSCoder) {

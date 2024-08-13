@@ -11,10 +11,9 @@ import RxSwift
 extension EnvironmentVCEnvironment {
     internal static let live = Self(
         loadData: {
-            .none
-//            Observable.just(Result.success(Int.random(in: 0 ... 10000)))
-//                .delay(.milliseconds(500), scheduler: MainScheduler.instance)
-//                .eraseToEffect()
+            Observable.just(Result.success(Int.random(in: 0 ... 10000)))
+                .delay(.milliseconds(500), scheduler: MainScheduler.instance)
+                .eraseToEffect()
         },
         trackEvent: AnalyticsManager.track,
         date: Date.init,
@@ -23,10 +22,9 @@ extension EnvironmentVCEnvironment {
 
     internal static let mockSuccess = Self(
         loadData: {
-            .none
-//            Observable.just(Result.success(Int.random(in: 0 ... 10000)))
-//                .delay(.milliseconds(500), scheduler: MainScheduler.instance)
-//                .eraseToEffect()
+            Observable.just(Result.success(Int.random(in: 0 ... 10000)))
+                .delay(.milliseconds(500), scheduler: MainScheduler.instance)
+                .eraseToEffect()
         },
         trackEvent: {
             print("MOCKING \($0)")
@@ -39,10 +37,9 @@ extension EnvironmentVCEnvironment {
     )
     internal static let mockFailed = Self(
         loadData: {
-            .none
-//            Observable.just(Result.failure(CustomError(message: "Server Error code: \(Int.random(in: 0 ... 500))")))
-//                .delay(.milliseconds(500), scheduler: MainScheduler.instance)
-//                .eraseToEffect()
+            Observable.just(Result.failure(CustomError(message: "Server Error code: \(Int.random(in: 0 ... 500))")))
+                .delay(.milliseconds(500), scheduler: MainScheduler.instance)
+                .eraseToEffect()
         },
         trackEvent: {
             print("MOCKING \($0)")
@@ -56,16 +53,15 @@ extension EnvironmentVCEnvironment {
 
     internal static let mockRandom = Self(
         loadData: {
-            .none
-//            if Bool.random() {
-//                return Observable.just(Result<Int, CustomError>.success(Int.random(in: 0 ... 10000)))
-//                    .delay(.milliseconds(500), scheduler: MainScheduler.instance)
-//                    .eraseToEffect()
-//            } else {
-//                return Observable.just(Result<Int, CustomError>.failure(CustomError(message: "Server Error")))
-//                    .delay(.milliseconds(500), scheduler: MainScheduler.instance)
-//                    .eraseToEffect()
-//            }
+            if Bool.random() {
+                return Observable.just(Result<Int, CustomError>.success(Int.random(in: 0 ... 10000)))
+                    .delay(.milliseconds(500), scheduler: MainScheduler.instance)
+                    .eraseToEffect()
+            } else {
+                return Observable.just(Result<Int, CustomError>.failure(CustomError(message: "Server Error")))
+                    .delay(.milliseconds(500), scheduler: MainScheduler.instance)
+                    .eraseToEffect()
+            }
         },
         trackEvent: {
             print("MOCKING \($0)")

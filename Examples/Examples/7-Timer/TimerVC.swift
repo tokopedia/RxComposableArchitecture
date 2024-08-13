@@ -40,11 +40,11 @@ class TimerVC: UIScrollVC {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-//        store.subscribe(\.tickCount)
-//            .subscribe(onNext: { [tickCountLabel] tickCount in
-//                tickCountLabel.text = "\(tickCount)"
-//            })
-//            .disposed(by: disposeBag)
+        store.subscribe(\.tickCount)
+            .subscribe(onNext: { [tickCountLabel] tickCount in
+                tickCountLabel.text = "\(tickCount)"
+            })
+            .disposed(by: disposeBag)
         
         store.send(.onDidLoad)
     }

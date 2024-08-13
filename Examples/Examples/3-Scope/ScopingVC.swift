@@ -103,11 +103,11 @@ class CounterView: UIStackView {
     
     
     private func bindState() {
-//        store.subscribe(\.number)
-//            .subscribe(onNext: { [numberLabel] in
-//                numberLabel.text = String($0)
-//            })
-//            .disposed(by: disposeBag)
+        store.subscribe(\.number)
+            .subscribe(onNext: { [numberLabel] in
+                numberLabel.text = String($0)
+            })
+            .disposed(by: disposeBag)
     }
     
     required init(coder: NSCoder) {

@@ -697,3 +697,39 @@ extension EffectPublisher {
     }
   }
 }
+
+import RxCombine
+import RxSwift
+extension Effect: ObservableType {
+    public func subscribe<Observer>(_ observer: Observer) -> RxSwift.Disposable where Observer : RxSwift.ObserverType, Action == Observer.Element {
+        self.publisher.asObservable().subscribe(observer)
+    }
+    
+    public func asObservable() -> Observable<Action> {
+        self.publisher.asObservable()
+    }
+    
+    public typealias Element = Action
+}
+
+extension ObservableType {
+    /// Turns any publisher into an `Effect`.
+    ///
+    /// This can be useful for when you perform a chain of publisher transformations in a reducer, and
+    /// you need to convert that publisher to an effect so that you can return it from the reducer:
+    ///
+    ///     case .buttonTapped:
+    ///       return fetchUser(id: 1)
+    ///         .filter(\.isAdmin)
+    ///         .eraseToEffect()
+    ///
+    /// - Returns: An effect that wraps `self`.
+    @_disfavoredOverload
+    public func eraseToEffect() -> Effect<Element> {
+        return EffectPublisher(operation: .publisher(
+            asPublisher().catch { _ in
+                Empty<Self.Element, Never>(completeImmediately: true)
+            }.eraseToAnyPublisher()
+        ))
+    }
+}

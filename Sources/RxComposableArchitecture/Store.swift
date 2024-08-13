@@ -483,6 +483,19 @@ public final class Store<State, Action> {
       }
     }
   }
+    
+    public func subscribe<LocalState>(
+        _ toLocalState: @escaping (State) -> LocalState,
+        removeDuplicates isDuplicate: @escaping (LocalState, LocalState) -> Bool
+    ) -> Effect<LocalState> {
+        return state.map(toLocalState).removeDuplicates(by: isDuplicate).eraseToEffect()
+    }
+
+    public func subscribe<LocalState: Equatable>(
+        _ toLocalState: @escaping (State) -> LocalState
+    ) -> Effect<LocalState> {
+        return state.map(toLocalState).removeDuplicates().eraseToEffect()
+    }
 
   /// Returns a "stateless" store by erasing state to `Void`.
   public var stateless: Store<Void, Action> {
@@ -781,3 +794,13 @@ public typealias StoreOf<R: ReducerProtocol> = Store<R.State, R.Action>
     }
   }
 #endif
+
+extension Store {
+    public func subscribeNeverEqual<LocalState: Equatable>(
+        _ toLocalState: @escaping (State) -> NeverEqual<LocalState>
+    ) -> Effect<LocalState> {
+        state.map(toLocalState).removeDuplicates()
+            .map(\.wrappedValue)
+            .eraseToEffect()
+    }
+}
