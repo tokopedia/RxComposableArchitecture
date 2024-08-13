@@ -6,6 +6,7 @@
 //
 
 import CasePaths
+import Combine
 import Foundation
 import RxComposableArchitecture
 import RxSwift
@@ -40,6 +41,9 @@ struct Environment: ReducerProtocol {
         switch action {
         case .didLoad:
             state.isLoading = true
+            return .run { send in
+                await send(.receiveData(.success(5)))
+            }
             return env.loadData()
                 .map(Action.receiveData)
         case let .receiveData(response):
@@ -106,9 +110,14 @@ extension EnvironmentVCEnvironment: DependencyKey {
     static var liveValue: EnvironmentVCEnvironment {
         EnvironmentVCEnvironment(
             loadData: {
-                Observable.just(Result.success(Int.random(in: 0 ... 10000)))
-                    .delay(.milliseconds(500), scheduler: MainScheduler.instance)
-                    .eraseToEffect()
+                Effect.run { send in
+                    await send(.success(5))
+                }
+//                Just(.success(5))
+//                    .eraseToEffect()
+//                Observable.just(Result.success(Int.random(in: 0 ... 10000)))
+//                    .delay(.milliseconds(500), scheduler: MainScheduler.instance)
+//                    .eraseToEffect()
             },
             trackEvent: AnalyticsManager.track(_:),
             date: Date.init,
@@ -118,7 +127,7 @@ extension EnvironmentVCEnvironment: DependencyKey {
     
     static var testValue: EnvironmentVCEnvironment {
         EnvironmentVCEnvironment(
-            loadData: unimplemented("\(Self.self).loadData", placeholder: .just(.failure(CustomError(message: "Error"))).eraseToEffect()),
+            loadData: unimplemented("\(Self.self).loadData", placeholder: .none),
             trackEvent: unimplemented("\(Self.self).trackEvent"),
             date: unimplemented("\(Self.self).date", placeholder: Date()),
             uuid: unimplemented("\(Self.self).uuid", placeholder: UUID())

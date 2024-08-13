@@ -77,54 +77,54 @@ class EnvironmentDemoVC: UIScrollVC {
     }
     
     private func bindState() {
-        store.subscribe(\.text)
-            .subscribe(onNext: { [textLabel] in
-                textLabel.text = $0
-            })
-            .disposed(by: disposeBag)
-
-        store.subscribe(\.uuidString)
-            .subscribe(onNext: { [uuidTextLabel] in
-                uuidTextLabel.text = $0
-            })
-            .disposed(by: disposeBag)
-
-        store.subscribe(\.currentDate)
-            .map {
-                $0.map { date -> String in
-                    let formatter = DateFormatter()
-                    formatter.dateStyle = .full
-                    formatter.timeStyle = .full
-                    return formatter.string(from: date)
-                }
-            }
-            .subscribe(onNext: { [dateTextLabel] in
-                dateTextLabel.text = $0
-            })
-            .disposed(by: disposeBag)
-
-        store.subscribe(\.alertMessage)
-            .subscribe(onNext: { [weak self] message in
-                if let message = message {
-                    let alert = UIAlertController(title: message, message: nil, preferredStyle: .alert)
-                    let okAction = UIAlertAction(title: "Ok", style: .default, handler: { _ in
-                        self?.store.send(.dismissAlert)
-                    })
-                    alert.addAction(okAction)
-                    self?.navigationController?.present(alert, animated: true)
-                }
-            })
-            .disposed(by: disposeBag)
-
-        store.subscribe(\.isLoading)
-            .subscribe(onNext: { [loadingIndicator] in
-                if $0 {
-                    loadingIndicator.startAnimating()
-                } else {
-                    loadingIndicator.stopAnimating()
-                }
-            })
-            .disposed(by: disposeBag)
+//        store.subscribe(\.text)
+//            .subscribe(onNext: { [textLabel] in
+//                textLabel.text = $0
+//            })
+//            .disposed(by: disposeBag)
+//
+//        store.subscribe(\.uuidString)
+//            .subscribe(onNext: { [uuidTextLabel] in
+//                uuidTextLabel.text = $0
+//            })
+//            .disposed(by: disposeBag)
+//
+//        store.subscribe(\.currentDate)
+//            .map {
+//                $0.map { date -> String in
+//                    let formatter = DateFormatter()
+//                    formatter.dateStyle = .full
+//                    formatter.timeStyle = .full
+//                    return formatter.string(from: date)
+//                }
+//            }
+//            .subscribe(onNext: { [dateTextLabel] in
+//                dateTextLabel.text = $0
+//            })
+//            .disposed(by: disposeBag)
+//
+//        store.subscribe(\.alertMessage)
+//            .subscribe(onNext: { [weak self] message in
+//                if let message = message {
+//                    let alert = UIAlertController(title: message, message: nil, preferredStyle: .alert)
+//                    let okAction = UIAlertAction(title: "Ok", style: .default, handler: { _ in
+//                        self?.store.send(.dismissAlert)
+//                    })
+//                    alert.addAction(okAction)
+//                    self?.navigationController?.present(alert, animated: true)
+//                }
+//            })
+//            .disposed(by: disposeBag)
+//
+//        store.subscribe(\.isLoading)
+//            .subscribe(onNext: { [loadingIndicator] in
+//                if $0 {
+//                    loadingIndicator.startAnimating()
+//                } else {
+//                    loadingIndicator.stopAnimating()
+//                }
+//            })
+//            .disposed(by: disposeBag)
     }
     
     @objc private func didTapReload() {

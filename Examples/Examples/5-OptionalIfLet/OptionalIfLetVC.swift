@@ -61,24 +61,24 @@ class OptionalIfLetVC: UIScrollVC {
     }
     
     private func bindState() {
-        store.subscribe(\.number)
-            .subscribe(onNext: { [textLabel] in
-                textLabel.text = "Last saved number: \($0)"
-            })
-            .disposed(by: disposeBag)
-        
-        store.scope(
-            state: \.counter,
-            action: OptionalIfLet.Action.counter
-        ).ifLet(then: { [weak self] wrappedStore in
-            let counterView = CounterView(store: wrappedStore)
-            self?.counterView = counterView
-            self?.stackView.addArrangedSubview(counterView)
-        }, else: { [weak self] in
-            self?.counterView?.removeFromSuperview()
-            self?.counterView = nil
-        })
-        .disposed(by: disposeBag)
+//        store.subscribe(\.number)
+//            .subscribe(onNext: { [textLabel] in
+//                textLabel.text = "Last saved number: \($0)"
+//            })
+//            .disposed(by: disposeBag)
+//        
+//        store.scope(
+//            state: \.counter,
+//            action: OptionalIfLet.Action.counter
+//        ).ifLet(then: { [weak self] wrappedStore in
+//            let counterView = CounterView(store: wrappedStore)
+//            self?.counterView = counterView
+//            self?.stackView.addArrangedSubview(counterView)
+//        }, else: { [weak self] in
+//            self?.counterView?.removeFromSuperview()
+//            self?.counterView = nil
+//        })
+//        .disposed(by: disposeBag)
     }
     
     @objc private func didTapSwitch() {
