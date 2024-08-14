@@ -1187,7 +1187,7 @@ public struct _ExhaustivityCheckView<State, Action>: View {
       let message = """
         Warning: SwitchStore.body@\(self.file):\(self.line)
 
-        "\(debugCaseOutput(self.store.wrappedValue.state.value))" was encountered by a \
+        "\(debugCaseOutput(self.store.wrappedValue._state.value))" was encountered by a \
         "SwitchStore" that does not handle this case.
 
         Make sure that you exhaustively provide a "CaseLet" view for each case in "\(State.self)", \
@@ -1213,7 +1213,7 @@ public struct _ExhaustivityCheckView<State, Action>: View {
           A "SwitchStore" at "\(self.fileID):\(self.line)" does not handle the current case. …
 
             Unhandled case:
-              \(debugCaseOutput(self.store.wrappedValue.state.value))
+              \(debugCaseOutput(self.store.wrappedValue._state.value))
 
           Make sure that you exhaustively provide a "CaseLet" view for each case in your state, \
           or provide a "Default" view at the end of the "SwitchStore".

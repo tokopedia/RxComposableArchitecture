@@ -131,7 +131,11 @@ public final class Store<State, Action> {
     private let reducer: (inout State, Action) -> Effect<Action>
     fileprivate var scope: AnyStoreScope?
   #endif
-  @_spi(Internals) public var state: CurrentValueSubject<State, Never>
+  @_spi(Internals) public var _state: CurrentValueSubject<State, Never>
+    
+  public var state: State {
+    _state.value
+  }
   #if DEBUG
     private let mainThreadChecksEnabled: Bool
   #endif
@@ -352,13 +356,13 @@ public final class Store<State, Action> {
     guard !self.isSending else { return nil }
 
     self.isSending = true
-    var currentState = self.state.value
+    var currentState = self._state.value
     let tasks = Box<[Task<Void, Never>]>(wrappedValue: [])
     defer {
       withExtendedLifetime(self.bufferedActions) {
         self.bufferedActions.removeAll()
       }
-      self.state.value = currentState
+      self._state.value = currentState
       self.isSending = false
       if !self.bufferedActions.isEmpty {
         if let task = self.send(
@@ -488,13 +492,13 @@ public final class Store<State, Action> {
         _ toLocalState: @escaping (State) -> LocalState,
         removeDuplicates isDuplicate: @escaping (LocalState, LocalState) -> Bool
     ) -> Effect<LocalState> {
-        return state.map(toLocalState).removeDuplicates(by: isDuplicate).eraseToEffect()
+        return _state.map(toLocalState).removeDuplicates(by: isDuplicate).eraseToEffect()
     }
 
     public func subscribe<LocalState: Equatable>(
         _ toLocalState: @escaping (State) -> LocalState
     ) -> Effect<LocalState> {
-        return state.map(toLocalState).removeDuplicates().eraseToEffect()
+        return _state.map(toLocalState).removeDuplicates().eraseToEffect()
     }
 
   /// Returns a "stateless" store by erasing state to `Void`.
@@ -600,7 +604,7 @@ public final class Store<State, Action> {
     reducer: R,
     mainThreadChecksEnabled: Bool
   ) where R.State == State, R.Action == Action {
-    self.state = CurrentValueSubject(initialState)
+    self._state = CurrentValueSubject(initialState)
     #if swift(>=5.7)
       self.reducer = reducer
     #else
@@ -677,7 +681,7 @@ public typealias StoreOf<R: ReducerProtocol> = Store<R.State, R.Action>
     ) -> Effect<ScopedAction> {
       self.isSending = true
       defer {
-        state = self.toScopedState(self.rootStore.state.value)
+        state = self.toScopedState(self.rootStore._state.value)
         self.isSending = false
       }
       if let action = self.fromScopedAction(state, action), let task = self.rootStore.send(action) {
@@ -706,19 +710,19 @@ public typealias StoreOf<R: ReducerProtocol> = Store<R.State, R.Action>
       let fromScopedAction = self.fromScopedAction as! (ScopedState, ScopedAction) -> RootAction?
       let reducer = ScopedReducer<RootState, RootAction, RescopedState, RescopedAction>(
         rootStore: self.rootStore,
-        state: { _ in toRescopedState(store.state.value) },
-        action: { fromRescopedAction($0, $1).flatMap { fromScopedAction(store.state.value, $0) } },
+        state: { _ in toRescopedState(store._state.value) },
+        action: { fromRescopedAction($0, $1).flatMap { fromScopedAction(store._state.value, $0) } },
         parentStores: self.parentStores + [store]
       )
       let childStore = Store<RescopedState, RescopedAction>(
-        initialState: toRescopedState(store.state.value),
+        initialState: toRescopedState(store._state.value),
         reducer: reducer
       )
-      childStore.parentCancellable = store.state
+      childStore.parentCancellable = store._state
         .dropFirst()
         .sink { [weak childStore] newValue in
           guard !reducer.isSending else { return }
-          childStore?.state.value = toRescopedState(newValue)
+          childStore?._state.value = toRescopedState(newValue)
         }
       return childStore
     }
@@ -799,7 +803,7 @@ extension Store {
     public func subscribeNeverEqual<LocalState: Equatable>(
         _ toLocalState: @escaping (State) -> NeverEqual<LocalState>
     ) -> Effect<LocalState> {
-        state.map(toLocalState).removeDuplicates()
+        _state.map(toLocalState).removeDuplicates()
             .map(\.wrappedValue)
             .eraseToEffect()
     }

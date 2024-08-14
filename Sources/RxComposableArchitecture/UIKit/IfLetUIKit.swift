@@ -49,7 +49,7 @@ extension Store {
     then unwrap: @escaping (Store<Wrapped, Action>) -> Void,
     else: @escaping () -> Void = {}
   ) -> Cancellable where State == Wrapped? {
-    return self.state
+    return self._state
       .removeDuplicates(by: { ($0 != nil) == ($1 != nil) })
       .sink { state in
         if var state = state {
@@ -110,7 +110,7 @@ extension Store {
         then unwrap: @escaping (Store<Wrapped, Action>) -> Void,
         else: @escaping () -> Void
     ) -> Disposable where State == Wrapped? {
-        self.state.asObservable()
+        self._state.asObservable()
             .distinctUntilChanged { ($0 != nil) == ($1 != nil) }
             .subscribe(onNext: { state in
                 if var state = state {

@@ -550,13 +550,13 @@ extension Store {
       return childState
     }
 
-    return toChildState(self.state.eraseToAnyPublisher())
+    return toChildState(self._state.eraseToAnyPublisher())
       .map { childState in
         let childStore = Store<ChildState, ChildAction>(
           initialState: childState,
           reducer: .init { childState, childAction, _ in
             let task = self.send(fromChildAction(childAction))
-            childState = extractChildState(self.state.value) ?? childState
+            childState = extractChildState(self._state.value) ?? childState
             if let task = task {
               return .fireAndForget { await task.cancellableValue }
             } else {
@@ -566,10 +566,10 @@ extension Store {
           environment: ()
         )
 
-        childStore.parentCancellable = self.state
+        childStore.parentCancellable = self._state
           .sink { [weak childStore] state in
             guard let childStore = childStore else { return }
-            childStore.state.value = extractChildState(state) ?? childStore.state.value
+            childStore._state.value = extractChildState(state) ?? childStore._state.value
           }
         return childStore
       }
