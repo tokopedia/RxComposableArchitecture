@@ -1,0 +1,32 @@
+{
+  "name": "IdentifiedCollections",
+  "version": "1.1.0",
+  "summary": "A library of data structures for working with collections of identifiable elements in an ergonomic, performant way.",
+  "description": "A library of data structures for working with collections of identifiable elements in an ergonomic, performant way.",
+  "homepage": "https://www.pointfree.co",
+  "license": {
+    "type": "MIT",
+    "file": "swift-identified-collections/LICENSE"
+  },
+  "authors": {
+    "Point-Free": "support@pointfree.co"
+  },
+  "platforms": {
+    "ios": "13.0",
+    "osx": "10.15",
+    "watchos": "6.0",
+    "tvos": "13.0"
+  },
+  "swift_versions": "5.9",
+  "source": {
+    "git": "https://github.com/pointfreeco/swift-identified-collections.git",
+    "tag": "1.1.0"
+  },
+  "source_files": "Sources/IdentifiedCollections/**/*.swift",
+  "dependencies": {
+    "OrderedCollections": [
+      "~> 1.0.3"
+    ]
+  },
+  "swift_version": "5.9"
+}
