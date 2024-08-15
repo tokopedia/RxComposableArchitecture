@@ -154,7 +154,7 @@ extension Store {
     initialState: State,
     reducer: AnyReducer<State, Action, Environment>,
     environment: Environment,
-    useNewScope: Bool
+    useNewScope: Bool = StoreConfig.default.useNewScope()
   ) {
     self.init(
       initialState: initialState,
