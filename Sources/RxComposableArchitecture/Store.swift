@@ -125,6 +125,7 @@ public final class Store<State, Action> {
   @_spi(Internals) public var effectCancellables: [UUID: AnyCancellable] = [:]
   private var isSending = false
   var parentCancellable: AnyCancellable?
+  var scopeCollectionCancellable: AnyCancellable?
   #if swift(>=5.7)
     private let reducer: any ReducerProtocol<State, Action>
   #else
@@ -132,13 +133,12 @@ public final class Store<State, Action> {
     fileprivate var scope: AnyStoreScope?
   #endif
   @_spi(Internals) public var _state: CurrentValueSubject<State, Never>
-    
-  public var state: State {
-    _state.value
-  }
   #if DEBUG
     private let mainThreadChecksEnabled: Bool
   #endif
+    
+  internal let useNewScope: Bool
+  fileprivate let cancelsEffectsOnDeinit: Bool
 
   /// Initializes a store from an initial state and a reducer.
   ///
@@ -150,19 +150,26 @@ public final class Store<State, Action> {
   public convenience init<R: ReducerProtocol>(
     initialState: @autoclosure () -> R.State,
     reducer: R,
+    useNewScope: Bool = StoreConfig.default.useNewScope(),
+    mainThreadChecksEnabled: Bool = StoreConfig.default.mainThreadChecksEnabled(),
+    cancelsEffectsOnDeinit: Bool = StoreConfig.default.cancelsEffectsOnDeinit(),
     prepareDependencies: ((inout DependencyValues) -> Void)? = nil
   ) where R.State == State, R.Action == Action {
     if let prepareDependencies = prepareDependencies {
       self.init(
         initialState: withDependencies(prepareDependencies) { initialState() },
         reducer: reducer.transformDependency(\.self, transform: prepareDependencies),
-        mainThreadChecksEnabled: true
+        mainThreadChecksEnabled: true,
+        useNewScope: useNewScope,
+        cancelsEffectsOnDeinit: cancelsEffectsOnDeinit
       )
     } else {
       self.init(
         initialState: initialState(),
         reducer: reducer,
-        mainThreadChecksEnabled: true
+        mainThreadChecksEnabled: true,
+        useNewScope: useNewScope,
+        cancelsEffectsOnDeinit: cancelsEffectsOnDeinit
       )
     }
   }
@@ -487,19 +494,6 @@ public final class Store<State, Action> {
       }
     }
   }
-    
-    public func subscribe<LocalState>(
-        _ toLocalState: @escaping (State) -> LocalState,
-        removeDuplicates isDuplicate: @escaping (LocalState, LocalState) -> Bool
-    ) -> Effect<LocalState> {
-        return _state.map(toLocalState).removeDuplicates(by: isDuplicate).eraseToEffect()
-    }
-
-    public func subscribe<LocalState: Equatable>(
-        _ toLocalState: @escaping (State) -> LocalState
-    ) -> Effect<LocalState> {
-        return _state.map(toLocalState).removeDuplicates().eraseToEffect()
-    }
 
   /// Returns a "stateless" store by erasing state to `Void`.
   public var stateless: Store<Void, Action> {
@@ -602,7 +596,10 @@ public final class Store<State, Action> {
   init<R: ReducerProtocol>(
     initialState: R.State,
     reducer: R,
-    mainThreadChecksEnabled: Bool
+    mainThreadChecksEnabled: Bool,
+    useNewScope: Bool = StoreConfig.default.useNewScope(),
+    cancelsEffectsOnDeinit: Bool = StoreConfig.default.cancelsEffectsOnDeinit(),
+    prepareDependencies: ((inout DependencyValues) -> Void)? = nil
   ) where R.State == State, R.Action == Action {
     self._state = CurrentValueSubject(initialState)
     #if swift(>=5.7)
@@ -613,6 +610,8 @@ public final class Store<State, Action> {
     #if DEBUG
       self.mainThreadChecksEnabled = mainThreadChecksEnabled
     #endif
+      self.useNewScope = useNewScope
+      self.cancelsEffectsOnDeinit = cancelsEffectsOnDeinit
     self.threadCheck(status: .`init`)
   }
 }
@@ -798,13 +797,3 @@ public typealias StoreOf<R: ReducerProtocol> = Store<R.State, R.Action>
     }
   }
 #endif
-
-extension Store {
-    public func subscribeNeverEqual<LocalState: Equatable>(
-        _ toLocalState: @escaping (State) -> NeverEqual<LocalState>
-    ) -> Effect<LocalState> {
-        _state.map(toLocalState).removeDuplicates()
-            .map(\.wrappedValue)
-            .eraseToEffect()
-    }
-}

@@ -153,11 +153,13 @@ extension Store {
   public convenience init<Environment>(
     initialState: State,
     reducer: AnyReducer<State, Action, Environment>,
-    environment: Environment
+    environment: Environment,
+    useNewScope: Bool
   ) {
     self.init(
       initialState: initialState,
-      reducer: Reduce(reducer, environment: environment)
+      reducer: Reduce(reducer, environment: environment),
+      useNewScope: useNewScope
     )
   }
 }
