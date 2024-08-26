@@ -710,6 +710,77 @@ public struct AnyReducer<State, Action, Environment> {
     }
   }
 
+   ///
+    /// - Parameters:
+    ///   - toLocalState: A key path that can get/set `State` inside `ParentState`.
+    ///   - toLocalAction: A case path that can extract/embed `Action` from `ParentAction`.
+    ///   - toLocalEnvironment: A function that transforms `ParentEnvironment` into `Environment`.
+    ///   - assertOnInvalidAction: A flag indicate we run assertion for `invalid action` that `not match` with our current extract-ed/embed-ed `State` from `ParentState`.
+    /// - Returns: A reducer that works on `ParentState`, `ParentAction`, `ParentEnvironment`.
+    public func pullback<GlobalState, GlobalAction, GlobalEnvironment, StatePath, ActionPath>(
+        state toLocalState: StatePath,
+        action toLocalAction: ActionPath,
+        environment toLocalEnvironment: @escaping (GlobalEnvironment) -> Environment,
+        assertOnInvalidAction: Bool = true,
+        file: StaticString = #file,
+        fileID: StaticString = #fileID,
+        line: UInt = #line
+    ) -> AnyReducer<GlobalState, GlobalAction, GlobalEnvironment>
+    where
+StatePath: WritablePath, StatePath.Root == GlobalState, StatePath.Value == State,
+ActionPath: WritablePath, ActionPath.Root == GlobalAction, ActionPath.Value == Action
+    {
+        return .init { globalState, globalAction, globalEnvironment in
+            guard let localAction = toLocalAction.extract(from: globalAction) else { return .none }
+            
+            guard var localState = toLocalState.extract(from: globalState) else {
+#if DEBUG
+                if assertOnInvalidAction {
+                    runtimeWarn(
+                              """
+                              A reducer pulled back from "\(fileID):\(line)" received an action when child state was \
+                              unavailable. …
+                              
+                                Action:
+                                  \(debugCaseOutput(localAction))
+                              
+                              This is generally considered an application logic error, and can happen for a few \
+                              reasons:
+                              
+                              • The reducer for a particular case of state was combined with or run from another \
+                              reducer that set "\(typeName(GlobalState.self))" to another case before the reducer ran. \
+                              Combine or run case-specific reducers before reducers that may set their state to \
+                              another case. This ensures that case-specific reducers can handle their actions while \
+                              their state is available.
+                              
+                              • An in-flight effect emitted this action when state was unavailable. While it may be \
+                              perfectly reasonable to ignore this action, you may want to cancel the associated \
+                              effect before state is set to another case, especially if it is a long-living effect.
+                              
+                              • This action was sent to the store while state was another case. Make sure that \
+                              actions for this reducer can only be sent to a view store when state is non-"nil". \
+                              In SwiftUI applications, use "SwitchStore".
+                              """
+                    )
+                }
+#endif
+                
+                return .none
+            }
+            
+            let effect =
+            self
+                .reducer(&localState, localAction, toLocalEnvironment(globalEnvironment))
+                .map { localAction -> GlobalAction in
+                    var globalAction = globalAction
+                    toLocalAction.set(into: &globalAction, localAction)
+                    return globalAction
+                }
+            toLocalState.set(into: &globalState, localState)
+            return effect
+        }
+    }
+
   /// This API has been soft-deprecated in favor of
   /// ``ReducerProtocol/ifLet(_:action:then:file:fileID:line:)``. Read
   /// <doc:MigratingToTheReducerProtocol> for more information.
