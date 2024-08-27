@@ -669,46 +669,34 @@ extension AnyReducer {
   }
 }
 
-//extension ForEachStore {
-//  @available(*, deprecated, message: "Use the 'IdentifiedArray'-based version, instead.")
-//  public init<EachContent>(
-//    _ store: Store<Data, (Data.Index, EachAction)>,
-//    id: KeyPath<EachState, ID>,
-//    @ViewBuilder content: @escaping (Store<EachState, EachAction>) -> EachContent
-//  )
-//  where
-//    Data == [EachState],
-//    Content == WithViewStore<
-//      [ID], (Data.Index, EachAction), ForEach<[(offset: Int, element: ID)], ID, EachContent>
-//    >
-//  {
-//    let data = store.state.value
-//    self.data = data
-//    self.content = WithViewStore(store.scope(state: { $0.map { $0[keyPath: id] } })) { viewStore in
-//      ForEach(Array(viewStore.state.enumerated()), id: \.element) { index, _ in
-//        content(
-//          store.scope(
-//            state: { index < $0.endIndex ? $0[index] : data[index] },
-//            action: { (index, $0) }
-//          )
-//        )
-//      }
-//    }
-//  }
+extension AnyReducer where State: Identifiable {
+    /// https://github.com/pointfreeco/swift-composable-architecture/pull/641
+    @available(*, deprecated, message: "Use the 'IdentifiedArray'-based version, instead.")
+    public func forEach<Identifier, GlobalState, GlobalAction, GlobalEnvironment>(
+        state toLocalState: WritableKeyPath<GlobalState, [State]>,
+        action toLocalAction: CasePath<GlobalAction, (Identifier, Action)>,
+        environment toLocalEnvironment: @escaping (GlobalEnvironment) -> Environment
+    ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment>
+        where Identifier == State.ID {
+        .init { globalState, globalAction, globalEnvironment in
+            guard let (identifier, localAction) = toLocalAction.extract(from: globalAction) else {
+                return .none
+            }
 
-//  @available(*, deprecated, message: "Use the 'IdentifiedArray'-based version, instead.")
-//  public init<EachContent>(
-//    _ store: Store<Data, (Data.Index, EachAction)>,
-//    @ViewBuilder content: @escaping (Store<EachState, EachAction>) -> EachContent
-//  )
-//  where
-//    Data == [EachState],
-//    Content == WithViewStore<
-//      [ID], (Data.Index, EachAction), ForEach<[(offset: Int, element: ID)], ID, EachContent>
-//    >,
-//    EachState: Identifiable,
-//    EachState.ID == ID
-//  {
-//    self.init(store, id: \.id, content: content)
-//  }
-//}
+            // search index of identifier
+            guard let index = globalState[keyPath: toLocalState].firstIndex(where: { $0.id == identifier })
+            else {
+                assertionFailure("\(identifier) is not exist on Global State")
+                return .none
+            }
+
+            // return redux
+            return self.run(
+                &globalState[keyPath: toLocalState][index],
+                localAction,
+                toLocalEnvironment(globalEnvironment)
+            )
+            .map { toLocalAction.embed((identifier, $0)) }
+        }
+    }
+}
