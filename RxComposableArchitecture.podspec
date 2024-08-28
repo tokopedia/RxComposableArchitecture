@@ -33,5 +33,7 @@ Pod::Spec.new do |s|
   s.dependency 'XCTestDynamicOverlay'
   s.dependency 'CustomDump'
   s.dependency 'Dependencies'
+  s.dependency 'RxCombine'
+  s.dependency 'IdentifiedCollections'
   
 end

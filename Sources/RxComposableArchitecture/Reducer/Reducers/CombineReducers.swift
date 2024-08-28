@@ -17,40 +17,28 @@
 /// ```
 public struct CombineReducers<State, Action, Reducers: ReducerProtocol>: ReducerProtocol
 where State == Reducers.State, Action == Reducers.Action {
-    @usableFromInline
-    let reducers: Reducers
+  @usableFromInline
+  let reducers: Reducers
 
-    /// Initializes a reducer that combines all of the reducers in the given build block.
-    ///
-    /// - Parameter build: A reducer builder.
-    @inlinable
-    public init(
-        @ReducerBuilder<State, Action> _ build: () -> Reducers
-    ) {
-        self.init(internal: build())
-    }
+  /// Initializes a reducer that combines all of the reducers in the given build block.
+  ///
+  /// - Parameter build: A reducer builder.
+  @inlinable
+  public init(
+    @ReducerBuilder<State, Action> _ build: () -> Reducers
+  ) {
+    self.init(internal: build())
+  }
 
-    @usableFromInline
-    init(internal reducers: Reducers) {
-        self.reducers = reducers
-    }
+  @usableFromInline
+  init(internal reducers: Reducers) {
+    self.reducers = reducers
+  }
 
-    @inlinable
-    public func reduce(
-        into state: inout Reducers.State, action: Reducers.Action
-    ) -> Effect<Reducers.Action> {
-        self.reducers.reduce(into: &state, action: action)
-    }
+  @inlinable
+  public func reduce(
+    into state: inout Reducers.State, action: Reducers.Action
+  ) -> Effect<Reducers.Action> {
+    self.reducers.reduce(into: &state, action: action)
+  }
 }
-
-#if swift(>=5.7)
-    extension ReducerProtocol {
-        // NB: This overload is provided to work around https://github.com/apple/swift/issues/60445
-        /// Combines multiple reducers into a single reducer.
-        public func CombineReducers<State, Action>(
-            @ReducerBuilder<State, Action> _ build: () -> some ReducerProtocol<State, Action>
-        ) -> some ReducerProtocol<State, Action> {
-            RxComposableArchitecture.CombineReducers(build)
-        }
-    }
-#endif

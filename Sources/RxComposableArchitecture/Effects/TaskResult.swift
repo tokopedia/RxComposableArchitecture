@@ -1,3 +1,5 @@
+import XCTestDynamicOverlay
+
 /// A value that represents either a success or a failure. This type differs from Swift's `Result`
 /// type in that it uses only one generic for the success case, leaving the failure case as an
 /// untyped `Error`.
@@ -29,9 +31,9 @@
 /// }
 /// ```
 ///
-/// And finally you can use ``Effect/task(priority:operation:catch:file:fileID:line:)`` to construct
-/// an effect in the reducer that invokes the `numberFact` endpoint and wraps its response in a
-/// ``TaskResult`` by using its catching initializer, ``TaskResult/init(catching:)``:
+/// And finally you can use ``EffectPublisher/task(priority:operation:catch:file:fileID:line:)`` to
+/// construct an effect in the reducer that invokes the `numberFact` endpoint and wraps its response
+/// in a ``TaskResult`` by using its catching initializer, ``TaskResult/init(catching:)``:
 ///
 /// ```swift
 /// case .factButtonTapped:
@@ -99,180 +101,179 @@
 /// }
 /// ```
 public enum TaskResult<Success: Sendable>: Sendable {
-    /// A success, storing a `Success` value.
-    case success(Success)
-    
-    /// A failure, storing an error.
-    case failure(Error)
-    
-    /// Creates a new task result by evaluating an async throwing closure, capturing the returned
-    /// value as a success, or any thrown error as a failure.
-    ///
-    /// This initializer is most often used in an async effect being returned from a reducer. See the
-    /// documentation for ``TaskResult`` for a concrete example.
-    ///
-    /// - Parameter body: An async, throwing closure.
-    @_transparent
-    public init(catching body: @Sendable () async throws -> Success) async {
-        do {
-            self = .success(try await body())
-        } catch {
-            self = .failure(error)
-        }
+  /// A success, storing a `Success` value.
+  case success(Success)
+
+  /// A failure, storing an error.
+  case failure(Error)
+
+  /// Creates a new task result by evaluating an async throwing closure, capturing the returned
+  /// value as a success, or any thrown error as a failure.
+  ///
+  /// This initializer is most often used in an async effect being returned from a reducer. See the
+  /// documentation for ``TaskResult`` for a concrete example.
+  ///
+  /// - Parameter body: An async, throwing closure.
+  @_transparent
+  public init(catching body: @Sendable () async throws -> Success) async {
+    do {
+      self = .success(try await body())
+    } catch {
+      self = .failure(error)
     }
-    
-    /// Transforms a `Result` into a `TaskResult`, erasing its `Failure` to `Error`.
-    ///
-    /// - Parameter result: A result.
-    @inlinable
-    public init<Failure>(_ result: Result<Success, Failure>) {
-        switch result {
-        case let .success(value):
-            self = .success(value)
-        case let .failure(error):
-            self = .failure(error)
-        }
+  }
+
+  /// Transforms a `Result` into a `TaskResult`, erasing its `Failure` to `Error`.
+  ///
+  /// - Parameter result: A result.
+  @inlinable
+  public init<Failure>(_ result: Result<Success, Failure>) {
+    switch result {
+    case let .success(value):
+      self = .success(value)
+    case let .failure(error):
+      self = .failure(error)
     }
-    
-    /// Returns the success value as a throwing property.
-    @inlinable
-    public var value: Success {
-        get throws {
-            switch self {
-            case let .success(value):
-                return value
-            case let .failure(error):
-                throw error
-            }
-        }
+  }
+
+  /// Returns the success value as a throwing property.
+  @inlinable
+  public var value: Success {
+    get throws {
+      switch self {
+      case let .success(value):
+        return value
+      case let .failure(error):
+        throw error
+      }
     }
-    
-    /// Returns a new task result, mapping any success value using the given transformation.
-    ///
-    /// Like `map` on `Result`, `Optional`, and many other types.
-    ///
-    /// - Parameter transform: A closure that takes the success value of this instance.
-    /// - Returns: A `TaskResult` instance with the result of evaluating `transform` as the new
-    ///   success value if this instance represents a success.
-    @inlinable
-    public func map<NewSuccess>(_ transform: (Success) -> NewSuccess) -> TaskResult<NewSuccess> {
-        switch self {
-        case let .success(value):
-            return .success(transform(value))
-        case let .failure(error):
-            return .failure(error)
-        }
+  }
+
+  /// Returns a new task result, mapping any success value using the given transformation.
+  ///
+  /// Like `map` on `Result`, `Optional`, and many other types.
+  ///
+  /// - Parameter transform: A closure that takes the success value of this instance.
+  /// - Returns: A `TaskResult` instance with the result of evaluating `transform` as the new
+  ///   success value if this instance represents a success.
+  @inlinable
+  public func map<NewSuccess>(_ transform: (Success) -> NewSuccess) -> TaskResult<NewSuccess> {
+    switch self {
+    case let .success(value):
+      return .success(transform(value))
+    case let .failure(error):
+      return .failure(error)
     }
-    
-    /// Returns a new task result, mapping any success value using the given transformation and
-    /// unwrapping the produced result.
-    ///
-    /// Like `flatMap` on `Result`, `Optional`, and many other types.
-    ///
-    /// - Parameter transform: A closure that takes the success value of the instance.
-    /// - Returns: A `TaskResult` instance, either from the closure or the previous `.failure`.
-    @inlinable
-    public func flatMap<NewSuccess>(
-        _ transform: (Success) -> TaskResult<NewSuccess>
-    ) -> TaskResult<NewSuccess> {
-        switch self {
-        case let .success(value):
-            return transform(value)
-        case let .failure(error):
-            return .failure(error)
-        }
+  }
+
+  /// Returns a new task result, mapping any success value using the given transformation and
+  /// unwrapping the produced result.
+  ///
+  /// Like `flatMap` on `Result`, `Optional`, and many other types.
+  ///
+  /// - Parameter transform: A closure that takes the success value of the instance.
+  /// - Returns: A `TaskResult` instance, either from the closure or the previous `.failure`.
+  @inlinable
+  public func flatMap<NewSuccess>(
+    _ transform: (Success) -> TaskResult<NewSuccess>
+  ) -> TaskResult<NewSuccess> {
+    switch self {
+    case let .success(value):
+      return transform(value)
+    case let .failure(error):
+      return .failure(error)
     }
+  }
 }
 
 extension Result where Success: Sendable, Failure == Error {
-    /// Transforms a `TaskResult` into a `Result`.
-    ///
-    /// - Parameter result: A task result.
-    @inlinable
-    public init(_ result: TaskResult<Success>) {
-        switch result {
-        case let .success(value):
-            self = .success(value)
-        case let .failure(error):
-            self = .failure(error)
-        }
+  /// Transforms a `TaskResult` into a `Result`.
+  ///
+  /// - Parameter result: A task result.
+  @inlinable
+  public init(_ result: TaskResult<Success>) {
+    switch result {
+    case let .success(value):
+      self = .success(value)
+    case let .failure(error):
+      self = .failure(error)
     }
+  }
 }
 
 enum TaskResultDebugging {
-    @TaskLocal static var emitRuntimeWarnings = true
+  @TaskLocal static var emitRuntimeWarnings = true
 }
 
 extension TaskResult: Equatable where Success: Equatable {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        switch (lhs, rhs) {
-        case let (.success(lhs), .success(rhs)):
-            return lhs == rhs
-        case let (.failure(lhs), .failure(rhs)):
-            return _isEqual(lhs, rhs) ?? {
-#if DEBUG
-                let lhsType = type(of: lhs)
-                if TaskResultDebugging.emitRuntimeWarnings, lhsType == type(of: rhs) {
-                    let lhsTypeName = typeName(lhsType)
-                    runtimeWarn(
+  public static func == (lhs: Self, rhs: Self) -> Bool {
+    switch (lhs, rhs) {
+    case let (.success(lhs), .success(rhs)):
+      return lhs == rhs
+    case let (.failure(lhs), .failure(rhs)):
+      return _isEqual(lhs, rhs) ?? {
+        #if DEBUG
+          let lhsType = type(of: lhs)
+          if TaskResultDebugging.emitRuntimeWarnings, lhsType == type(of: rhs) {
+            let lhsTypeName = typeName(lhsType)
+            runtimeWarn(
               """
               "\(lhsTypeName)" is not equatable. …
-              
+
               To test two values of this type, it must conform to the "Equatable" protocol. For \
               example:
-              
+
                   extension \(lhsTypeName): Equatable {}
-              
+
               See the documentation of "TaskResult" for more information.
               """
-                    )
-                }
-#endif
-                return false
-            }()
-        default:
-            return false
-        }
+            )
+          }
+        #endif
+        return false
+      }()
+    default:
+      return false
     }
+  }
 }
 
 extension TaskResult: Hashable where Success: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        switch self {
-        case let .success(value):
-            hasher.combine(value)
-            hasher.combine(0)
-        case let .failure(error):
-            if let error = (error as Any) as? AnyHashable {
-                hasher.combine(error)
-                hasher.combine(1)
-            } else {
-#if DEBUG
-                if TaskResultDebugging.emitRuntimeWarnings {
-                    let errorType = typeName(type(of: error))
-                    runtimeWarn(
+  public func hash(into hasher: inout Hasher) {
+    switch self {
+    case let .success(value):
+      hasher.combine(value)
+      hasher.combine(0)
+    case let .failure(error):
+      if let error = (error as Any) as? AnyHashable {
+        hasher.combine(error)
+        hasher.combine(1)
+      } else {
+        #if DEBUG
+          if TaskResultDebugging.emitRuntimeWarnings {
+            let errorType = typeName(type(of: error))
+            runtimeWarn(
               """
               "\(errorType)" is not hashable. …
-              
+
               To hash a value of this type, it must conform to the "Hashable" protocol. For example:
-              
+
                   extension \(errorType): Hashable {}
-              
+
               See the documentation of "TaskResult" for more information.
               """
-                    )
-                }
-#endif
-            }
-        }
+            )
+          }
+        #endif
+      }
     }
+  }
 }
 
 extension TaskResult {
-    // NB: For those that try to interface with `TaskResult` using `Result`'s old API.
-    @available(*, unavailable, renamed: "value")
-    public func get() throws -> Success {
-        try self.value
-    }
+  // NB: For those that try to interface with `TaskResult` using `Result`'s old API.
+  @available(*, unavailable, renamed: "value")
+  public func get() throws -> Success {
+    try self.value
+  }
 }
-

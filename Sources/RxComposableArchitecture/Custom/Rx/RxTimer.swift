@@ -1,10 +1,3 @@
-//
-//  Timer.swift
-//  RxComposableArchitecture_RxComposableArchitecture
-//
-//  Created by Jefferson Setiawan on 02/02/21.
-//
-
 import RxSwift
 
 extension Effect where Action: RxAbstractInteger {
@@ -100,7 +93,7 @@ extension Effect where Action: RxAbstractInteger {
         id: AnyHashable,
         every interval: RxTimeInterval,
         on scheduler: SchedulerType
-    ) -> Effect {
+    ) -> Effect<Element> {
         Observable
             .interval(interval, scheduler: scheduler)
             .eraseToEffect()
@@ -126,7 +119,7 @@ extension Effect where Action: RxAbstractInteger {
         id: Any.Type,
         every interval: RxTimeInterval,
         on scheduler: SchedulerType
-    ) -> Self {
+    ) -> Effect<Element> {
         self.timer(
             id: ObjectIdentifier(id),
             every: interval,

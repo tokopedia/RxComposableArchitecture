@@ -21,7 +21,10 @@ let package = Package(
         .package(name: "Benchmark", url: "https://github.com/google/swift-benchmark", from: "0.1.0"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "0.8.5"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "0.9.1"),
-        .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "0.2.0")
+        .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "0.2.0"),
+        .package(url: "https://github.com/pointfreeco/swift-identified-collections", from: "0.7.0"),
+        .package(url: "https://github.com/jeffersonsetiawan/RxCombine", revision: "0b984ee089e29736b7f07df03b3af667683deefd")
+//        .package(url: "https://github.com/jeffersonsetiawan/RxCombine", branch: "rxswift5")
     ],
     targets: [
         .target(
@@ -33,6 +36,8 @@ let package = Package(
                 .product(name: "XCTestDynamicOverlay", package: "xctest-dynamic-overlay"),
                 .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
+                .product(name: "IdentifiedCollections", package: "swift-identified-collections"),
+                .product(name: "RxCombine", package: "RxCombine"),
             ]
         ),
         .testTarget(
@@ -40,13 +45,6 @@ let package = Package(
             dependencies: [
                 "RxComposableArchitecture",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
-            ]
-        ),
-        .executableTarget(
-            name: "RxComposableArchitecture-Benchmark",
-            dependencies: [
-                "RxComposableArchitecture",
-                .product(name: "Benchmark", package: "Benchmark"),
             ]
         ),
     ]

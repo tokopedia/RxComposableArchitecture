@@ -1,0 +1,702 @@
+import CasePaths
+import Combine
+import SwiftUI
+import XCTestDynamicOverlay
+
+// MARK: - Deprecated after 0.49.2
+
+@available(
+  *,
+  deprecated,
+  message: "Use 'ReducerBuilder<_, _>' with explicit 'State' and 'Action' generics, instead."
+)
+public typealias ReducerBuilderOf<R: ReducerProtocol> = ReducerBuilder<R.State, R.Action>
+
+// NB: As of Swift 5.7, property wrapper deprecations are not diagnosed, so we may want to keep this
+//     deprecation around for now:
+//     https://github.com/apple/swift/issues/63139
+@available(*, deprecated, renamed: "BindingState")
+public typealias BindableState = BindingState
+
+// MARK: - Deprecated after 0.47.2
+
+extension ActorIsolated {
+  @available(
+    *,
+    deprecated,
+    message: "Use the non-async version of 'withValue'."
+  )
+  public func withValue<T: Sendable>(
+    _ operation: @Sendable (inout Value) async throws -> T
+  ) async rethrows -> T {
+    var value = self.value
+    defer { self.value = value }
+    return try await operation(&value)
+  }
+}
+
+// MARK: - Deprecated after 0.45.0:
+
+//@available(
+//  *,
+//  deprecated,
+//  message: "Pass 'TextState' to the 'SwiftUI.Text' initializer, instead, e.g., 'Text(textState)'."
+//)
+//extension TextState: View {
+//  public var body: some View {
+//    Text(self)
+//  }
+//}
+
+// MARK: - Deprecated after 0.42.0:
+
+/// This API has been deprecated in favor of ``ReducerProtocol``.
+/// Read <doc:MigratingToTheReducerProtocol> for more information.
+///
+/// A type alias to ``AnyReducer`` for source compatibility. This alias will be removed.
+@available(
+  *,
+  deprecated,
+  renamed: "AnyReducer",
+  message:
+    """
+    'Reducer' has been deprecated in favor of 'ReducerProtocol'.
+
+    See the migration guide for more information: https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/reducerprotocol
+    """
+)
+public typealias Reducer = AnyReducer
+
+// MARK: - Deprecated after 0.41.0:
+
+extension ViewStore {
+  @available(*, deprecated, renamed: "ViewState")
+  public typealias State = ViewState
+
+  @available(*, deprecated, renamed: "ViewAction")
+  public typealias Action = ViewAction
+}
+
+extension ReducerProtocol {
+  @available(*, deprecated, renamed: "_printChanges")
+  @warn_unqualified_access
+  public func debug() -> _PrintChangesReducer<Self> {
+    self._printChanges()
+  }
+}
+
+#if swift(>=5.7)
+  extension ReducerBuilder {
+    @_disfavoredOverload
+    @available(
+      *,
+      deprecated,
+      message:
+        """
+        Reducer bodies should return 'some ReducerProtocol<State, Action>' instead of 'Reduce<State, Action>'.
+        """
+    )
+    @inlinable
+    public static func buildFinalResult<R: ReducerProtocol>(_ reducer: R) -> Reduce<State, Action>
+    where R.State == State, R.Action == Action {
+      Reduce(reducer)
+    }
+
+    @_disfavoredOverload
+    @inlinable
+    public static func buildFinalResult(_ reducer: Reduce<State, Action>) -> Reduce<State, Action> {
+      reducer
+    }
+  }
+#endif
+
+// MARK: - Deprecated after 0.39.1:
+
+extension WithViewStore {
+  @available(*, deprecated, renamed: "ViewState")
+  public typealias State = ViewState
+
+  @available(*, deprecated, renamed: "ViewAction")
+  public typealias Action = ViewAction
+}
+
+// MARK: - Deprecated after 0.39.0:
+
+extension CaseLet {
+  @available(*, deprecated, renamed: "EnumState")
+  public typealias GlobalState = EnumState
+
+  @available(*, deprecated, renamed: "EnumAction")
+  public typealias GlobalAction = EnumAction
+
+  @available(*, deprecated, renamed: "CaseState")
+  public typealias LocalState = CaseState
+
+  @available(*, deprecated, renamed: "CaseAction")
+  public typealias LocalAction = CaseAction
+}
+
+extension TestStore {
+  @available(*, deprecated, renamed: "ScopedState")
+  public typealias LocalState = ScopedState
+
+  @available(*, deprecated, renamed: "ScopedAction")
+  public typealias LocalAction = ScopedAction
+}
+
+// MARK: - Deprecated after 0.38.2:
+
+extension EffectPublisher {
+  @available(*, deprecated)
+  public var upstream: AnyPublisher<Action, Failure> {
+    self.publisher
+  }
+}
+
+extension EffectPublisher where Failure == Error {
+  @_disfavoredOverload
+  @available(
+    *,
+    deprecated,
+    message: "Use the non-failing version of 'Effect.task'"
+  )
+  public static func task(
+    priority: TaskPriority? = nil,
+    operation: @escaping @Sendable () async throws -> Action
+  ) -> Self {
+    Deferred<Publishers.HandleEvents<PassthroughSubject<Action, Failure>>> {
+      let subject = PassthroughSubject<Action, Failure>()
+      let task = Task(priority: priority) { @MainActor in
+        do {
+          try Task.checkCancellation()
+          let output = try await operation()
+          try Task.checkCancellation()
+          subject.send(output)
+          subject.send(completion: .finished)
+        } catch is CancellationError {
+          subject.send(completion: .finished)
+        } catch {
+          subject.send(completion: .failure(error))
+        }
+      }
+      return subject.handleEvents(receiveCancel: task.cancel)
+    }
+    .eraseToEffect()
+  }
+}
+
+/// Initializes a store from an initial state, a reducer, and an environment, and the main thread
+/// check is disabled for all interactions with this store.
+///
+/// - Parameters:
+///   - initialState: The state to start the application in.
+///   - reducer: The reducer that powers the business logic of the application.
+///   - environment: The environment of dependencies for the application.
+@available(
+  *, deprecated,
+  message:
+    """
+    If you use this initializer, please open a discussion on GitHub and let us know how: \
+    https://github.com/pointfreeco/swift-composable-architecture/discussions/new
+    """
+)
+extension Store {
+  public static func unchecked<Environment>(
+    initialState: State,
+    reducer: AnyReducer<State, Action, Environment>,
+    environment: Environment
+  ) -> Self {
+    self.init(
+      initialState: initialState,
+      reducer: Reduce(reducer, environment: environment),
+      mainThreadChecksEnabled: false
+    )
+  }
+}
+
+// MARK: - Deprecated after 0.38.0:
+
+extension EffectPublisher {
+  @available(iOS, deprecated: 9999.0, renamed: "unimplemented")
+  @available(macOS, deprecated: 9999.0, renamed: "unimplemented")
+  @available(tvOS, deprecated: 9999.0, renamed: "unimplemented")
+  @available(watchOS, deprecated: 9999.0, renamed: "unimplemented")
+  public static func failing(_ prefix: String) -> Self {
+    self.unimplemented(prefix)
+  }
+}
+
+// MARK: - Deprecated after 0.36.0:
+
+extension ViewStore {
+  @available(*, deprecated, renamed: "yield(while:)")
+  @MainActor
+  public func suspend(while predicate: @escaping (ViewState) -> Bool) async {
+    await self.yield(while: predicate)
+  }
+}
+
+// MARK: - Deprecated after 0.34.0:
+
+extension EffectPublisher {
+  @available(
+    *,
+    deprecated,
+    message:
+      """
+      Using a variadic list is no longer supported. Use an array of identifiers instead. For more \
+      on this change, see: https://github.com/pointfreeco/swift-composable-architecture/pull/1041
+      """
+  )
+  @_disfavoredOverload
+  public static func cancel(ids: AnyHashable...) -> Self {
+    .cancel(ids: ids)
+  }
+}
+
+// MARK: - Deprecated after 0.31.0:
+
+extension AnyReducer {
+  @available(
+    *,
+    deprecated,
+    message: "'pullback' no longer takes a 'breakpointOnNil' argument"
+  )
+  public func pullback<ParentState, ParentAction, ParentEnvironment>(
+    state toChildState: CasePath<ParentState, State>,
+    action toChildAction: CasePath<ParentAction, Action>,
+    environment toChildEnvironment: @escaping (ParentEnvironment) -> Environment,
+    breakpointOnNil: Bool,
+    file: StaticString = #fileID,
+    line: UInt = #line
+  ) -> AnyReducer<ParentState, ParentAction, ParentEnvironment> {
+    self.pullback(
+      state: toChildState,
+      action: toChildAction,
+      environment: toChildEnvironment,
+      file: file,
+      line: line
+    )
+  }
+
+  @available(
+    *,
+    deprecated,
+    message: "'optional' no longer takes a 'breakpointOnNil' argument"
+  )
+  public func optional(
+    breakpointOnNil: Bool,
+    file: StaticString = #fileID,
+    line: UInt = #line
+  ) -> AnyReducer<
+    State?, Action, Environment
+  > {
+    self.optional(file: file, line: line)
+  }
+
+  @available(
+    *,
+    deprecated,
+    message: "'forEach' no longer takes a 'breakpointOnNil' argument"
+  )
+  public func forEach<ParentState, ParentAction, ParentEnvironment, ID>(
+    state toElementsState: WritableKeyPath<ParentState, IdentifiedArray<ID, State>>,
+    action toElementAction: CasePath<ParentAction, (ID, Action)>,
+    environment toElementEnvironment: @escaping (ParentEnvironment) -> Environment,
+    breakpointOnNil: Bool,
+    file: StaticString = #fileID,
+    line: UInt = #line
+  ) -> AnyReducer<ParentState, ParentAction, ParentEnvironment> {
+    self.forEach(
+      state: toElementsState,
+      action: toElementAction,
+      environment: toElementEnvironment,
+      file: file,
+      line: line
+    )
+  }
+
+  @available(
+    *,
+    deprecated,
+    message: "'forEach' no longer takes a 'breakpointOnNil' argument"
+  )
+  public func forEach<ParentState, ParentAction, ParentEnvironment, Key>(
+    state toElementsState: WritableKeyPath<ParentState, [Key: State]>,
+    action toElementAction: CasePath<ParentAction, (Key, Action)>,
+    environment toElementEnvironment: @escaping (ParentEnvironment) -> Environment,
+    breakpointOnNil: Bool,
+    file: StaticString = #fileID,
+    line: UInt = #line
+  ) -> AnyReducer<ParentState, ParentAction, ParentEnvironment> {
+    self.forEach(
+      state: toElementsState,
+      action: toElementAction,
+      environment: toElementEnvironment,
+      file: file,
+      line: line
+    )
+  }
+}
+
+// MARK: - Deprecated after 0.29.0:
+
+extension TestStore where ScopedState: Equatable, Action: Equatable {
+  @available(
+    *, deprecated, message: "Use 'TestStore.send' and 'TestStore.receive' directly, instead."
+  )
+  public func assert(
+    _ steps: Step...,
+    file: StaticString = #file,
+    line: UInt = #line
+  ) {
+    assert(steps, file: file, line: line)
+  }
+
+  @available(
+    *, deprecated, message: "Use 'TestStore.send' and 'TestStore.receive' directly, instead."
+  )
+  public func assert(
+    _ steps: [Step],
+    file: StaticString = #file,
+    line: UInt = #line
+  ) {
+
+    func assert(step: Step) {
+      switch step.type {
+      case let .send(action, updateStateToExpectedResult):
+        self.send(action, assert: updateStateToExpectedResult, file: step.file, line: step.line)
+
+      case let .receive(expectedAction, updateStateToExpectedResult):
+        self.receive(
+          expectedAction, assert: updateStateToExpectedResult, file: step.file, line: step.line
+        )
+
+      case let .environment(work):
+        if !self.reducer.receivedActions.isEmpty {
+          var actions = ""
+          customDump(self.reducer.receivedActions.map(\.action), to: &actions)
+          XCTFail(
+            """
+            Must handle \(self.reducer.receivedActions.count) received \
+            action\(self.reducer.receivedActions.count == 1 ? "" : "s") before performing this \
+            work: …
+
+            Unhandled actions: \(actions)
+            """,
+            file: step.file, line: step.line
+          )
+        }
+        do {
+          try work(&self.environment)
+        } catch {
+          XCTFail("Threw error: \(error)", file: step.file, line: step.line)
+        }
+
+      case let .do(work):
+        if !self.reducer.receivedActions.isEmpty {
+          var actions = ""
+          customDump(self.reducer.receivedActions.map(\.action), to: &actions)
+          XCTFail(
+            """
+            Must handle \(self.reducer.receivedActions.count) received \
+            action\(self.reducer.receivedActions.count == 1 ? "" : "s") before performing this \
+            work: …
+
+            Unhandled actions: \(actions)
+            """,
+            file: step.file, line: step.line
+          )
+        }
+        do {
+          try work()
+        } catch {
+          XCTFail("Threw error: \(error)", file: step.file, line: step.line)
+        }
+
+      case let .sequence(subSteps):
+        subSteps.forEach(assert(step:))
+      }
+    }
+
+    steps.forEach(assert(step:))
+
+    self.completed()
+  }
+
+  public struct Step {
+    fileprivate let type: StepType
+    fileprivate let file: StaticString
+    fileprivate let line: UInt
+
+    private init(
+      _ type: StepType,
+      file: StaticString = #file,
+      line: UInt = #line
+    ) {
+      self.type = type
+      self.file = file
+      self.line = line
+    }
+
+    @available(*, deprecated, message: "Call 'TestStore.send' directly, instead.")
+    public static func send(
+      _ action: ScopedAction,
+      file: StaticString = #file,
+      line: UInt = #line,
+      _ update: ((inout ScopedState) throws -> Void)? = nil
+    ) -> Step {
+      Step(.send(action, update), file: file, line: line)
+    }
+
+    @available(*, deprecated, message: "Call 'TestStore.receive' directly, instead.")
+    public static func receive(
+      _ action: Action,
+      file: StaticString = #file,
+      line: UInt = #line,
+      _ update: ((inout ScopedState) throws -> Void)? = nil
+    ) -> Step {
+      Step(.receive(action, update), file: file, line: line)
+    }
+
+    @available(*, deprecated, message: "Mutate 'TestStore.environment' directly, instead.")
+    public static func environment(
+      file: StaticString = #file,
+      line: UInt = #line,
+      _ update: @escaping (inout Environment) throws -> Void
+    ) -> Step {
+      Step(.environment(update), file: file, line: line)
+    }
+
+    @available(*, deprecated, message: "Perform this work directly in your test, instead.")
+    public static func `do`(
+      file: StaticString = #file,
+      line: UInt = #line,
+      _ work: @escaping () throws -> Void
+    ) -> Step {
+      Step(.do(work), file: file, line: line)
+    }
+
+    @available(*, deprecated, message: "Perform this work directly in your test, instead.")
+    public static func sequence(
+      _ steps: [Step],
+      file: StaticString = #file,
+      line: UInt = #line
+    ) -> Step {
+      Step(.sequence(steps), file: file, line: line)
+    }
+
+    @available(*, deprecated, message: "Perform this work directly in your test, instead.")
+    public static func sequence(
+      _ steps: Step...,
+      file: StaticString = #file,
+      line: UInt = #line
+    ) -> Step {
+      Step(.sequence(steps), file: file, line: line)
+    }
+
+    fileprivate indirect enum StepType {
+      case send(ScopedAction, ((inout ScopedState) throws -> Void)?)
+      case receive(Action, ((inout ScopedState) throws -> Void)?)
+      case environment((inout Environment) throws -> Void)
+      case `do`(() throws -> Void)
+      case sequence([Step])
+    }
+  }
+}
+
+extension ViewStore where ViewAction: BindableAction, ViewAction.State == ViewState {
+  @available(
+    *, deprecated,
+    message:
+      """
+      Dynamic member lookup is no longer supported for bindable state. Instead of dot-chaining on \
+      the view store, e.g. 'viewStore.$value', invoke the 'binding' method on view store with a \
+      key path to the value, e.g. 'viewStore.binding(\\.$value)'. For more on this change, see: \
+      https://github.com/pointfreeco/swift-composable-architecture/pull/810
+      """
+  )
+  @MainActor
+  public subscript<Value: Equatable>(
+    dynamicMember keyPath: WritableKeyPath<ViewState, BindingState<Value>>
+  ) -> Binding<Value> {
+    self.binding(
+      get: { $0[keyPath: keyPath].wrappedValue },
+      send: { .binding(.set(keyPath, $0)) }
+    )
+  }
+}
+
+// MARK: - Deprecated after 0.25.0:
+
+extension BindingAction {
+  @available(
+    *, deprecated,
+    message:
+      """
+      For improved safety, bindable properties must now be wrapped explicitly in 'BindingState', \
+      and accessed via key paths to that 'BindingState', like '\\.$value'
+      """
+  )
+  public static func set<Value: Equatable>(
+    _ keyPath: WritableKeyPath<Root, Value>,
+    _ value: Value
+  ) -> Self {
+    .init(
+      keyPath: keyPath,
+      set: { $0[keyPath: keyPath] = value },
+      value: value,
+      valueIsEqualTo: { $0 as? Value == value }
+    )
+  }
+
+  @available(
+    *, deprecated,
+    message:
+      """
+      For improved safety, bindable properties must now be wrapped explicitly in 'BindingState', \
+      and accessed via key paths to that 'BindingState', like '\\.$value'
+      """
+  )
+  public static func ~= <Value>(
+    keyPath: WritableKeyPath<Root, Value>,
+    bindingAction: Self
+  ) -> Bool {
+    keyPath == bindingAction.keyPath
+  }
+}
+
+extension AnyReducer {
+  @available(
+    *, deprecated,
+    message:
+      """
+      'Reducer.binding()' no longer takes an explicit extract function and instead the reducer's \
+      'Action' type must conform to 'BindableAction'
+      """
+  )
+  public func binding(action toBindingAction: @escaping (Action) -> BindingAction<State>?) -> Self {
+    Self { state, action, environment in
+      toBindingAction(action)?.set(&state)
+      return self.run(&state, action, environment)
+    }
+  }
+}
+
+extension ViewStore {
+  @available(
+    *, deprecated,
+    message:
+      """
+      For improved safety, bindable properties must now be wrapped explicitly in 'BindingState'. \
+      Bindings are now derived via 'ViewStore.binding' with a key path to that 'BindingState' \
+      (for example, 'viewStore.binding(\\.$value)'). For dynamic member lookup to be available, \
+      the view store's 'Action' type must also conform to 'BindableAction'.
+      """
+  )
+  @MainActor
+  public func binding<Value: Equatable>(
+    keyPath: WritableKeyPath<ViewState, Value>,
+    send action: @escaping (BindingAction<ViewState>) -> ViewAction
+  ) -> Binding<Value> {
+    self.binding(
+      get: { $0[keyPath: keyPath] },
+      send: { action(.set(keyPath, $0)) }
+    )
+  }
+}
+
+// MARK: - Deprecated after 0.20.0:
+
+extension AnyReducer {
+  @available(*, deprecated, message: "Use the 'IdentifiedArray'-based version, instead.")
+  public func forEach<ParentState, ParentAction, ParentEnvironment>(
+    state toElementsState: WritableKeyPath<ParentState, [State]>,
+    action toElementAction: CasePath<ParentAction, (Int, Action)>,
+    environment toElementEnvironment: @escaping (ParentEnvironment) -> Environment,
+    breakpointOnNil: Bool = true,
+    file: StaticString = #file,
+    fileID: StaticString = #fileID,
+    line: UInt = #line
+  ) -> AnyReducer<ParentState, ParentAction, ParentEnvironment> {
+    .init { parentState, parentAction, parentEnvironment in
+      guard let (index, action) = toElementAction.extract(from: parentAction) else {
+        return .none
+      }
+      if index >= parentState[keyPath: toElementsState].endIndex {
+        runtimeWarn(
+          """
+          A "forEach" reducer at "\(fileID):\(line)" received an action when state contained no \
+          element at that index. …
+
+            Action:
+              \(debugCaseOutput(action))
+            Index:
+              \(index)
+
+          This is generally considered an application logic error, and can happen for a few \
+          reasons:
+
+          • This "forEach" reducer was combined with or run from another reducer that removed \
+          the element at this index when it handled this action. To fix this make sure that this \
+          "forEach" reducer is run before any other reducers that can move or remove elements \
+          from state. This ensures that "forEach" reducers can handle their actions for the \
+          element at the intended index.
+
+          • An in-flight effect emitted this action while state contained no element at this \
+          index. While it may be perfectly reasonable to ignore this action, you may want to \
+          cancel the associated effect when moving or removing an element. If your "forEach" \
+          reducer returns any long-living effects, you should use the identifier-based "forEach" \
+          instead.
+
+          • This action was sent to the store while its state contained no element at this index \
+          To fix this make sure that actions for this reducer can only be sent to a view store \
+          when its state contains an element at this index. In SwiftUI applications, use \
+          "ForEachStore".
+          """,
+          file: file,
+          line: line
+        )
+        return .none
+      }
+      return self.run(
+        &parentState[keyPath: toElementsState][index],
+        action,
+        toElementEnvironment(parentEnvironment)
+      )
+      .map { toElementAction.embed((index, $0)) }
+    }
+  }
+}
+
+extension AnyReducer where State: Identifiable {
+    /// https://github.com/pointfreeco/swift-composable-architecture/pull/641
+    @available(*, deprecated, message: "Use the 'IdentifiedArray'-based version, instead.")
+    public func forEach<Identifier, GlobalState, GlobalAction, GlobalEnvironment>(
+        state toLocalState: WritableKeyPath<GlobalState, [State]>,
+        action toLocalAction: CasePath<GlobalAction, (Identifier, Action)>,
+        environment toLocalEnvironment: @escaping (GlobalEnvironment) -> Environment
+    ) -> Reducer<GlobalState, GlobalAction, GlobalEnvironment>
+        where Identifier == State.ID {
+        .init { globalState, globalAction, globalEnvironment in
+            guard let (identifier, localAction) = toLocalAction.extract(from: globalAction) else {
+                return .none
+            }
+
+            // search index of identifier
+            guard let index = globalState[keyPath: toLocalState].firstIndex(where: { $0.id == identifier })
+            else {
+                assertionFailure("\(identifier) is not exist on Global State")
+                return .none
+            }
+
+            // return redux
+            return self.run(
+                &globalState[keyPath: toLocalState][index],
+                localAction,
+                toLocalEnvironment(globalEnvironment)
+            )
+            .map { toLocalAction.embed((identifier, $0)) }
+        }
+    }
+}
