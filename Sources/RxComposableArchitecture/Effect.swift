@@ -710,6 +710,21 @@ extension Effect: ObservableType {
     }
     
     public typealias Element = Action
+    
+    public func flatMap<T: ObservableType>(_ transform: @escaping (Action) -> T) -> Effect<T.Element> {
+        switch self.operation {
+        case let .publisher(observable):
+            let dependencies = DependencyValues._current
+            let transform = { action in
+                DependencyValues.$_current.withValue(dependencies) {
+                    transform(action)
+                }
+            }
+            return observable.asObservable().flatMap(transform).eraseToEffect()
+        default:
+            return .none
+        }
+    }
 }
 
 extension ObservableType {
