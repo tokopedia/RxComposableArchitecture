@@ -124,12 +124,6 @@ extension Effect {
         case .none:
             return .none
         case .publisher, .run:
-//            let publisher = Observable.just(())
-//                .delay(dueTime, scheduler: scheduler)
-//                .flatMap { self.asObservable().observeOn(scheduler)}
-//                .asPublisher()
-//                .catch { _ in Empty<Element, Never>(completeImmediately: true) } // Ignore errors
-//                .eraseToAnyPublisher()
             return Effect(
                 operation: .publisher(
                     Observable.just(())

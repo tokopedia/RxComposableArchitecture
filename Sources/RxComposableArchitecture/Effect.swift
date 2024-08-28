@@ -732,4 +732,22 @@ extension ObservableType {
             }.eraseToAnyPublisher()
         ))
     }
+
+    public static func fireAndForget(_ work: @escaping () -> Void) -> Effect<Element> {
+        let dependencies = DependencyValues._current
+        return Observable<Element>.deferred {
+            DependencyValues.$_current.withValue(dependencies) {
+                work()
+                return Observable<Element>.empty()
+            }
+        }
+        .eraseToEffect()
+    }
+    
+    public func fireAndForget<NewOutput>(
+        outputType _: NewOutput.Type = NewOutput.self
+    ) -> Effect<NewOutput> {
+        return flatMap { _ in Observable.empty() }
+            .eraseToEffect()
+    }
 }
